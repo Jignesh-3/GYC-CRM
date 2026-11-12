@@ -1,0 +1,49 @@
+# Get You Collab // Enterprise Creator Commerce & Talent CRM
+
+## Section 1: System Scope, Architecture & Standards
+
+### 1.1 Core Platform Objectives
+A unified creator commerce platform powering UGC attribution, automated multi-tier commissions, multi-tenant WhatsApp communications, and granular role-based agency operations.
+
+### 1.2 Dual Operational Vectors
+1. Creator Vector: Attributed orders, GMV generated, conversion rate (CVR%), deliverable fulfillment, commission settlement, and compliance/reputation score.
+2. Agency / Brand Vector: Campaign ROI, UGC video engagement-to-cart conversions, abandoned cart recovery rate, and affiliate payout reconciliations.
+
+### 1.3 Editorial Luxury Design Language (Quiet Luxury)
+* Surface & Color Palette:
+  - Base Background: `#FBF9F5` (Alabaster Warm Cream)
+  - Card & Container Surfaces: `#F4F0E8` (Oatmeal Beige / Soft Linen)
+  - Elevated Popups / Modals: `#FFFFFF` (Crisp Off-White)
+  - Borders & Hairlines: `#E6E0D5` (Soft Stone)
+  - Primary Typographic Ink: `#1C1917` (Deep Espresso Charcoal)
+  - Secondary Inks: `#78716C` (Muted Warm Taupe)
+  - Status Indicators: `#3F4E3D` (Deep Olive Sage for Approved/Paid), `#8C3B36` (Terracotta Brick for Reversed/Blacklisted)
+* Typography System:
+  - Headlines & Titles: Editorial High-Contrast Serif (`Playfair Display` or `Newsreader`).
+  - Interface & Body: Geometric Sans (`Plus Jakarta Sans` or `Inter`).
+  - Financials & Rates: Tabular Monospace (`Space Mono` or `JetBrains Mono`).
+* Motion & Transitions:
+  - Soft radial mouse follower highlighting card boundaries.
+  - Subdued 250ms cubic-bezier transitions (`cubic-bezier(0.16, 1, 0.3, 1)`).
+
+### 1.4 Technical Stack (Zero-Overhead & High Scalability)
+* Frontend: Semantic HTML5, Tailwind CSS, Modular ES6+ Vanilla JavaScript.
+* Backend: Python 3.10+ with FastAPI (Asynchronous, ~30MB memory profile).
+* Database: MySQL 8.0+ (InnoDB Engine, utf8mb4 collation, strict foreign keys).
+* Real-time & Messaging: Webhooks for WhatsApp Cloud API & E-commerce platforms (Shopify/WooCommerce).
+
+---
+
+## Section 2: Implementation Roadmap & Tracker
+
+| Step | Module / Milestone | Status | Deliverables & Scope |
+| :--- | :--- | :--- | :--- |
+| **0.1** | **System Architecture & README** | **Completed** | Mapped specs from all 3 requirement docs. |
+| **1.0** | **MySQL Schema Definition (`schema.sql`)** | **Completed** | InnoDB tables, foreign keys, UTF8mb4, and status enums. |
+| **2.0** | **Database Manager (`database.py`)** | **Completed** | MySQL connection pooling (`aiomysql` / `pymysql`). |
+| **3.0** | **Commission & Financial Logic (`ledger.py`)** | **Completed** | Automated calculation, status transitions, reversal handler. |
+| **4.0** | **Data Contracts & Pydantic DTOs (`schemas.py`)** | **Completed** | Granular input validation for RBAC, Orders, and Campaigns. |
+| **5.0** | **Backend REST API Core (`main.py` + routers)** | **Completed** | Super Admin routes, creator dashboard APIs, webhook ingest. |
+| **6.0** | **Design Token Palette & Layout Engine (`index.html`)** | **Completed** | Editorial luxury UI, mouse spotlight effect, responsive shell. |
+| **7.0** | **Client Application Logic (`app.js`)** | Pending | Dynamic tables, status badges, review & commission drawers. |
+| **8.0** | **Testing, Data Seeding & Audit Verification** | Pending | Seed brands, creators, orders, and verify commission math. |

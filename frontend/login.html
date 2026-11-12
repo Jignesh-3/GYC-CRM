@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get You Collab | Portal Sign In</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    @keyframes subtleGridPulse {
+      0%, 100% { opacity: 0.04; }
+      50% { opacity: 0.09; }
+    }
+
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes cardRise {
+      0% { opacity: 0; transform: translateY(18px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .bg-studio-grid {
+      background-size: 44px 44px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      animation: subtleGridPulse 3.5s ease-in-out infinite;
+    }
+
+    .gyc-float {
+      animation: floatCard 4s ease-in-out infinite;
+    }
+
+    .gyc-form-enter {
+      animation: cardRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#111A2A] min-h-screen flex flex-col lg:flex-row antialiased selection:bg-[#008CFF] selection:text-white">
+
+  <!-- =========================================================================
+       LEFT PANEL: DARK NAVY (#111A2A) ARCHITECTURAL BRAND SHOWCASE
+       ========================================================================= -->
+  <section class="lg:w-[46%] bg-[#111A2A] text-white relative overflow-hidden flex flex-col justify-between p-8 sm:p-12 lg:p-14">
+    <!-- Architectural Grid & Ambient Brand Glows -->
+    <div class="absolute inset-0 bg-studio-grid pointer-events-none"></div>
+    <div class="absolute -top-28 -left-28 w-96 h-96 rounded-full bg-[#01B7F9]/20 blur-[120px] pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-[#1749E8]/25 blur-[120px] pointer-events-none"></div>
+
+    <!-- Top Brand Lockup -->
+    <div class="relative z-10 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center font-extrabold text-sm tracking-tight shadow-lg">
+        <span class="bg-gradient-to-r from-[#01B7F9] to-[#008CFF] bg-clip-text text-transparent">GYC</span>
+      </div>
+      <div>
+        <span class="font-extrabold text-base tracking-tight text-white block leading-none">Get You Collab</span>
+        <span class="text-[11px] font-medium text-white/50 block mt-1">Creator Commerce Suite</span>
+      </div>
+    </div>
+
+    <!-- Center Editorial Pitch -->
+    <div class="relative z-10 my-12 lg:my-0 space-y-6 max-w-md">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#01B7F9] animate-ping"></span>
+        <span class="text-[10px] font-bold uppercase tracking-[0.22em] text-[#01B7F9]">Multi-Tenant Attribution</span>
+      </div>
+
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.15] text-white">
+        Precision creator attribution & <span class="bg-gradient-to-r from-[#01B7F9] to-[#008CFF] bg-clip-text text-transparent">instant settlements.</span>
+      </h2>
+
+      <p class="text-xs sm:text-sm text-white/65 leading-relaxed font-medium">
+        Unified workspace for Super Admins, Brand Partners, and Verified Creators to track GMV, audit deliverables, and execute UTR-verified disbursements.
+      </p>
+
+      <!-- Floating Live Telemetry Preview Card -->
+      <div class="gyc-float hidden sm:block bg-white/[0.06] border border-white/10 backdrop-blur-md rounded-2xl p-4 mt-4">
+        <div class="flex items-center justify-between text-[11px] font-bold text-white/50 uppercase tracking-wider mb-2">
+          <span>Active Ledger Engine</span>
+          <span class="text-[#01B7F9]">● Live Sync</span>
+        </div>
+        <div class="grid grid-cols-3 gap-3 pt-2 border-t border-white/10">
+          <div>
+            <span class="text-[10px] text-white/45 block">Role Isolation</span>
+            <span class="text-xs font-extrabold text-white mt-0.5 block">RBAC JWT</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-white/45 block">Attribution</span>
+            <span class="text-xs font-extrabold text-[#01B7F9] mt-0.5 block">Cookie + SKU</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-white/45 block">Payout Audit</span>
+            <span class="text-xs font-extrabold text-white mt-0.5 block">UTR Locked</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Copyright -->
+    <div class="relative z-10 flex items-center justify-between text-[11px] font-medium text-white/40">
+      <span>Get You Collab CRM &copy; 2026</span>
+      <span>Mumbai • Enterprise Edition</span>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       RIGHT PANEL: CRISP WHITE (#FFFFFF) AUTHENTICATION FORM
+       ========================================================================= -->
+  <section class="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-14">
+    <div class="gyc-form-enter w-full max-w-md bg-white border border-[#111A2A]/10 rounded-2xl p-7 sm:p-9 shadow-2xl shadow-[#111A2A]/[0.06]">
+
+      <!-- Form Header -->
+      <div class="mb-6">
+        <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#008CFF]">Workspace Access</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A] mt-1">Sign in to Studio</h1>
+        <p class="text-xs font-medium text-[#111A2A]/55 mt-1">Enter your registered workspace credentials to continue</p>
+      </div>
+
+      <!-- Error Alert Box -->
+      <div id="error-alert" class="hidden mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs text-center font-bold"></div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="email" class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Work Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            required 
+            placeholder="name@company.com" 
+            class="w-full px-4 py-3 rounded-xl bg-[#F8FAFC] border border-[#111A2A]/15 text-[#111A2A] placeholder-[#111A2A]/35 focus:outline-none focus:border-[#008CFF] focus:bg-white focus:ring-4 focus:ring-[#008CFF]/10 text-sm font-medium transition"
+          >
+        </div>
+
+        <div>
+          <label for="password" class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            required 
+            placeholder="••••••••" 
+            class="w-full px-4 py-3 rounded-xl bg-[#F8FAFC] border border-[#111A2A]/15 text-[#111A2A] placeholder-[#111A2A]/35 focus:outline-none focus:border-[#008CFF] focus:bg-white focus:ring-4 focus:ring-[#008CFF]/10 text-sm font-medium transition"
+          >
+        </div>
+
+        <button 
+          type="submit" 
+          id="submit-btn" 
+          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-[#008CFF]/25 transition duration-150 flex items-center justify-center gap-2 cursor-pointer mt-2 transform active:scale-[0.99]"
+        >
+          <span>Sign In to Portal</span>
+          <span>→</span>
+        </button>
+      </form>
+
+      <!-- Role-Based Navigation Routing Reference -->
+      <div class="mt-6 pt-5 border-t border-[#111A2A]/10 text-[11px] text-[#111A2A]/50 space-y-1.5 font-medium">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-[#111A2A]/70">SUPER_ADMIN</span>
+          <span class="px-2 py-0.5 rounded bg-[#F8FAFC] border border-[#111A2A]/10 text-[#111A2A]/60 text-[10px] font-semibold">/admin/dashboard.html</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-[#111A2A]/70">BRAND_ADMIN</span>
+          <span class="px-2 py-0.5 rounded bg-[#F8FAFC] border border-[#111A2A]/10 text-[#111A2A]/60 text-[10px] font-semibold">/brand/dashboard.html</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-[#008CFF]">CREATOR</span>
+          <span class="px-2 py-0.5 rounded bg-[#01B7F9]/10 border border-[#008CFF]/20 text-[#1749E8] text-[10px] font-semibold">/creator/dashboard.html</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const errorAlert = document.getElementById('error-alert');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (errorAlert) errorAlert.classList.add('hidden');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Authenticating...</span>';
+      }
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Invalid email or password.');
+        }
+
+        // 1. Store session tokens & scoped IDs in localStorage
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('user_role', data.role || data.user?.role || '');
+        localStorage.setItem('user_id', data.user_id || data.user?.id || '');
+        localStorage.setItem('user_email', email);
+
+        // Resolve influencer_id from response or fallback to decoded JWT token
+        let influencerId = data.influencer_id || data.user?.influencer_id;
+        if (!influencerId && data.access_token) {
+          try {
+            const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+            influencerId = payload.influencer_id;
+          } catch (err) {
+            console.error('Failed to parse token payload', err);
+          }
+        }
+
+        if (influencerId) {
+          localStorage.setItem('influencer_id', influencerId);
+        } else {
+          localStorage.removeItem('influencer_id');
+        }
+
+        if (data.brand_id || data.user?.brand_id) {
+          localStorage.setItem('brand_id', data.brand_id || data.user?.brand_id);
+        } else {
+          localStorage.removeItem('brand_id');
+        }
+
+        // 2. Dynamic Redirect: Sends each role to their designated page
+        const redirectUrl = data.redirect_url || (data.role === 'CREATOR' ? '/index.html?view=creator' : '/index.html');
+        window.location.href = redirectUrl;
+
+      } catch (err) {
+        if (errorAlert) {
+          errorAlert.textContent = err.message;
+          errorAlert.classList.remove('hidden');
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Sign In to Portal</span><span>→</span>';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

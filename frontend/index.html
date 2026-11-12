@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get You Collab // Enterprise Creator Commerce Suite</title>
+  
+  <!-- Tailwind CSS via CDN (zero build step) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Editorial Serif + Neutral Geometric Sans + Tabular Monospace -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            alabaster: '#FBF9F5',
+            linen: '#F4F0E8',
+            stonehair: '#E6E0D5',
+            espresso: '#1C1917',
+            taupe: '#78716C',
+            sage: '#3F4E3D',
+            terracotta: '#8C3B36',
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Space Mono"', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    .spotlight-card {
+      background-color: #F4F0E8;
+      border: 1px solid #E6E0D5;
+      transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s ease;
+    }
+    .spotlight-card:hover {
+      border-color: #D3CBBE;
+    }
+
+    .modal-backdrop {
+      background-color: rgba(17, 26, 42, 0.65);
+      backdrop-filter: blur(8px);
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FBF9F5;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E6E0D5;
+      border-radius: 9999px;
+    }
+    /* ================= GYC ARCHITECTURAL SPLIT-CURTAIN LOADER (ALL PANELS) ================= */
+    .gyc-curtain-left,
+    .gyc-curtain-right {
+      transition: transform 0.95s cubic-bezier(0.76, 0, 0.24, 1);
+      will-change: transform;
+    }
+    .gyc-curtains-open .gyc-curtain-left {
+      transform: translateX(-100%);
+    }
+    .gyc-curtains-open .gyc-curtain-right {
+      transform: translateX(100%);
+    }
+
+    @keyframes drawGycStroke {
+      0% { stroke-dashoffset: 420; fill-opacity: 0; }
+      65% { stroke-dashoffset: 0; fill-opacity: 0; }
+      100% { stroke-dashoffset: 0; fill-opacity: 1; }
+    }
+
+    @keyframes subtleGridPulse {
+      0%, 100% { opacity: 0.04; }
+      50% { opacity: 0.09; }
+    }
+
+    @keyframes wordmarkReveal {
+      0% { opacity: 0; transform: translateY(10px); letter-spacing: 0.18em; }
+      100% { opacity: 1; transform: translateY(0); letter-spacing: 0.38em; }
+    }
+
+    @keyframes progressSweep {
+      0% { transform: scaleX(0); }
+      100% { transform: scaleX(1); }
+    }
+
+    .gyc-svg-letter {
+      stroke-dasharray: 420;
+      stroke-dashoffset: 420;
+      fill-opacity: 0;
+      animation: drawGycStroke 1.35s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    }
+    .gyc-svg-letter-2 { animation-delay: 0.14s; }
+    .gyc-svg-letter-3 { animation-delay: 0.28s; }
+
+    .gyc-wordmark {
+      opacity: 0;
+      animation: wordmarkReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards;
+    }
+
+    .gyc-loader-track {
+      transform-origin: left center;
+      transform: scaleX(0);
+      animation: progressSweep 1.65s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
+    }
+
+    .gyc-center-stage {
+      transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    .gyc-stage-exit {
+      opacity: 0 !important;
+      transform: scale(0.94);
+    }
+
+    .bg-studio-grid {
+      background-size: 48px 48px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      animation: subtleGridPulse 3s ease-in-out infinite;
+    }
+
+    /* ================= CREATOR STUDIO CARD MICRO-INTERACTIONS ================= */
+    @keyframes contentLift {
+      0% { opacity: 0; transform: translateY(20px) scale(0.988); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .studio-reveal-active {
+      animation: contentLift 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    }
+
+    .gyc-card-hover {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    .gyc-card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 35px -12px rgba(17, 26, 42, 0.08), 0 0 0 1px rgba(0, 140, 255, 0.28);
+    }
+
+    /* Apply Plus Jakarta Sans across Admin, Creator, and GYC Loader */
+    #adminView,
+    #creatorView,
+    #gycAuthLoader {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Ensure active tab border renders in Brand Blue (#008CFF) even if JS toggles border-espresso */
+    #adminView #tabAll.border-espresso,
+    #adminView #tabActive.border-espresso,
+    #adminView #tabBlacklisted.border-espresso {
+      border-color: #008CFF !important;
+      color: #111A2A !important;
+    }
+
+    /* Override dynamic stepper colors inside #clearanceAuditModal to Brand Blue */
+    #clearanceAuditModal .bg-sage {
+      background-color: #008CFF !important;
+      color: #FFFFFF !important;
+    }
+    #clearanceAuditModal .bg-linen {
+      background-color: #F1F5F9 !important;
+      border-color: rgba(17, 26, 42, 0.15) !important;
+      color: rgba(17, 26, 42, 0.5) !important;
+    }
+
+    /* Ensure active portal switcher tab renders in Brand Blue (#008CFF) */
+    #roleNavSwitcher .bg-espresso {
+      background-color: #008CFF !important;
+      color: #FFFFFF !important;
+    }
+    /* ================= DYNAMIC CAMPAIGN CARDS (GYC STUDIO OVERRIDE) ================= */
+    #adminCampaignCardsContainer > div,
+    #creatorCampaignsList > div {
+      background-color: #FFFFFF !important;
+      border: 1px solid rgba(17, 26, 42, 0.1) !important;
+      border-radius: 1rem !important;
+      padding: 1.5rem !important;
+      box-shadow: 0 1px 3px rgba(17, 26, 42, 0.04) !important;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
+    }
+
+    #adminCampaignCardsContainer > div:hover,
+    #creatorCampaignsList > div:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 35px -12px rgba(17, 26, 42, 0.08), 0 0 0 1px rgba(0, 140, 255, 0.28) !important;
+    }
+
+    /* Card Title (Switch Newsreader serif to bold Plus Jakarta Sans) */
+    #adminCampaignCardsContainer h3,
+    #adminCampaignCardsContainer h4,
+    #creatorCampaignsList h3,
+    #creatorCampaignsList h4 {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: 800 !important;
+      color: #111A2A !important;
+      letter-spacing: -0.02em !important;
+    }
+
+    /* Inner Commission / Fee / Roster Stat Box */
+    #adminCampaignCardsContainer .bg-linen,
+    #adminCampaignCardsContainer .bg-alabaster,
+    #creatorCampaignsList .bg-linen,
+    #creatorCampaignsList .bg-alabaster {
+      background-color: #F8FAFC !important;
+      border: 1px solid rgba(17, 26, 42, 0.08) !important;
+      border-radius: 0.75rem !important;
+    }
+
+    /* "Active" Status Badge Pill */
+    #adminCampaignCardsContainer span.rounded,
+    #adminCampaignCardsContainer span.rounded-full,
+    #creatorCampaignsList span.rounded,
+    #creatorCampaignsList span.rounded-full {
+      background-color: rgba(1, 183, 249, 0.14) !important;
+      color: #1749E8 !important;
+      border: 1px solid rgba(0, 140, 255, 0.2) !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: 700 !important;
+      border-radius: 9999px !important;
+    }
+
+    /* "Analytics & Leaderboard" Action Button */
+    #adminCampaignCardsContainer button,
+    #creatorCampaignsList button {
+      background-color: #111A2A !important;
+      color: #FFFFFF !important;
+      border: none !important;
+      border-radius: 0.75rem !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: 700 !important;
+      padding: 0.55rem 1rem !important;
+      transition: background-color 0.2s ease, transform 0.15s ease !important;
+      cursor: pointer !important;
+    }
+
+    #adminCampaignCardsContainer button:hover,
+    #creatorCampaignsList button:hover {
+      background-color: #008CFF !important;
+    }
+
+    /* Subtle Divider Borders & Muted Labels */
+    #adminCampaignCardsContainer .border-stonehair,
+    #creatorCampaignsList .border-stonehair {
+      border-color: rgba(17, 26, 42, 0.1) !important;
+    }
+
+    #adminCampaignCardsContainer .text-taupe,
+    #creatorCampaignsList .text-taupe {
+      color: rgba(17, 26, 42, 0.5) !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+
+    #adminCampaignCardsContainer .text-espresso,
+    #creatorCampaignsList .text-espresso {
+      color: #111A2A !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: 700 !important;
+    }
+    /* Catch Tailwind opacity variants (e.g. bg-linen/50, bg-alabaster/60) on inner metric trays */
+    #adminCampaignCardsContainer [class*="bg-linen"],
+    #adminCampaignCardsContainer [class*="bg-alabaster"],
+    #creatorCampaignsList [class*="bg-linen"],
+    #creatorCampaignsList [class*="bg-alabaster"] {
+      background-color: #F8FAFC !important;
+      border: 1px solid rgba(17, 26, 42, 0.08) !important;
+      border-radius: 0.75rem !important;
+    }
+
+  </style>
+
+<script>
+  (function () {
+    const token = localStorage.getItem('access_token');
+    const role = localStorage.getItem('user_role');
+    const influencerId = localStorage.getItem('influencer_id');
+
+    // 1. Kick unauthenticated users back to login
+    if (!token || !role) {
+      window.location.replace('/login.html');
+      return;
+    }
+
+    // Pre-initialize global activeCreatorId if user is a creator
+    window.state = window.state || {};
+    if (role === 'CREATOR' && influencerId) {
+      window.state.activeCreatorId = influencerId;
+    }
+
+    // 2. Determine target view strictly based on role
+    let targetView = 'admin';
+    if (role === 'CREATOR') targetView = 'creator';
+    else if (role === 'BRAND_ADMIN') targetView = 'brand';
+
+    // 3. Keep URL in sync
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('view') !== targetView) {
+      const newUrl = `${window.location.pathname}?view=${targetView}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+
+    // 4. Toggle DOM views once loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const adminView = document.getElementById('adminView');
+      const creatorView = document.getElementById('creatorView');
+      const brandView = document.getElementById('brandView');
+      const subTitle = document.getElementById('headerSubTitle');
+      const roleSwitcher = document.getElementById('roleNavSwitcher') || document.querySelector('.flex.items-center.bg-linen');
+
+      // Hide all panels first
+      if (adminView) adminView.classList.add('hidden');
+      if (creatorView) creatorView.classList.add('hidden');
+      if (brandView) brandView.classList.add('hidden');
+
+      // Show ONLY the user's authorized role view
+      if (role === 'CREATOR' && creatorView) {
+        creatorView.classList.remove('hidden');
+
+        // Fix header to Creator Portal and hide Admin controls
+        if (subTitle) subTitle.textContent = 'Creator Portal';
+        if (roleSwitcher) roleSwitcher.classList.add('hidden');
+
+        // Populate creator email header
+        const email = localStorage.getItem('user_email');
+        const emailDisplay = document.getElementById('creatorEmailDisplay');
+        if (emailDisplay && email) emailDisplay.textContent = email;
+
+        // If app.js already defined the real loader on window, trigger it
+        if (typeof window.loadCreatorPortalData === 'function') {
+          window.loadCreatorPortalData();
+        }
+      } else if (role === 'BRAND_ADMIN' && brandView) {
+        brandView.classList.remove('hidden');
+      } else if (adminView) {
+        adminView.classList.remove('hidden');
+        if (subTitle) subTitle.textContent = 'Executive Suite';
+      }
+    });
+  })();
+
+  function logout() {
+    localStorage.clear();
+    window.location.replace('/login.html');
+  }
+</script>
+
+
+</head>
+<body class="bg-[#F8FAFC] text-[#111A2A] font-sans antialiased min-h-screen flex flex-col selection:bg-[#008CFF] selection:text-white">
+
+  <!-- Get You Collab Top Navigation & Role Switcher Bar -->
+  <header class="border-b border-[#111A2A]/10 bg-white/90 backdrop-blur-md sticky top-0 z-40 px-6 md:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+    
+    <!-- Brand Identity -->
+    <div class="flex items-center gap-3.5">
+      <div class="w-9 h-9 rounded-xl bg-[#111A2A] flex items-center justify-center font-extrabold text-xs tracking-tight shadow-md shadow-[#111A2A]/15">
+        <span class="bg-gradient-to-r from-[#01B7F9] to-[#008CFF] bg-clip-text text-transparent">GYC</span>
+      </div>
+      <div class="flex items-center flex-wrap">
+        <span class="font-extrabold text-base text-[#111A2A] tracking-tight">Get You Collab</span>
+        <span class="mx-2.5 text-[#111A2A]/20 font-light">/</span>
+        <span id="headerSubTitle" class="text-[11px] uppercase font-bold tracking-[0.18em] text-[#008CFF]">Executive Suite</span>
+      </div>
+    </div>
+
+    <!-- Active Mode Toggle, Creator Selector, Status & Sign Out -->
+    <div class="flex items-center gap-3.5 sm:gap-4">
+      
+      <!-- Panel Mode Selector Pill -->
+      <div id="roleNavSwitcher" class="flex items-center bg-[#F1F5F9] border border-[#111A2A]/10 p-1 rounded-xl text-xs font-bold">
+        <button id="viewBtnAdmin" onclick="switchPortalMode('ADMIN')" class="px-3.5 py-1.5 bg-[#008CFF] text-white rounded-lg shadow-sm transition cursor-pointer">
+          Admin Suite
+        </button>
+        <button id="viewBtnCreator" onclick="switchPortalMode('CREATOR')" class="px-3.5 py-1.5 text-[#111A2A]/60 hover:text-[#111A2A] rounded-lg transition cursor-pointer">
+          Creator Portal
+        </button>
+      </div>
+
+      <!-- Creator Selector (Shown only when in Creator Portal Mode) -->
+      <div id="creatorSelectorContainer" class="hidden items-center gap-2">
+        <span class="text-xs font-bold text-[#111A2A]/50">View As:</span>
+        <select id="activeCreatorSelect" onchange="changeActiveCreator(this.value)" class="bg-[#F8FAFC] border border-[#111A2A]/15 px-3 py-1.5 text-xs font-bold rounded-xl text-[#111A2A] focus:outline-none focus:border-[#008CFF] transition cursor-pointer">
+          <!-- Dynamically populated -->
+        </select>
+      </div>
+
+      <div class="h-4 w-[1px] bg-[#111A2A]/15 hidden sm:block"></div>
+
+      <!-- Status Indicator -->
+      <div id="connectionStatus" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#01B7F9]/10 border border-[#01B7F9]/20">
+        <span class="w-2 h-2 rounded-full bg-[#008CFF] animate-pulse"></span>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-[#1749E8]">Online</span>
+      </div>
+
+      <!-- Sign Out Button -->
+      <button 
+        onclick="logout()" 
+        class="px-3.5 py-1.5 text-xs font-bold text-rose-600 hover:text-white hover:bg-rose-600 bg-rose-500/10 border border-rose-500/20 rounded-xl transition duration-150 cursor-pointer">
+        Sign Out
+      </button>
+    </div>
+
+  </header>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 1. ADMIN & BRAND PARTNER PANEL VIEW (GET YOU COLLAB STUDIO UI)            -->
+  <!-- ========================================================================= -->
+  <main id="adminView" class="hidden flex-1 w-full bg-gradient-to-b from-[#F8FAFC] via-white to-[#F1F5F9] text-[#111A2A]">
+    <div id="adminStudioContent" class="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
+
+      <!-- 1. Dark Navy Executive Command Banner -->
+      <section class="rounded-2xl bg-[#111A2A] text-white p-7 sm:p-9 shadow-2xl shadow-[#111A2A]/15 relative overflow-hidden">
+        <!-- Ambient Gradient Orbs -->
+        <div class="absolute -right-20 -top-24 w-80 h-80 rounded-full bg-gradient-to-br from-[#01B7F9]/25 to-[#1749E8]/25 blur-3xl pointer-events-none"></div>
+        <div class="absolute left-1/3 -bottom-24 w-64 h-64 rounded-full bg-[#008CFF]/15 blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm">
+              <span class="w-2 h-2 rounded-full bg-[#01B7F9] animate-pulse"></span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-white">Get You Collab // Agency & Brand Command</span>
+            </div>
+
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Executive Roster & Ledger
+            </h1>
+            <p class="text-xs sm:text-sm font-medium text-white/60">
+              Multi-tenant creator attribution, campaign orchestration, and settlement operations
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="refreshData()" class="px-4 py-2.5 bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold tracking-wide transition rounded-xl flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="text-[#01B7F9]">↻</span> Sync Roster
+            </button>
+            <button onclick="openCampaignModal()" class="px-4 py-2.5 bg-white hover:bg-white/90 text-[#111A2A] text-xs font-extrabold tracking-wide transition rounded-xl flex items-center gap-1.5 shadow-md cursor-pointer">
+              <span class="text-[#008CFF]">+</span> Launch Brand Deal
+            </button>
+            <button onclick="openOrderModal()" class="px-4 py-2.5 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white text-xs font-bold tracking-wide transition rounded-xl shadow-lg shadow-[#008CFF]/30 cursor-pointer">
+              + Ingest Order
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Admin KPI Summary Grid (4 Crisp White Cards) -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Total Attributed GMV</span>
+            <span class="px-2 py-0.5 rounded-md bg-[#01B7F9]/15 text-[#1749E8] text-[10px] font-bold">Active</span>
+          </div>
+          <div class="mt-3">
+            <span id="metricGmv" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A]">₹0.00</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Across all creator affiliate links</p>
+        </div>
+
+        <div class="gyc-card-hover bg-white border border-[#008CFF]/30 p-6 rounded-2xl shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#01B7F9] to-[#1749E8]"></div>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#008CFF]">Payable Commissions</span>
+            <span class="px-2 py-0.5 rounded-md bg-[#008CFF]/10 text-[#008CFF] text-[10px] font-bold">Pending Payout</span>
+          </div>
+          <div class="mt-3">
+            <span id="metricPayable" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1749E8]">₹0.00</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Delivered & verified SOWs</p>
+        </div>
+
+        <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Active Creators</span>
+            <span class="px-2 py-0.5 rounded-md bg-[#1749E8]/10 text-[#1749E8] text-[10px] font-bold">Onboarded</span>
+          </div>
+          <div class="mt-3">
+            <span id="metricCreators" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A]">0</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Participating in campaigns</p>
+        </div>
+
+        <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Compliance / Blacklisted</span>
+            <span class="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 text-[10px] font-bold">Flagged</span>
+          </div>
+          <div class="mt-3">
+            <span id="metricBlacklisted" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A]">0</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Restricted from brand deals</p>
+        </div>
+      </section>
+
+      <!-- 3. Operational Data Table Section: Talent Roster -->
+      <section class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
+        <!-- Table Filters -->
+        <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-center gap-6 text-xs font-bold">
+            <button id="tabAll" onclick="setTab('ALL')" class="pb-1.5 border-b-2 border-[#008CFF] text-[#111A2A] transition cursor-pointer">
+              All Talent (<span id="countAll">0</span>)
+            </button>
+            <button id="tabActive" onclick="setTab('ACTIVE')" class="pb-1.5 border-b-2 border-transparent text-[#111A2A]/50 hover:text-[#111A2A] transition cursor-pointer">
+              Active Roster
+            </button>
+            <button id="tabBlacklisted" onclick="setTab('BLACKLISTED')" class="pb-1.5 border-b-2 border-transparent text-[#111A2A]/50 hover:text-[#111A2A] transition cursor-pointer">
+              Blacklisted
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <input 
+              type="text" 
+              id="searchInput" 
+              oninput="handleSearch()" 
+              placeholder="Search name, phone, or email..." 
+              class="w-full md:w-72 px-3.5 py-2 text-xs bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl text-[#111A2A] placeholder-[#111A2A]/40 focus:outline-none focus:border-[#008CFF] focus:bg-white font-medium transition"
+            />
+          </div>
+        </div>
+        
+        <!-- Responsive Table View -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[#111A2A]/10 text-[10px] font-bold uppercase tracking-wider text-[#111A2A]/50 bg-[#F8FAFC]">
+                <th class="py-3.5 px-6">Creator</th>
+                <th class="py-3.5 px-4">Contact</th>
+                <th class="py-3.5 px-4">Attributed Sales</th>
+                <th class="py-3.5 px-4">Payable Commission</th>
+                <th class="py-3.5 px-4">Reg. Fee</th>
+                <th class="py-3.5 px-4">Status</th>
+                <th class="py-3.5 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="influencerTableBody" class="divide-y divide-[#111A2A]/10 text-xs font-medium">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-[#111A2A]/40">Loading talent records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination / Footer Info -->
+        <div class="px-6 py-3.5 border-t border-[#111A2A]/10 flex items-center justify-between text-xs text-[#111A2A]/50 bg-[#F8FAFC] font-medium">
+          <span id="tableFootInfo">Showing 0 creators</span>
+          <span class="text-[11px] font-bold text-[#008CFF]">Direct MySQL Attribution Query</span>
+        </div>
+      </section>
+
+      <!-- 4. Campaign Performance & Analytics (Overview & Leaderboards) -->
+      <section class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
+        <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#008CFF]">Campaign Telemetry</span>
+            <h3 class="text-lg sm:text-xl font-extrabold text-[#111A2A] tracking-tight mt-0.5">Campaign Performance & Analytics</h3>
+            <p class="text-xs font-medium text-[#111A2A]/50 mt-0.5">Macro conversion rates, attributed GMV, and creator performance leaderboards</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-[#111A2A] text-white text-[10px] font-bold uppercase tracking-wider">
+            Executive Audit
+          </span>
+        </div>
+
+        <!-- Campaign Cards Dynamic Grid -->
+        <div class="p-5 md:p-6 bg-[#F8FAFC]/50">
+          <div id="adminCampaignCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="p-6 bg-white rounded-2xl border border-[#111A2A]/10 text-center col-span-1 md:col-span-2">
+              <span class="text-xs font-medium text-[#111A2A]/40">Loading active and completed campaigns...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Agency Order & Fulfillment Stream + UGC Review Stream -->
+      <section class="space-y-8">
+        <!-- Order Fulfillment Card -->
+        <div class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
+          <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-extrabold text-[#111A2A]">Agency Order & Fulfillment Stream</h3>
+              <p class="text-xs font-medium text-[#111A2A]/50 mt-0.5">Audit attribution and transition fulfillment to unlock payable creator commissions</p>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-[#008CFF]/10 text-[#008CFF] text-[11px] font-bold">Real-time Stream</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-[#111A2A]/10 text-[10px] font-bold uppercase tracking-wider text-[#111A2A]/50 bg-[#F8FAFC]">
+                  <th class="py-3.5 px-6">Order Ref</th>
+                  <th class="py-3.5 px-4">Brand</th>
+                  <th class="py-3.5 px-4">Creator</th>
+                  <th class="py-3.5 px-4">Order Value</th>
+                  <th class="py-3.5 px-4">Commission</th>
+                  <th class="py-3.5 px-4">Ledger Status</th>
+                  <th class="py-3.5 px-6 text-right">Fulfillment Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersTableBody" class="divide-y divide-[#111A2A]/10 text-xs font-medium">
+                <tr>
+                  <td colspan="7" class="py-6 text-center text-[#111A2A]/40">Loading fulfillment queue...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- UGC Deliverable & Content Review Stream -->
+        <div class="bg-white border border-[#111A2A]/10 rounded-2xl p-6 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h3 class="text-lg font-extrabold text-[#111A2A]">UGC Deliverable & Content Review Stream</h3>
+              <p class="text-xs text-[#111A2A]/60 mt-0.5">
+                Review video draft submissions. Approving a submission automatically unlocks and credits the campaign participation fee.
+              </p>
+            </div>
+            <button 
+              onclick="window.refreshUgcAdminStream ? window.refreshUgcAdminStream() : window.refreshData()" 
+              class="px-4 py-2 text-xs font-bold bg-[#111A2A]/[0.04] hover:bg-[#008CFF] hover:text-white rounded-xl text-[#111A2A] transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span>↻</span> Refresh Submissions
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#F8FAFC] border-y border-[#111A2A]/10 text-[#111A2A]/50 font-bold uppercase tracking-wider text-[10px]">
+                  <th class="py-3.5 px-4">Campaign & Brand</th>
+                  <th class="py-3.5 px-4">Creator</th>
+                  <th class="py-3.5 px-4">Deliverable Preview</th>
+                  <th class="py-3.5 px-4">Fee Value</th>
+                  <th class="py-3.5 px-4">Review Status</th>
+                  <th class="py-3.5 px-6 text-right">Editorial Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminUgcTableBody" class="divide-y divide-[#111A2A]/10 font-medium">
+                <tr>
+                  <td colspan="6" class="py-6 text-center text-[#111A2A]/40">
+                    Loading UGC submissions...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Pending Payout Settlements Queue -->
+      <section class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
+        <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#008CFF]">Settlement Queue</span>
+              <span id="payoutQueueBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#01B7F9]/15 text-[#1749E8]">0 Creators Eligible</span>
+            </div>
+            <h3 class="text-lg sm:text-xl font-extrabold text-[#111A2A] tracking-tight mt-1">Pending Batch Disbursements</h3>
+            <p class="text-xs font-medium text-[#111A2A]/50">Execute bank settlements with UTR reference logging</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button 
+              type="button" 
+              onclick="window.refreshPayoutQueue && window.refreshPayoutQueue()" 
+              class="px-3.5 py-2 bg-[#111A2A]/[0.04] hover:bg-[#111A2A]/[0.08] text-xs font-bold rounded-xl text-[#111A2A] transition cursor-pointer">
+              ↻ Refresh Queue
+            </button>
+            <button 
+              id="openBatchPayoutBtn" 
+              type="button" 
+              onclick="window.openBatchPayoutModal && window.openBatchPayoutModal()" 
+              disabled 
+              class="px-4 py-2 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs rounded-xl font-bold transition shadow-md shadow-[#008CFF]/25 cursor-pointer">
+              Disburse Selected (<span id="selectedPayoutCount">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-[#111A2A]/10 text-[10px] font-bold uppercase tracking-wider text-[#111A2A]/50 bg-[#F8FAFC]">
+                <th class="py-3.5 px-4 w-10 text-center">
+                  <input 
+                    type="checkbox" 
+                    id="selectAllPayoutsCheckbox" 
+                    onchange="window.toggleSelectAllPayouts && window.toggleSelectAllPayouts(this.checked)" 
+                    class="rounded border-[#111A2A]/20 text-[#008CFF] focus:ring-0 cursor-pointer" />
+                </th>
+                <th class="py-3.5 px-4">Creator / Contact</th>
+                <th class="py-3.5 px-4">Payable Line Items</th>
+                <th class="py-3.5 px-4">Total Amount Payable</th>
+                <th class="py-3.5 px-6 text-right">Quick Action</th>
+              </tr>
+            </thead>
+            <tbody id="payoutQueueTableBody" class="divide-y divide-[#111A2A]/10 text-xs font-medium">
+              <tr>
+                <td colspan="5" class="py-8 text-center text-[#111A2A]/40">Loading pending payout queue...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="px-6 py-4 bg-[#F8FAFC] border-t border-[#111A2A]/10 flex items-center justify-between text-xs font-medium">
+          <span class="text-[#111A2A]/60">Pool Total: <strong id="payoutPoolTotal" class="font-extrabold text-[#111A2A]">₹0.00</strong></span>
+          <span class="text-[#111A2A]/60">Selected Settlement: <strong id="selectedPayoutAmount" class="text-[#008CFF] font-extrabold">₹0.00</strong></span>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- ARCHITECTURAL SPLIT-CURTAIN & SVG VECTOR LOADER                           -->
+  <!-- ========================================================================= -->
+  <div id="gycAuthLoader" class="hidden fixed inset-0 z-[100] items-center justify-center pointer-events-auto select-none">
+    
+    <!-- Left Architectural Navy Curtain -->
+    <div class="gyc-curtain-left fixed inset-y-0 left-0 w-1/2 bg-[#111A2A] border-r border-white/[0.06] overflow-hidden">
+      <div class="absolute inset-0 bg-studio-grid"></div>
+      <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#01B7F9]/15 blur-[110px]"></div>
+    </div>
+
+    <!-- Right Architectural Navy Curtain -->
+    <div class="gyc-curtain-right fixed inset-y-0 right-0 w-1/2 bg-[#111A2A] overflow-hidden">
+      <div class="absolute inset-0 bg-studio-grid"></div>
+      <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#1749E8]/20 blur-[110px]"></div>
+    </div>
+
+    <!-- Center Vector Monogram Stage -->
+    <div id="gycCenterStage" class="gyc-center-stage relative z-20 flex flex-col items-center">
+      <svg class="w-56 sm:w-64 h-24 overflow-visible" viewBox="0 0 270 90">
+        <defs>
+          <linearGradient id="gycVectorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#01B7F9" />
+            <stop offset="55%" stop-color="#008CFF" />
+            <stop offset="100%" stop-color="#1749E8" />
+          </linearGradient>
+        </defs>
+
+        <!-- Geometric G -->
+        <path class="gyc-svg-letter"
+          d="M 68 26 C 62 17, 52 13, 41 13 C 22 13, 10 27, 10 45 C 10 63, 22 77, 42 77 C 59 77, 70 66, 70 49 L 70 43 L 42 43 L 42 54 L 57 54 C 55 61, 49 65, 42 65 C 29 65, 23 56, 23 45 C 23 34, 29 25, 42 25 C 49 25, 54 28, 57 33 Z"
+          fill="#FFFFFF"
+          stroke="url(#gycVectorGrad)"
+          stroke-width="2.2"
+          stroke-linejoin="round"
+        />
+
+        <!-- Geometric Y -->
+        <path class="gyc-svg-letter gyc-svg-letter-2"
+          d="M 102 15 L 124 51 L 124 75 L 138 75 L 138 51 L 160 15 L 145 15 L 131 39 L 117 15 Z"
+          fill="#FFFFFF"
+          stroke="url(#gycVectorGrad)"
+          stroke-width="2.2"
+          stroke-linejoin="round"
+        />
+
+        <!-- Geometric C -->
+        <path class="gyc-svg-letter gyc-svg-letter-3"
+          d="M 248 27 C 242 18, 232 13, 220 13 C 201 13, 188 27, 188 45 C 188 63, 201 77, 220 77 C 232 77, 242 72, 248 63 L 237 56 C 233 62, 227 65, 220 65 C 208 65, 201 56, 201 45 C 201 34, 208 25, 220 25 C 227 25, 233 28, 237 34 Z"
+          fill="#FFFFFF"
+          stroke="url(#gycVectorGrad)"
+          stroke-width="2.2"
+          stroke-linejoin="round"
+        />
+      </svg>
+
+      <!-- Precision Track Bar -->
+      <div class="w-44 h-[2px] bg-white/10 rounded-full overflow-hidden mt-3">
+        <div class="gyc-loader-track w-full h-full bg-gradient-to-r from-[#01B7F9] via-[#008CFF] to-[#1749E8]"></div>
+      </div>
+
+      <!-- Expanded Studio Wordmark -->
+      <p id="gycLoaderSubtitle" class="gyc-wordmark text-[10px] sm:text-[11px] font-bold uppercase text-white/80 mt-4 pl-[0.38em]">
+        Get You Collab
+      </p>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. CREATOR / USER PORTAL VIEW (GET YOU COLLAB STUDIO UI)                  -->
+  <!-- ========================================================================= -->
+  <main id="creatorView" class="hidden flex-1 w-full bg-gradient-to-b from-[#F8FAFC] via-white to-[#F1F5F9] text-[#111A2A]">
+    <div id="creatorStudioContent" class="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
+      
+      <!-- 1. High-Contrast Dark Navy Hero Banner -->
+      <section class="rounded-2xl bg-[#111A2A] text-white p-7 sm:p-9 shadow-2xl shadow-[#111A2A]/15 relative overflow-hidden">
+        <!-- Ambient Gradient Orbs -->
+        <div class="absolute -right-20 -top-24 w-80 h-80 rounded-full bg-gradient-to-br from-[#01B7F9]/25 to-[#1749E8]/25 blur-3xl pointer-events-none"></div>
+        <div class="absolute left-1/3 -bottom-24 w-64 h-64 rounded-full bg-[#008CFF]/15 blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm">
+              <span class="w-2 h-2 rounded-full bg-[#01B7F9] animate-pulse"></span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-white">Get You Collab // Verified Partner</span>
+            </div>
+
+            <h1 id="creatorGreeting" class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Welcome back
+            </h1>
+            <p id="creatorEmailDisplay" class="text-xs sm:text-sm font-medium text-white/60"></p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Export Statement CSV Button -->
+            <button 
+              onclick="window.exportCreatorCsv && window.exportCreatorCsv()" 
+              class="px-4 py-2.5 bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold tracking-wide transition rounded-xl flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="text-[#01B7F9]">↓</span> Export Statement (.CSV)
+            </button>
+
+            <!-- Refresh Earnings Button -->
+            <button 
+              onclick="refreshCreatorPortal()" 
+              class="px-4 py-2.5 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white text-xs font-bold tracking-wide transition rounded-xl flex items-center gap-2 shadow-lg shadow-[#008CFF]/30 cursor-pointer">
+              <span>↻</span> Refresh Earnings
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Creator Financial Metrics (4 Crisp White Cards) -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Attributed Sales (GMV)</span>
+            <span class="px-2 py-0.5 rounded-md bg-[#111A2A]/5 text-[#111A2A]/70 text-[10px] font-bold">All Deals</span>
+          </div>
+          <div class="mt-3">
+            <span id="creatorMetricSales" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A]">₹0.00</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Total value driven by your links</p>
+        </div>
+
+        <div class="gyc-card-hover bg-white border border-[#008CFF]/30 p-6 rounded-2xl shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#01B7F9] to-[#1749E8]"></div>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#008CFF]">Ready for Payout</span>
+            <span class="px-2 py-0.5 rounded-md bg-[#01B7F9]/15 text-[#1749E8] text-[10px] font-bold">Payable</span>
+          </div>
+          <div class="mt-3">
+            <span id="creatorMetricPayable" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1749E8]">₹0.00</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Delivered & verified orders</p>
+        </div>
+
+        <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Pending Commission</span>
+            <span class="px-2 py-0.5 rounded-md bg-[#111A2A]/5 text-[#111A2A]/70 text-[10px] font-bold">In Transit</span>
+          </div>
+          <div class="mt-3">
+            <span id="creatorMetricPending" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A]">₹0.00</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Awaiting customer order delivery</p>
+        </div>
+
+        <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Disbursed Lifetime</span>
+            <span class="px-2 py-0.5 rounded-md bg-[#1749E8]/10 text-[#1749E8] text-[10px] font-bold">Settled</span>
+          </div>
+          <div class="mt-3">
+            <span id="creatorMetricPaid" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A]">₹0.00</span>
+          </div>
+          <p class="text-xs text-[#111A2A]/50 mt-2 font-medium">Cleared bank transfers (UTR)</p>
+        </div>
+      </section>
+
+      <!-- 3. Performance & Conversion Analytics Section -->
+      <section class="space-y-4">
+        <div class="flex items-end justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#008CFF]">Studio Telemetry</span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#111A2A] tracking-tight mt-0.5">Conversion & Performance Analytics</h2>
+            <p class="text-xs text-[#111A2A]/50 font-medium mt-0.5">Real-time attribution health, deliverable velocity, and weekly volume pacing</p>
+          </div>
+          <button 
+            onclick="window.refreshCreatorAnalytics && window.refreshCreatorAnalytics()" 
+            class="px-3.5 py-1.5 rounded-lg bg-[#111A2A]/[0.04] hover:bg-[#008CFF] hover:text-white text-xs font-bold text-[#111A2A] transition cursor-pointer">
+            Refresh Metrics ⟳
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Card 1: Conversion Efficiency -->
+          <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Conversion Efficiency</span>
+            
+            <div class="space-y-3.5 my-4">
+              <div class="flex justify-between items-center pb-2.5 border-b border-[#111A2A]/10">
+                <span class="text-xs font-medium text-[#111A2A]/60">Average Order Value (AOV)</span>
+                <span id="analyticsAov" class="text-sm font-extrabold text-[#111A2A]">₹0.00</span>
+              </div>
+              
+              <div class="flex justify-between items-center pb-2.5 border-b border-[#111A2A]/10">
+                <span class="text-xs font-medium text-[#111A2A]/60">Attributed Order Volume</span>
+                <span id="analyticsOrdersCount" class="text-sm font-extrabold text-[#111A2A]">0 orders</span>
+              </div>
+
+              <div class="flex justify-between items-center pb-2.5 border-b border-[#111A2A]/10">
+                <span class="text-xs font-medium text-[#111A2A]/60">Fulfillment Delivery Rate</span>
+                <span id="analyticsFulfillmentRate" class="text-xs text-[#008CFF] font-bold">100% Delivered</span>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-medium text-[#111A2A]/60">Refunded / Returned</span>
+                <span id="analyticsRefundRate" class="text-xs text-rose-600 font-bold">0 orders</span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-[#111A2A]/10 text-[11px] font-medium text-[#111A2A]/50">
+              Attribution model: Direct Affiliate Cookie + SKU
+            </div>
+          </div>
+
+          <!-- Card 2: UGC Review Quality -->
+          <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Deliverable Quality</span>
+              <span id="analyticsApprovalRate" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#01B7F9]/15 text-[#1749E8]">
+                0% Approved
+              </span>
+            </div>
+
+            <div class="my-4 space-y-3 text-xs font-medium">
+              <div class="flex justify-between items-center">
+                <span class="text-[#111A2A]/60">Total Submitted Drafts:</span>
+                <span id="analyticsTotalSubmissions" class="font-extrabold text-[#111A2A]">0</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-[#008CFF]">Approved & Credited:</span>
+                <span id="analyticsApprovedSubmissions" class="font-extrabold text-[#008CFF]">0</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-amber-600">Revisions Requested:</span>
+                <span id="analyticsRevisionSubmissions" class="font-extrabold text-amber-600">0</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-rose-600">Rejected / Dropped:</span>
+                <span id="analyticsRejectedSubmissions" class="font-extrabold text-rose-600">0</span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-[#111A2A]/10 text-[11px] font-medium text-[#111A2A]/50">
+              Approved videos credit campaign fee automatically
+            </div>
+          </div>
+
+          <!-- Card 3: Weekly Volume Trajectory -->
+          <div class="gyc-card-hover bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Weekly GMV Attribution</span>
+            
+            <div id="analyticsWeeklyTrendContainer" class="h-32 flex items-end gap-2 pt-4 pb-2 border-b border-[#111A2A]/10">
+              <div class="text-center w-full text-xs font-medium text-[#111A2A]/40 my-auto">No weekly trajectory data yet</div>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 text-xs font-medium text-[#111A2A]/60">
+              <span>Past 8 Weeks</span>
+              <span id="analyticsWeeklyTotal" class="font-extrabold text-[#111A2A]">₹0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Converting Campaigns Leaderboard -->
+        <div class="bg-white border border-[#111A2A]/10 p-6 rounded-2xl shadow-sm">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/50">Top Converting Brand Campaigns</span>
+          
+          <div class="overflow-x-auto mt-4">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-[#111A2A]/10 text-[#111A2A]/50 font-bold uppercase tracking-wider text-[10px]">
+                  <th class="pb-3">Brand & Campaign</th>
+                  <th class="pb-3">Commission Rate</th>
+                  <th class="pb-3">Orders</th>
+                  <th class="pb-3">Gross Sales</th>
+                  <th class="pb-3 text-right">Commission Earned</th>
+                </tr>
+              </thead>
+              <tbody id="analyticsCampaignsTableBody" class="divide-y divide-[#111A2A]/10 font-medium">
+                <tr>
+                  <td colspan="5" class="py-5 text-center text-[#111A2A]/40 text-xs">
+                    No conversion attribution recorded yet.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Brand Collaborations & Active Deals -->
+      <section class="space-y-5">
+        <div class="flex items-end justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#008CFF]">Partner Campaigns</span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#111A2A] tracking-tight mt-0.5">Active Brand Deals & Campaigns</h2>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-[#111A2A]/5 text-xs font-bold text-[#111A2A]/70">Direct Attribution Deals</span>
+        </div>
+
+        <!-- Creator UGC Deliverables Tracker -->
+        <div class="bg-white border border-[#111A2A]/10 rounded-2xl p-6 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h3 class="text-lg font-extrabold text-[#111A2A]">My Campaign Deliverables</h3>
+              <p class="text-xs text-[#111A2A]/60 mt-0.5">
+                Track the status of your video drafts, view editor feedback, and submit new content for brand campaigns.
+              </p>
+            </div>
+            <button 
+              onclick="window.openUgcModal && window.openUgcModal()" 
+              class="px-4 py-2 text-xs font-bold bg-[#111A2A] hover:bg-[#008CFF] text-white rounded-xl transition shadow-sm shrink-0 cursor-pointer">
+              + Submit Video Draft
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#F8FAFC] border-y border-[#111A2A]/10 text-[#111A2A]/50 font-bold uppercase tracking-wider text-[10px]">
+                  <th class="py-3 px-4">Campaign</th>
+                  <th class="py-3 px-4">Deliverable Link</th>
+                  <th class="py-3 px-4">Fee Credit</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4">Feedback / Notes</th>
+                </tr>
+              </thead>
+              <tbody id="creatorUgcTableBody" class="divide-y divide-[#111A2A]/10 font-medium">
+                <tr>
+                  <td colspan="5" class="py-6 text-center text-[#111A2A]/40">
+                    No deliverables submitted yet.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="creatorCampaignsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Rendered dynamically -->
+          <div class="p-6 text-center text-xs text-[#111A2A]/50 font-medium border border-[#111A2A]/10 rounded-2xl bg-white">
+            Loading active brand campaigns...
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Creator Attributed Orders Ledger -->
+      <section class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
+        <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-extrabold text-[#111A2A]">Recent Order Conversions</h3>
+            <p class="text-xs font-medium text-[#111A2A]/50 mt-0.5">Transparent line-item audit of your affiliate sales</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-[#008CFF]/10 text-[#008CFF] text-[11px] font-bold">Live Ledger</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[#111A2A]/10 text-[10px] font-bold uppercase tracking-wider text-[#111A2A]/50 bg-[#F8FAFC]">
+                <th class="py-3.5 px-6">Order Ref</th>
+                <th class="py-3.5 px-4">Brand</th>
+                <th class="py-3.5 px-4">Order Value</th>
+                <th class="py-3.5 px-4">Your Cut</th>
+                <th class="py-3.5 px-4">Commission Status</th>
+                <th class="py-3.5 px-4">Delivery State</th>
+                <th class="py-3.5 px-6 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="creatorOrdersTableBody" class="divide-y divide-[#111A2A]/10 text-xs font-medium">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-[#111A2A]/40">Loading your recent orders...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS (GET YOU COLLAB STUDIO THEME)                                      -->
+  <!-- ========================================================================= -->
+
+  <!-- 1. Blacklist Modal -->
+  <div id="blacklistModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50 p-4">
+    <div class="bg-white border border-[#111A2A]/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden relative">
+      <!-- Dark Navy Header -->
+      <div class="bg-[#111A2A] px-6 py-5 flex items-start justify-between">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-400">Compliance Restriction</span>
+          <h3 class="text-lg font-extrabold text-white tracking-tight mt-0.5">Blacklist Influencer</h3>
+        </div>
+        <button onclick="closeBlacklistModal()" class="text-white/60 hover:text-white text-sm font-bold transition cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-6">
+        <p id="blacklistCreatorName" class="text-xs font-medium text-[#111A2A]/60">Restricting creator access to deals.</p>
+
+        <form id="blacklistForm" onsubmit="submitBlacklist(event)" class="mt-4 space-y-4">
+          <input type="hidden" id="blacklistCreatorId" />
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Reason for Blacklisting</label>
+            <textarea 
+              id="blacklistReason" 
+              required 
+              rows="3" 
+              placeholder="e.g. Fake engagement metrics, violation of campaign brief, unprofessional conduct..." 
+              class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl p-3 text-xs font-medium text-[#111A2A] placeholder-[#111A2A]/40 focus:outline-none focus:border-[#008CFF] focus:bg-white transition"
+            ></textarea>
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeBlacklistModal()" class="px-4 py-2 bg-[#111A2A]/[0.05] hover:bg-[#111A2A]/[0.1] rounded-xl text-xs font-bold text-[#111A2A]/70 transition cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-600/20 transition cursor-pointer">
+              Confirm Blacklist
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Order Ingest Modal -->
+  <div id="orderModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50 p-4">
+    <div class="bg-white border border-[#111A2A]/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden relative">
+      <!-- Dark Navy Header -->
+      <div class="bg-[#111A2A] px-6 py-5 flex items-start justify-between relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-[#01B7F9]/20 blur-2xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#01B7F9]">Attribution Simulator</span>
+          <h3 class="text-lg font-extrabold text-white tracking-tight mt-0.5">Ingest Attributed Order</h3>
+        </div>
+        <button onclick="closeOrderModal()" class="relative z-10 text-white/60 hover:text-white text-sm font-bold transition cursor-pointer">✕</button>
+      </div>
+
+      <form id="orderForm" onsubmit="submitOrder(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Select Brand</label>
+          <select id="orderBrandSelect" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition">
+            <!-- Populated dynamically via app.js -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Select Influencer</label>
+          <select id="orderInfluencerSelect" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition">
+            <!-- Populated dynamically via app.js -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Order Amount (INR ₹)</label>
+            <input type="number" step="0.01" min="1" id="orderAmount" value="3500.00" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Commission Cut (%)</label>
+            <input type="number" step="0.01" min="1" max="100" id="orderCommissionRate" value="12.00" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Customer Phone (WhatsApp Attribution)</label>
+          <input type="text" id="orderCustomerPhone" value="+919820123456" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition" />
+        </div>
+
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-[#111A2A]/10">
+          <button type="button" onclick="closeOrderModal()" class="px-4 py-2 bg-[#111A2A]/[0.05] hover:bg-[#111A2A]/[0.1] rounded-xl text-xs font-bold text-[#111A2A]/70 transition cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white rounded-xl text-xs font-bold shadow-lg shadow-[#008CFF]/25 transition cursor-pointer">
+            Process Order & Ledger
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Launch Campaign Modal (Admin Only) -->
+  <div id="campaignModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50 p-4">
+    <div class="bg-white border border-[#111A2A]/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden relative">
+      <!-- Dark Navy Header -->
+      <div class="bg-[#111A2A] px-6 py-5 flex items-start justify-between relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-[#1749E8]/25 blur-2xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#01B7F9]">Campaign Operations</span>
+          <h3 class="text-lg font-extrabold text-white tracking-tight mt-0.5">Broadcast New Brand Deal</h3>
+        </div>
+        <button onclick="closeCampaignModal()" class="relative z-10 text-white/60 hover:text-white text-sm font-bold transition cursor-pointer">✕</button>
+      </div>
+
+      <form id="campaignForm" onsubmit="submitCampaign(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Select Brand Partner</label>
+          <select id="campaignBrandSelect" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Campaign Title</label>
+          <input type="text" id="campaignTitle" required placeholder="e.g. Monsoon Glow Skincare Launch" class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-[#111A2A] placeholder-[#111A2A]/40 focus:outline-none focus:border-[#008CFF] focus:bg-white transition" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Participation Fee (₹)</label>
+            <input type="number" step="0.01" min="0" id="campaignFee" value="500.00" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Affiliate Commission (%)</label>
+            <input type="number" step="0.01" min="1" max="100" id="campaignCommissionRate" value="15.00" required class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Campaign Brief / Deliverables</label>
+          <textarea id="campaignDescription" rows="2" placeholder="1 Reel + 2 Stories detailing application routine..." class="w-full bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl p-3 text-xs font-medium text-[#111A2A] placeholder-[#111A2A]/40 focus:outline-none focus:border-[#008CFF] focus:bg-white transition"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-[#111A2A]/10">
+          <button type="button" onclick="closeCampaignModal()" class="px-4 py-2 bg-[#111A2A]/[0.05] hover:bg-[#111A2A]/[0.1] rounded-xl text-xs font-bold text-[#111A2A]/70 transition cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white rounded-xl text-xs font-bold shadow-lg shadow-[#008CFF]/25 transition cursor-pointer">
+            Launch Campaign
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- Modal: UGC Video Submission -->
+  <div id="ugcModal" class="fixed inset-0 modal-backdrop z-50 items-center justify-center hidden p-4">
+    <div class="bg-white border border-[#111A2A]/10 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden relative">
+      <!-- Dark Navy Header -->
+      <div class="bg-[#111A2A] px-6 py-5 flex items-start justify-between relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-[#01B7F9]/20 blur-2xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#01B7F9]">Creator Studio</span>
+          <h3 class="text-lg font-extrabold text-white tracking-tight mt-0.5">Submit Campaign Deliverable</h3>
+          <p class="text-xs text-white/60 mt-0.5">Provide your video draft or published Reel link for review</p>
+        </div>
+        <button onclick="window.closeUgcModal && window.closeUgcModal()" class="relative z-10 text-white/60 hover:text-white text-sm font-bold transition cursor-pointer">&times;</button>
+      </div>
+
+      <form id="ugcSubmitForm" onsubmit="window.submitUgcForm(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Target Campaign</label>
+          <select id="ugcCampaignSelect" required class="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-[#111A2A]/15 bg-[#F8FAFC] text-[#111A2A] focus:outline-none focus:border-[#008CFF] focus:bg-white transition">
+            <!-- Populated dynamically via JS -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Video Preview / Reel URL</label>
+          <input 
+            type="url" 
+            id="ugcVideoUrl" 
+            placeholder="https://instagram.com/reel/... or Drive link" 
+            required 
+            class="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-[#111A2A]/15 bg-[#F8FAFC] text-[#111A2A] placeholder-[#111A2A]/40 focus:outline-none focus:border-[#008CFF] focus:bg-white transition" 
+          />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Caption Copy & Notes (Optional)</label>
+          <textarea 
+            id="ugcCaptionCopy" 
+            rows="3" 
+            placeholder="Draft caption, hashtags, and any editorial context for the brand..."
+            class="w-full text-xs font-medium p-3 rounded-xl border border-[#111A2A]/15 bg-[#F8FAFC] text-[#111A2A] placeholder-[#111A2A]/40 focus:outline-none focus:border-[#008CFF] focus:bg-white transition"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-[#111A2A]/10 flex items-center justify-end gap-2.5">
+          <button 
+            type="button" 
+            onclick="window.closeUgcModal && window.closeUgcModal()" 
+            class="px-4 py-2 text-xs font-bold bg-[#111A2A]/[0.05] hover:bg-[#111A2A]/[0.1] rounded-xl text-[#111A2A]/70 transition cursor-pointer">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="px-5 py-2 text-xs font-bold bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white rounded-xl transition shadow-lg shadow-[#008CFF]/25 cursor-pointer">
+            Submit Deliverable
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BATCH PAYOUT DISBURSEMENT MODAL -->
+  <div id="batchPayoutModal" class="fixed inset-0 modal-backdrop z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-[#111A2A]/10 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden relative">
+      <!-- Dark Navy Header -->
+      <div class="bg-[#111A2A] px-6 py-5 flex items-start justify-between relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-[#1749E8]/25 blur-2xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#01B7F9]">Treasury & Settlement</span>
+          <h3 class="text-lg font-extrabold text-white tracking-tight mt-0.5">Settle Batch Payout</h3>
+          <p class="text-xs text-white/60 mt-0.5">Atomic ledger settlement with bank audit reference</p>
+        </div>
+        <button 
+          type="button" 
+          onclick="window.closeBatchPayoutModal && window.closeBatchPayoutModal()" 
+          class="relative z-10 text-white/60 hover:text-white text-sm font-bold transition cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <!-- Summary Callout Box -->
+        <div class="bg-[#F8FAFC] border border-[#111A2A]/10 rounded-xl p-4 text-xs space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-medium text-[#111A2A]/60">Selected Recipients:</span>
+            <span id="modalSelectedCount" class="font-extrabold text-[#111A2A]">0 creators</span>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-[#111A2A]/10">
+            <span class="font-medium text-[#111A2A]/60">Total Disbursement Amount:</span>
+            <span id="modalSelectedAmount" class="font-extrabold text-sm text-[#008CFF]">₹0.00</span>
+          </div>
+        </div>
+
+        <form id="batchPayoutForm" onsubmit="window.handleBatchPayoutSubmit && window.handleBatchPayoutSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">
+              Bank Transaction Ref / UTR Number <span class="text-rose-600">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="payoutUtrInput" 
+              required 
+              placeholder="e.g. UTR_20261029_9847192" 
+              class="w-full px-3.5 py-2.5 text-xs font-bold bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl focus:outline-none focus:border-[#008CFF] focus:bg-white text-[#111A2A] placeholder-[#111A2A]/40 transition" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">
+              Payment Mode
+            </label>
+            <select 
+              id="payoutModeSelect" 
+              class="w-full px-3.5 py-2.5 text-xs font-semibold bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl focus:outline-none focus:border-[#008CFF] focus:bg-white text-[#111A2A] transition">
+              <option value="IMPS">IMPS (Immediate Payment Service)</option>
+              <option value="NEFT">NEFT (National Electronic Funds Transfer)</option>
+              <option value="UPI">UPI Transfer</option>
+              <option value="MANUAL_WIRE">Direct Wire / RTGS</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">
+              Settlement Notes (Optional)
+            </label>
+            <input 
+              type="text" 
+              id="payoutNotesInput" 
+              placeholder="e.g. Weekly agency settlement run" 
+              class="w-full px-3.5 py-2.5 text-xs font-medium bg-[#F8FAFC] border border-[#111A2A]/15 rounded-xl focus:outline-none focus:border-[#008CFF] focus:bg-white text-[#111A2A] placeholder-[#111A2A]/40 transition" />
+          </div>
+
+          <div class="pt-3 border-t border-[#111A2A]/10 flex items-center justify-end gap-2.5">
+            <button 
+              type="button" 
+              onclick="window.closeBatchPayoutModal && window.closeBatchPayoutModal()" 
+              class="px-4 py-2 bg-[#111A2A]/[0.05] hover:bg-[#111A2A]/[0.1] text-xs font-bold rounded-xl text-[#111A2A]/70 transition cursor-pointer">
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              id="submitPayoutBtn" 
+              class="px-5 py-2 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-[#008CFF]/25 cursor-pointer">
+              Confirm & Execute Settlement
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATOR TRUST ENGINE: CLEARANCE AUDIT MODAL -->
+  <div id="clearanceAuditModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white border border-[#111A2A]/10 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+      
+      <!-- Dark Navy Modal Header -->
+      <div class="bg-[#111A2A] px-6 py-5 flex items-start justify-between relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-[#01B7F9]/20 blur-2xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#01B7F9]">Creator Trust Engine</span>
+          <h3 class="text-lg font-extrabold text-white tracking-tight mt-0.5" id="auditModalTitle">Payout Clearance Audit</h3>
+        </div>
+        <button onclick="closeClearanceAuditModal()" class="relative z-10 text-white/60 hover:text-white text-sm font-bold p-1 leading-none transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body: Interactive Clearance Timeline -->
+      <div class="p-6 space-y-6">
+        
+        <!-- Quick Metric Card -->
+        <div class="grid grid-cols-3 gap-3 p-4 bg-[#F8FAFC] rounded-xl border border-[#111A2A]/10 text-xs">
+          <div>
+            <span class="text-[#111A2A]/50 font-bold block text-[10px] uppercase tracking-wider">ORDER REF</span>
+            <span class="font-extrabold text-[#111A2A] mt-0.5 block" id="auditOrderRef">—</span>
+          </div>
+          <div>
+            <span class="text-[#111A2A]/50 font-bold block text-[10px] uppercase tracking-wider">YOUR CUT</span>
+            <span class="font-extrabold text-[#008CFF] mt-0.5 block" id="auditCommissionCut">—</span>
+          </div>
+          <div>
+            <span class="text-[#111A2A]/50 font-bold block text-[10px] uppercase tracking-wider">CURRENT STAGE</span>
+            <span class="font-extrabold text-[#111A2A] mt-0.5 block" id="auditStageBadge">—</span>
+          </div>
+        </div>
+
+        <!-- 4-Step Visual Progress Stepper -->
+        <div class="space-y-5 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#111A2A]/10">
+          
+          <!-- Step 1: Placed -->
+          <div class="relative flex items-start gap-3.5">
+            <div id="stepDotPlaced" class="w-6 h-6 rounded-full flex items-center justify-center bg-[#008CFF] text-white text-xs font-extrabold z-10 shrink-0 shadow-sm shadow-[#008CFF]/30">
+              ✓
+            </div>
+            <div>
+              <div class="text-xs font-bold text-[#111A2A]">Order Attributed & Placed</div>
+              <div class="text-[11px] font-semibold text-[#008CFF]" id="stepTimePlaced">—</div>
+              <p class="text-[11px] text-[#111A2A]/60 mt-0.5">Tracking cookie attributed purchase to your creator profile.</p>
+            </div>
+          </div>
+
+          <!-- Step 2: Delivered -->
+          <div class="relative flex items-start gap-3.5">
+            <div id="stepDotDelivered" class="w-6 h-6 rounded-full flex items-center justify-center bg-[#F1F5F9] border border-[#111A2A]/15 text-[#111A2A]/50 text-xs font-extrabold z-10 shrink-0">
+              2
+            </div>
+            <div>
+              <div class="text-xs font-bold text-[#111A2A]" id="stepTitleDelivered">Parcel Fulfillment</div>
+              <div class="text-[11px] font-semibold text-[#111A2A]/50" id="stepTimeDelivered">—</div>
+              <p class="text-[11px] text-[#111A2A]/60 mt-0.5" id="stepDescDelivered">Fulfillment courier verifies package arrival.</p>
+            </div>
+          </div>
+
+          <!-- Step 3: Cooling-Off Return Window -->
+          <div class="relative flex items-start gap-3.5">
+            <div id="stepDotCooling" class="w-6 h-6 rounded-full flex items-center justify-center bg-[#F1F5F9] border border-[#111A2A]/15 text-[#111A2A]/50 text-xs font-extrabold z-10 shrink-0">
+              3
+            </div>
+            <div>
+              <div class="text-xs font-bold text-[#111A2A]" id="stepTitleCooling">Cooling-Off Return Window</div>
+              <div class="text-[11px] font-semibold text-[#111A2A]/50" id="stepTimeCooling">—</div>
+              <p class="text-[11px] text-[#111A2A]/60 mt-0.5" id="stepDescCooling">Brand customer return period protection against reversals.</p>
+            </div>
+          </div>
+
+          <!-- Step 4: Batch Disbursement -->
+          <div class="relative flex items-start gap-3.5">
+            <div id="stepDotDisbursed" class="w-6 h-6 rounded-full flex items-center justify-center bg-[#F1F5F9] border border-[#111A2A]/15 text-[#111A2A]/50 text-xs font-extrabold z-10 shrink-0">
+              4
+            </div>
+            <div>
+              <div class="text-xs font-bold text-[#111A2A]" id="stepTitleDisbursed">Disbursement & Settlement</div>
+              <div class="text-[11px] font-semibold text-[#111A2A]/50" id="stepTimeDisbursed">—</div>
+              <p class="text-[11px] text-[#111A2A]/60 mt-0.5" id="stepDescDisbursed">Transferred via bank batch with immutable settlement UTR.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-[#111A2A]/10 bg-[#F8FAFC] flex items-center justify-between">
+        <span class="text-[11px] font-semibold text-[#111A2A]/50">Protected by ledger non-repudiation</span>
+        <button onclick="closeClearanceAuditModal()" class="px-4 py-1.5 text-xs font-bold bg-[#111A2A] hover:bg-[#008CFF] rounded-xl text-white transition cursor-pointer">
+          Close Audit
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ADMIN SUITE: CAMPAIGN ANALYTICS & CREATOR LEADERBOARD MODAL -->
+  <div id="campaignAnalyticsModal" style="display: none;" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white border border-[#111A2A]/10 rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Dark Navy Modal Header -->
+      <div class="bg-[#111A2A] px-6 py-5 flex items-start justify-between shrink-0 relative overflow-hidden">
+        <div class="absolute -right-12 -top-12 w-44 h-44 rounded-full bg-gradient-to-br from-[#01B7F9]/25 to-[#1749E8]/25 blur-2xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#01B7F9]" id="analyticsBrandHeader">Campaign Performance</span>
+          <h3 class="text-lg sm:text-xl font-extrabold text-white tracking-tight mt-0.5" id="analyticsCampaignTitle">Campaign Analytics</h3>
+        </div>
+        <button type="button" onclick="closeCampaignAnalyticsModal()" class="relative z-10 text-white/60 hover:text-white text-sm font-bold p-1 leading-none transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Scrollable Modal Content -->
+      <div class="p-6 space-y-6 overflow-y-auto">
+        
+        <!-- Top 4 KPI Metric Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          <div class="p-4 bg-[#F8FAFC] rounded-xl border border-[#111A2A]/10">
+            <span class="text-[#111A2A]/50 block text-[10px] font-bold uppercase tracking-wider">Total Clicks</span>
+            <span class="text-lg font-extrabold text-[#111A2A] mt-1 block" id="analyticTotalClicks">0</span>
+          </div>
+          <div class="p-4 bg-[#F8FAFC] rounded-xl border border-[#111A2A]/10">
+            <span class="text-[#111A2A]/50 block text-[10px] font-bold uppercase tracking-wider">Attributed Orders</span>
+            <span class="text-lg font-extrabold text-[#111A2A] mt-1 block" id="analyticTotalOrders">0</span>
+          </div>
+          <div class="p-4 bg-[#F8FAFC] rounded-xl border border-[#008CFF]/25">
+            <span class="text-[#008CFF] block text-[10px] font-bold uppercase tracking-wider">Conversion Rate</span>
+            <span class="text-lg font-extrabold text-[#1749E8] mt-1 block" id="analyticConvRate">0.00%</span>
+          </div>
+          <div class="p-4 bg-[#F8FAFC] rounded-xl border border-[#111A2A]/10">
+            <span class="text-[#111A2A]/50 block text-[10px] font-bold uppercase tracking-wider">Gross GMV</span>
+            <span class="text-lg font-extrabold text-[#111A2A] mt-1 block" id="analyticTotalGMV">₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Top-Performing Creators Leaderboard -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-extrabold text-[#111A2A]">Top Performing Creators</h4>
+            <span class="text-[10px] font-bold text-[#008CFF] uppercase tracking-wider">Ranked by Attributed GMV</span>
+          </div>
+          
+          <div class="border border-[#111A2A]/10 rounded-xl bg-white overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-[#111A2A]/10 text-[10px] font-bold text-[#111A2A]/50 uppercase tracking-wider bg-[#F8FAFC]">
+                  <th class="py-3 px-4"># Rank</th>
+                  <th class="py-3 px-4">Creator</th>
+                  <th class="py-3 px-4 text-right">Clicks</th>
+                  <th class="py-3 px-4 text-right">Orders</th>
+                  <th class="py-3 px-4 text-right">Conv. Rate</th>
+                  <th class="py-3 px-4 text-right">GMV Generated</th>
+                </tr>
+              </thead>
+              <tbody id="analyticsLeaderboardBody" class="divide-y divide-[#111A2A]/10 text-xs font-medium">
+                <!-- Injected dynamically via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-[#111A2A]/10 bg-[#F8FAFC] flex items-center justify-between shrink-0">
+        <span class="text-[11px] font-semibold text-[#111A2A]/50">Protected by non-repudiation sales ledger</span>
+        <button type="button" onclick="closeCampaignAnalyticsModal()" class="px-4 py-1.5 text-xs font-bold bg-[#111A2A] hover:bg-[#008CFF] rounded-xl text-white transition cursor-pointer">
+          Close Analytics
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Get You Collab Studio Footer -->
+  <footer class="border-t border-[#111A2A]/10 bg-white mt-auto py-5 px-6 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#111A2A]/50 font-medium">
+    <div class="flex items-center gap-2.5">
+      <span class="w-5 h-5 rounded bg-[#111A2A] text-[9px] font-extrabold text-[#01B7F9] flex items-center justify-center">GYC</span>
+      <span>Get You Collab CRM &copy; 2026. All rights reserved.</span>
+    </div>
+    <span class="text-[11px] font-semibold text-[#111A2A]/40">Enterprise Creator Commerce Suite // FastAPI & MySQL</span>
+  </footer>
+
+  <!-- Include Client Controller Script -->
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
