@@ -7,12 +7,17 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 import pymysql
 
-from fastapi import FastAPI, HTTPException, status, Query, Depends
+from fastapi import FastAPI, HTTPException, status, Query, Depends, Request
 from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from backend.security import create_access_token, decode_access_token, verify_password, get_password_hash
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from backend.database import init_db_pool, close_db_pool, get_db_cursor
 from backend.ledger import (
@@ -48,6 +53,19 @@ app = FastAPI(
     description="High-velocity Creator Commerce, Affiliate Ledger, and Talent Operations API",
     lifespan=lifespan
 )
+# Initialize rate limiter (100 requests/min global default per IP)
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Too many login attempts. Please wait 60 seconds and try again."}
+    )
 
 # Enable CORS for local static frontend
 app.add_middleware(
@@ -905,8 +923,10 @@ async def disburse_batch_payouts(payload: BatchDisbursementRequest):
 from backend.security import verify_password, create_access_token
 
 @app.post("/api/v1/auth/login", response_model=LoginResponse)
-async def login(payload: LoginRequest):
+@limiter.limit("5/minute")
+async def login(request: Request, payload: LoginRequest):
     async with get_db_cursor() as cursor:
+        # ... keep all your existing code below this untouched ...
         query = """
             SELECT id, email, password_hash, role, brand_id, influencer_id, is_active
             FROM users 

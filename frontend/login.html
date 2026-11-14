@@ -189,6 +189,8 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      let isRateLimited = false;
+
       if (errorAlert) errorAlert.classList.add('hidden');
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -208,6 +210,20 @@
         const data = await response.json();
 
         if (!response.ok) {
+          if (response.status === 429) {
+            isRateLimited = true;
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.innerHTML = '<span>Locked (Wait 60s)</span>';
+            }
+            setTimeout(() => {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Sign In to Portal</span><span>→</span>';
+              }
+              if (errorAlert) errorAlert.classList.add('hidden');
+            }, 60000);
+          }
           throw new Error(data.detail || 'Invalid email or password.');
         }
 
@@ -250,7 +266,7 @@
           errorAlert.classList.remove('hidden');
         }
       } finally {
-        if (submitBtn) {
+        if (submitBtn && !isRateLimited) {
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<span>Sign In to Portal</span><span>→</span>';
         }
