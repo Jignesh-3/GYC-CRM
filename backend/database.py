@@ -1,4 +1,5 @@
 import os
+import ssl
 import aiomysql
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -11,11 +12,26 @@ DB_PORT = int(os.getenv("DB_PORT", 3306))
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME", "getyoucollab_crm")
+DB_SSL = os.getenv("DB_SSL", "false").lower() == "true"
 POOL_MIN = int(os.getenv("DB_POOL_MIN", 2))
 POOL_MAX = int(os.getenv("DB_POOL_MAX", 10))
 
 # Global connection pool holder
 _pool: aiomysql.Pool | None = None
+
+
+def _get_ssl_context() -> ssl.SSLContext | None:
+    """Builds a TLS context when DB_SSL=true (required for TiDB Cloud)."""
+    if not DB_SSL:
+        return None
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
 
 
 async def init_db_pool():
@@ -30,9 +46,11 @@ async def init_db_pool():
             db=DB_NAME,
             minsize=POOL_MIN,
             maxsize=POOL_MAX,
+            pool_recycle=280,  # Prevents stale connection drops on cloud DBs
             autocommit=False,  # Strict transaction boundary control
             charset="utf8mb4",
             cursorclass=aiomysql.DictCursor,  # Returns rows as Python dictionaries
+            ssl=_get_ssl_context(),
         )
         print("✓ MySQL Connection Pool initialized successfully.")
 
