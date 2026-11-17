@@ -1732,7 +1732,7 @@ window.openUgcModal = async (preselectedCampaignId = null) => {
   const campaigns = state.creatorPortal?.campaigns || [];
 
   if (campaigns.length === 0) {
-    alert("No active brand campaigns found. Launch a campaign from Admin Suite first.");
+    alert("No active brand campaigns found.");
     return;
   }
 
