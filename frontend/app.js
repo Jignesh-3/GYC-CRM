@@ -859,14 +859,14 @@ window.openEditDossierModal = function openEditDossierModal() {
   const emailInput = document.getElementById('dossierEmailInput');
   const phoneInput = document.getElementById('dossierPhoneInput');
   const feedbackEl = document.getElementById('editDossierFeedback');
-  const rawDigits = (creator.phone_number || '').replace(/\D/g, '');
-  if (phoneInput) phoneInput.value = rawDigits.length > 10 ? rawDigits.slice(-10) : rawDigits;
 
   if (!modal) return;
 
   const creator = state.creatorPortal?.creator || {};
+  const rawDigits = (creator.phone_number || '').replace(/\D/g, '');
+
   if (emailInput) emailInput.value = creator.email || '';
-  if (phoneInput) phoneInput.value = creator.phone_number || '';
+  if (phoneInput) phoneInput.value = rawDigits.length > 10 ? rawDigits.slice(-10) : rawDigits;
 
   if (feedbackEl) {
     feedbackEl.classList.add('hidden');
@@ -905,7 +905,7 @@ window.handleEditDossierSubmit = async function handleEditDossierSubmit(event) {
   if (feedbackEl) {
     feedbackEl.classList.add('hidden');
   }
-  
+
   if (!/^\d{10}$/.test(phone_number)) {
     if (feedbackEl) {
       feedbackEl.textContent = 'Phone number must be exactly 10 digits.';
