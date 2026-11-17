@@ -3,7 +3,7 @@
  * Pure Fetch abstraction with error normalization
  */
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = `${window.location.origin}/api/v1`;
 
 export const ApiClient = {
   /**
@@ -82,7 +82,7 @@ export const ApiClient = {
       throw err;
     }
   },
-  
+
   /**
    * Update creator dossier contact details (email and phone number)
    */
