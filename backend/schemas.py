@@ -83,6 +83,9 @@ class InfluencerResponse(BaseModel):
     blacklist_reason: Optional[str] = None
     created_at: datetime
 
+class CreatorDossierUpdate(BaseModel):
+    email: str
+    phone_number: str
 
 # --- 3. Brand Deals & Marketplace DTOs ---
 class BrandDealCreateRequest(BaseModel):

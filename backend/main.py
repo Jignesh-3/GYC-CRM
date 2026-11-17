@@ -34,7 +34,8 @@ from backend.schemas import (
     OrderStatusUpdateRequest,
     BatchDisbursementRequest,
     LoginRequest,
-    LoginResponse
+    LoginResponse,
+    CreatorDossierUpdate
 )
 
 
@@ -293,6 +294,64 @@ async def get_recent_agency_orders():
 
 
 # --- 5. Creator Portal Endpoints ---
+@app.patch("/api/v1/creators/{influencer_id}/dossier", tags=["Creator Portal"])
+async def update_creator_dossier(influencer_id: str, payload: CreatorDossierUpdate):
+    """Updates a creator's email and phone number across both influencers and users tables."""
+    new_email = payload.email.strip().lower()
+    new_phone = payload.phone_number.strip()
+
+    if not new_email or "@" not in new_email or "." not in new_email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    if not new_phone.isdigit() or len(new_phone) != 10:
+        raise HTTPException(status_code=400, detail="Phone number must be exactly 10 digits.")
+
+    async with get_db_cursor() as cursor:
+        # 1. Verify creator exists
+        await cursor.execute(
+            "SELECT id, name, email, phone_number FROM influencers WHERE id = %s",
+            (influencer_id,)
+        )
+        creator = await cursor.fetchone()
+        if not creator:
+            raise HTTPException(status_code=404, detail="Creator not found.")
+
+        # 2. Prevent duplicate email conflicts across influencers and users
+        await cursor.execute(
+            "SELECT id FROM influencers WHERE email = %s AND id != %s",
+            (new_email, influencer_id)
+        )
+        if await cursor.fetchone():
+            raise HTTPException(status_code=409, detail="This email is already registered to another creator.")
+
+        await cursor.execute(
+            "SELECT id FROM users WHERE email = %s AND (influencer_id IS NULL OR influencer_id != %s)",
+            (new_email, influencer_id)
+        )
+        if await cursor.fetchone():
+            raise HTTPException(status_code=409, detail="This email is already in use by another account.")
+
+        # 3. Update both tables atomically so login email and dossier email stay in sync
+        await cursor.execute(
+            "UPDATE influencers SET email = %s, phone_number = %s WHERE id = %s",
+            (new_email, new_phone, influencer_id)
+        )
+        await cursor.execute(
+            "UPDATE users SET email = %s WHERE influencer_id = %s",
+            (new_email, influencer_id)
+        )
+
+        # 4. Return updated creator record
+        await cursor.execute(
+            "SELECT id, name, email, phone_number, registration_fee_status, is_blacklisted FROM influencers WHERE id = %s",
+            (influencer_id,)
+        )
+        updated_creator = await cursor.fetchone()
+
+    return {
+        "message": "Dossier updated successfully.",
+        "creator": dict(updated_creator)
+    }
+
 @app.get("/api/v1/creators/{influencer_id}/dashboard", tags=["Creator Portal"])
 async def get_creator_dashboard(influencer_id: str):
     """Returns private earnings, attributed sales, and active campaigns for a specific creator."""
@@ -401,6 +460,7 @@ async def get_creator_dashboard(influencer_id: str):
             for ord in recent_orders
         ]
     }
+
 
 @app.post("/api/v1/creators/{influencer_id}/payout", tags=["Admin Operations"])
 async def process_creator_payout(

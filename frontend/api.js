@@ -82,6 +82,29 @@ export const ApiClient = {
       throw err;
     }
   },
+  
+  /**
+   * Update creator dossier contact details (email and phone number)
+   */
+  async updateCreatorDossier(influencerId, payload) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/creators/${influencerId}/dossier`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Failed to update creator dossier');
+      }
+      return await res.json();
+    } catch (err) {
+      console.error(`Failed to update dossier for creator ${influencerId}:`, err);
+      throw err;
+    }
+  },
 
   /**
    * Fetch all recent orders across the agency (Admin View)

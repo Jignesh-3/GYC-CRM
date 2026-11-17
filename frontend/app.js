@@ -853,6 +853,111 @@ window.loadCreatorPortalData = async function loadCreatorPortalData() {
   }
 };
 
+// --- Creator Edit Dossier Modal Handlers ---
+window.openEditDossierModal = function openEditDossierModal() {
+  const modal = document.getElementById('editDossierModal');
+  const emailInput = document.getElementById('dossierEmailInput');
+  const phoneInput = document.getElementById('dossierPhoneInput');
+  const feedbackEl = document.getElementById('editDossierFeedback');
+  const rawDigits = (creator.phone_number || '').replace(/\D/g, '');
+  if (phoneInput) phoneInput.value = rawDigits.length > 10 ? rawDigits.slice(-10) : rawDigits;
+
+  if (!modal) return;
+
+  const creator = state.creatorPortal?.creator || {};
+  if (emailInput) emailInput.value = creator.email || '';
+  if (phoneInput) phoneInput.value = creator.phone_number || '';
+
+  if (feedbackEl) {
+    feedbackEl.classList.add('hidden');
+    feedbackEl.textContent = '';
+  }
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+};
+
+window.closeEditDossierModal = function closeEditDossierModal() {
+  const modal = document.getElementById('editDossierModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+};
+
+window.handleEditDossierSubmit = async function handleEditDossierSubmit(event) {
+  event.preventDefault();
+
+  const influencerId = state.activeCreatorId;
+  if (!influencerId) return;
+
+  const emailInput = document.getElementById('dossierEmailInput');
+  const phoneInput = document.getElementById('dossierPhoneInput');
+  const feedbackEl = document.getElementById('editDossierFeedback');
+  const saveBtn = document.getElementById('saveDossierBtn');
+
+  const email = (emailInput?.value || '').trim();
+  const phone_number = (phoneInput?.value || '').trim();
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+  if (feedbackEl) {
+    feedbackEl.classList.add('hidden');
+  }
+  
+  if (!/^\d{10}$/.test(phone_number)) {
+    if (feedbackEl) {
+      feedbackEl.textContent = 'Phone number must be exactly 10 digits.';
+      feedbackEl.className = 'text-xs font-medium rounded-lg px-3 py-2 bg-rose-500/20 border border-rose-400/30 text-rose-200';
+    }
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
+    }
+    return;
+  }
+
+  try {
+    const res = await ApiClient.updateCreatorDossier(influencerId, { email, phone_number });
+
+    // Update cached creator state & refresh hero banner text immediately
+    if (state.creatorPortal && res.creator) {
+      state.creatorPortal.creator = res.creator;
+    }
+
+    const emailDisp = document.getElementById('creatorEmailDisplay');
+    if (emailDisp && res.creator) {
+      const phoneText = res.creator.phone_number ? ` • ${res.creator.phone_number}` : '';
+      emailDisp.textContent = `${res.creator.email || ''}${phoneText}`;
+    }
+
+    // Also update localStorage user_email if stored during login
+    if (res.creator?.email && localStorage.getItem('user_email')) {
+      localStorage.setItem('user_email', res.creator.email);
+    }
+
+    if (feedbackEl) {
+      feedbackEl.textContent = res.message || 'Dossier updated successfully.';
+      feedbackEl.className = 'text-xs font-medium rounded-lg px-3 py-2 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200';
+    }
+
+    setTimeout(() => {
+      window.closeEditDossierModal();
+    }, 700);
+  } catch (err) {
+    if (feedbackEl) {
+      feedbackEl.textContent = err.message || 'Could not update dossier.';
+      feedbackEl.className = 'text-xs font-medium rounded-lg px-3 py-2 bg-rose-500/20 border border-rose-400/30 text-rose-200';
+    }
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
+    }
+  }
+};
+
 /**
  * Renders active brand campaigns strictly assigned to the selected creator
  */
