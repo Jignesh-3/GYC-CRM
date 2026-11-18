@@ -1160,6 +1160,39 @@ async def get_brand_portal_data(brand_id: str):
         ]
     }
     
+
+@app.get("/api/v1/public/campaigns")
+async def get_public_latest_campaigns(limit: int = 6):
+    safe_limit = max(1, min(limit, 12))
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            """
+            SELECT 
+                bd.id,
+                bd.title AS campaign_title,
+                bd.description,
+                bd.participation_fee,
+                bd.commission_percentage,
+                bd.status,
+                bd.deal_status,
+                bd.created_at,
+                b.name AS brand_name
+            FROM brand_deals bd
+            JOIN brands b ON bd.brand_id = b.id
+            WHERE UPPER(COALESCE(bd.status, bd.deal_status, '')) IN ('ACTIVE', 'LIVE', 'OPEN')
+            ORDER BY bd.created_at DESC
+            LIMIT %s
+            """,
+            (safe_limit,)
+        )
+        campaigns = await cursor.fetchall()
+
+    return {
+        "count": len(campaigns),
+        "campaigns": campaigns
+    }
+
+
 import os
 from pathlib import Path
 
