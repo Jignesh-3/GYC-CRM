@@ -292,6 +292,41 @@ async def get_recent_agency_orders():
             for row in orders
         ]
 
+@app.get("/api/v1/admin/creators/{influencer_id}/brand-breakdown", tags=["Admin Operations"])
+async def get_creator_brand_breakdown(influencer_id: str):
+    """Returns brand-by-brand orders, attributed GMV, and commission totals for a specific creator."""
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            """
+            SELECT 
+                b.id AS brand_id,
+                b.name AS brand_name,
+                COUNT(DISTINCT o.id) AS total_orders,
+                COALESCE(SUM(o.order_amount), 0) AS attributed_gmv,
+                COALESCE(SUM(cl.commission_amount), 0) AS total_commission,
+                COALESCE(SUM(CASE WHEN cl.commission_status = 'PAYABLE' THEN cl.commission_amount ELSE 0 END), 0) AS payable_commission
+            FROM orders o
+            JOIN brands b ON o.brand_id = b.id
+            LEFT JOIN commission_ledger cl ON o.id = cl.order_id
+            WHERE o.influencer_id = %s
+            GROUP BY b.id, b.name
+            ORDER BY attributed_gmv DESC;
+            """,
+            (influencer_id,)
+        )
+        rows = await cursor.fetchall()
+        return [
+            {
+                "brand_id": row["brand_id"],
+                "brand_name": row["brand_name"],
+                "total_orders": int(row["total_orders"] or 0),
+                "attributed_gmv": float(row["attributed_gmv"] or 0),
+                "total_commission": float(row["total_commission"] or 0),
+                "payable_commission": float(row["payable_commission"] or 0),
+            }
+            for row in rows
+        ]
+
 
 # --- 5. Creator Portal Endpoints ---
 @app.patch("/api/v1/creators/{influencer_id}/dossier", tags=["Creator Portal"])
@@ -801,115 +836,115 @@ async def get_creator_analytics(influencer_id: str):
 
 logger = logging.getLogger(__name__)
 
-@app.get("/api/v1/campaigns/{campaign_id}/analytics", tags=["Campaign Analytics"])
-@app.get("/api/v1/admin/campaigns/{campaign_id}/analytics", tags=["Campaign Analytics"])
-async def get_admin_campaign_analytics(campaign_id: str):
-    """
-    Returns aggregated analytics and creator leaderboard.
-    Accepts either a brand_deal id OR a brand id seamlessly.
-    """
-    try:
-        async with get_db_cursor() as cursor:
-            # 1. Resolve Brand ID (Check brand_deals first, fallback to brands directly)
-            await cursor.execute(
-                """
-                SELECT bd.id AS deal_id, bd.title, bd.brand_id, b.name AS brand_name, 
-                       bd.commission_percentage, bd.participation_fee
-                FROM brand_deals bd
-                JOIN brands b ON bd.brand_id = b.id
-                WHERE bd.id = %s;
-                """,
-                (campaign_id,)
-            )
-            deal_row = await cursor.fetchone()
+# @app.get("/api/v1/campaigns/{campaign_id}/analytics", tags=["Campaign Analytics"])
+# @app.get("/api/v1/admin/campaigns/{campaign_id}/analytics", tags=["Campaign Analytics"])
+# async def get_admin_campaign_analytics(campaign_id: str):
+#     """
+#     Returns aggregated analytics and creator leaderboard.
+#     Accepts either a brand_deal id OR a brand id seamlessly.
+#     """
+#     try:
+#         async with get_db_cursor() as cursor:
+#             # 1. Resolve Brand ID (Check brand_deals first, fallback to brands directly)
+#             await cursor.execute(
+#                 """
+#                 SELECT bd.id AS deal_id, bd.title, bd.brand_id, b.name AS brand_name, 
+#                        bd.commission_percentage, bd.participation_fee
+#                 FROM brand_deals bd
+#                 JOIN brands b ON bd.brand_id = b.id
+#                 WHERE bd.id = %s;
+#                 """,
+#                 (campaign_id,)
+#             )
+#             deal_row = await cursor.fetchone()
 
-            if deal_row:
-                brand_id = deal_row["brand_id"]
-                brand_name = deal_row["brand_name"]
-                campaign_title = deal_row["title"]
-                base_fee = float(deal_row["participation_fee"] or 0.0)
-                comm_pct = float(deal_row["commission_percentage"] or 10.0)
-            else:
-                # Fallback: maybe campaign_id is directly a brand_id
-                await cursor.execute(
-                    "SELECT id, name, website_url FROM brands WHERE id = %s;",
-                    (campaign_id,)
-                )
-                brand_row = await cursor.fetchone()
-                if not brand_row:
-                    raise HTTPException(status_code=404, detail="Campaign or Brand not found.")
-                brand_id = brand_row["id"]
-                brand_name = brand_row["name"]
-                campaign_title = f"{brand_name} Performance Audit"
-                base_fee = 0.0
-                comm_pct = 10.0
+#             if deal_row:
+#                 brand_id = deal_row["brand_id"]
+#                 brand_name = deal_row["brand_name"]
+#                 campaign_title = deal_row["title"]
+#                 base_fee = float(deal_row["participation_fee"] or 0.0)
+#                 comm_pct = float(deal_row["commission_percentage"] or 10.0)
+#             else:
+#                 # Fallback: maybe campaign_id is directly a brand_id
+#                 await cursor.execute(
+#                     "SELECT id, name, website_url FROM brands WHERE id = %s;",
+#                     (campaign_id,)
+#                 )
+#                 brand_row = await cursor.fetchone()
+#                 if not brand_row:
+#                     raise HTTPException(status_code=404, detail="Campaign or Brand not found.")
+#                 brand_id = brand_row["id"]
+#                 brand_name = brand_row["name"]
+#                 campaign_title = f"{brand_name} Performance Audit"
+#                 base_fee = 0.0
+#                 comm_pct = 10.0
 
-            # 2. Performance & Creator Leaderboard from orders & commission_ledger
-            await cursor.execute(
-                """
-                SELECT 
-                    i.id AS creator_id,
-                    i.name AS creator_name,
-                    COUNT(o.id) AS orders_count,
-                    COALESCE(SUM(o.order_amount), 0.00) AS attributed_gmv,
-                    COALESCE(SUM(cl.commission_amount), 0.00) AS earned_commission
-                FROM orders o
-                JOIN influencers i ON o.influencer_id = i.id
-                LEFT JOIN commission_ledger cl ON o.id = cl.order_id
-                WHERE o.brand_id = %s AND (o.order_status IS NULL OR o.order_status != 'CANCELLED')
-                GROUP BY i.id, i.name
-                ORDER BY attributed_gmv DESC, orders_count DESC;
-                """,
-                (brand_id,)
-            )
-            creators_raw = await cursor.fetchall()
+#             # 2. Performance & Creator Leaderboard from orders & commission_ledger
+#             await cursor.execute(
+#                 """
+#                 SELECT 
+#                     i.id AS creator_id,
+#                     i.name AS creator_name,
+#                     COUNT(o.id) AS orders_count,
+#                     COALESCE(SUM(o.order_amount), 0.00) AS attributed_gmv,
+#                     COALESCE(SUM(cl.commission_amount), 0.00) AS earned_commission
+#                 FROM orders o
+#                 JOIN influencers i ON o.influencer_id = i.id
+#                 LEFT JOIN commission_ledger cl ON o.id = cl.order_id
+#                 WHERE o.brand_id = %s AND (o.order_status IS NULL OR o.order_status != 'CANCELLED')
+#                 GROUP BY i.id, i.name
+#                 ORDER BY attributed_gmv DESC, orders_count DESC;
+#                 """,
+#                 (brand_id,)
+#             )
+#             creators_raw = await cursor.fetchall()
 
-            leaderboard = []
-            total_orders = 0
-            total_gmv = 0.0
-            total_commissions = 0.0
+#             leaderboard = []
+#             total_orders = 0
+#             total_gmv = 0.0
+#             total_commissions = 0.0
 
-            for rank, c in enumerate(creators_raw, start=1):
-                c_orders = int(c["orders_count"])
-                c_gmv = float(c["attributed_gmv"])
-                c_comm = float(c["earned_commission"])
+#             for rank, c in enumerate(creators_raw, start=1):
+#                 c_orders = int(c["orders_count"])
+#                 c_gmv = float(c["attributed_gmv"])
+#                 c_comm = float(c["earned_commission"])
 
-                total_orders += c_orders
-                total_gmv += c_gmv
-                total_commissions += c_comm
+#                 total_orders += c_orders
+#                 total_gmv += c_gmv
+#                 total_commissions += c_comm
 
-                leaderboard.append({
-                    "rank": rank,
-                    "creator_id": c["creator_id"],
-                    "creator_name": c["creator_name"],
-                    "clicks": 0,
-                    "orders_count": c_orders,
-                    "conversion_rate": 100.0 if c_orders > 0 else 0.0,
-                    "attributed_gmv": c_gmv,
-                    "earned_commission": c_comm,
-                })
+#                 leaderboard.append({
+#                     "rank": rank,
+#                     "creator_id": c["creator_id"],
+#                     "creator_name": c["creator_name"],
+#                     "clicks": 0,
+#                     "orders_count": c_orders,
+#                     "conversion_rate": 100.0 if c_orders > 0 else 0.0,
+#                     "attributed_gmv": c_gmv,
+#                     "earned_commission": c_comm,
+#                 })
 
-            return {
-                "campaign": {
-                    "id": campaign_id,
-                    "title": campaign_title,
-                    "brand_name": brand_name,
-                    "commission_percentage": comm_pct,
-                    "participation_fee": base_fee,
-                    "total_clicks": 0,
-                    "total_orders": total_orders,
-                    "conversion_rate": 100.0 if total_orders > 0 else 0.0,
-                    "total_gmv": round(total_gmv, 2),
-                    "total_commissions": round(total_commissions, 2)
-                },
-                "leaderboard": leaderboard
-            }
+#             return {
+#                 "campaign": {
+#                     "id": campaign_id,
+#                     "title": campaign_title,
+#                     "brand_name": brand_name,
+#                     "commission_percentage": comm_pct,
+#                     "participation_fee": base_fee,
+#                     "total_clicks": 0,
+#                     "total_orders": total_orders,
+#                     "conversion_rate": 100.0 if total_orders > 0 else 0.0,
+#                     "total_gmv": round(total_gmv, 2),
+#                     "total_commissions": round(total_commissions, 2)
+#                 },
+#                 "leaderboard": leaderboard
+#             }
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching campaign analytics: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Database execution error: {str(e)}")
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         logger.error(f"Error fetching campaign analytics: {e}", exc_info=True)
+#         raise HTTPException(status_code=500, detail=f"Database execution error: {str(e)}")
       
 # --- Pending and Batch Endpoint ---
 @app.get("/api/v1/admin/payouts/pending-queue", tags=["Executive Suite - Payouts"])
@@ -1213,3 +1248,4 @@ if FRONTEND_DIR.exists():
 
     # 2. Mount static folder for CSS, JS, and other assets
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="static")
+    

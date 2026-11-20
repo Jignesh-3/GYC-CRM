@@ -59,61 +59,90 @@ function formatCurrency(amount) {
 /**
  * Plays the GYC SVG vector draw & splits the architectural navy curtains open
  */
-window.triggerGycCurtainReveal = function(subtitleText = 'Get You Collab') {
-  const loader = document.getElementById('gycAuthLoader');
-  const stage = document.getElementById('gycCenterStage');
-  const content = document.getElementById('creatorStudioContent');
-  const subtitleEl = document.getElementById('gycLoaderSubtitle');
-  const creatorContent = document.getElementById('creatorStudioContent');
-  const adminContent = document.getElementById('adminStudioContent');
-  // Inside setTimeout(() => { loader.classList.add('gyc-curtains-open'); ... }):
-  if (creatorContent) creatorContent.classList.add('studio-reveal-active');
-  if (adminContent) adminContent.classList.add('studio-reveal-active');
+// window.triggerGycCurtainReveal = function(subtitleText = 'Get You Collab') {
+//   const loader = document.getElementById('gycAuthLoader');
+//   const stage = document.getElementById('gycCenterStage');
+//   const content = document.getElementById('creatorStudioContent');
+//   const subtitleEl = document.getElementById('gycLoaderSubtitle');
+//   const creatorContent = document.getElementById('creatorStudioContent');
+//   const adminContent = document.getElementById('adminStudioContent');
+//   // Inside setTimeout(() => { loader.classList.add('gyc-curtains-open'); ... }):
+//   if (creatorContent) creatorContent.classList.add('studio-reveal-active');
+//   if (adminContent) adminContent.classList.add('studio-reveal-active');
 
-  if (!loader) return;
-  if (subtitleEl) subtitleEl.textContent = subtitleText;
+//   if (!loader) return;
+//   if (subtitleEl) subtitleEl.textContent = subtitleText;
 
-  // 1. Reset overlay & curtains
-  loader.classList.remove('hidden', 'gyc-curtains-open');
-  loader.classList.add('flex');
-  if (stage) stage.classList.remove('gyc-stage-exit');
-  if (content) content.classList.remove('studio-reveal-active');
+//   // 1. Reset overlay & curtains
+//   loader.classList.remove('hidden', 'gyc-curtains-open');
+//   loader.classList.add('flex');
+//   if (stage) stage.classList.remove('gyc-stage-exit');
+//   if (content) content.classList.remove('studio-reveal-active');
 
-  // 2. Restart SVG stroke draw + wordmark + track bar animations
-  loader.querySelectorAll('.gyc-svg-letter, .gyc-wordmark, .gyc-loader-track').forEach(el => {
-    el.style.animation = 'none';
-    el.offsetHeight; // force DOM reflow
-    el.style.animation = '';
-  });
+//   // 2. Restart SVG stroke draw + wordmark + track bar animations
+//   loader.querySelectorAll('.gyc-svg-letter, .gyc-wordmark, .gyc-loader-track').forEach(el => {
+//     el.style.animation = 'none';
+//     el.offsetHeight; // force DOM reflow
+//     el.style.animation = '';
+//   });
 
-  // 3. Fade out center monogram slightly before curtains part
-  setTimeout(() => {
-    if (stage) stage.classList.add('gyc-stage-exit');
-  }, 1650);
+//   // 3. Fade out center monogram slightly before curtains part
+//   setTimeout(() => {
+//     if (stage) stage.classList.add('gyc-stage-exit');
+//   }, 1650);
 
-  // 4. Split the architectural navy doors open & lift studio content
-  setTimeout(() => {
-    loader.classList.add('gyc-curtains-open');
-    if (content) content.classList.add('studio-reveal-active');
-  }, 1850);
+//   // 4. Split the architectural navy doors open & lift studio content
+//   setTimeout(() => {
+//     loader.classList.add('gyc-curtains-open');
+//     if (content) content.classList.add('studio-reveal-active');
+//   }, 1850);
 
-  // 5. Hide overlay container after curtains finish sliding off-screen
-  setTimeout(() => {
-    loader.classList.add('hidden');
-    loader.classList.remove('flex');
-  }, 2800);
-};
+//   // 5. Hide overlay container after curtains finish sliding off-screen
+//   setTimeout(() => {
+//     loader.classList.add('hidden');
+//     loader.classList.remove('flex');
+//   }, 2800);
+// };
 
 // ==========================================
 // 1. ADMIN & BRAND PORTAL OPERATIONS
 // ==========================================
 
 window.loadBrandPortalData = async function() {
-  const activeBrandId = localStorage.getItem('active_brand_id') || localStorage.getItem('brand_id');
+  const activeBrandId =
+    localStorage.getItem('active_brand_id') ||
+    localStorage.getItem('brand_id') ||
+    state.currentBrand?.id;
+
   if (!activeBrandId) {
     console.warn('[BrandPortal] No active_brand_id found.');
     return;
   }
+
+  // Hide Creator Portal nav button/tab when inside Brand Admin Portal (preserves DOM & listeners)
+  document.querySelectorAll('button, a, [role="tab"]').forEach((el) => {
+    const label = (el.textContent || '').trim().toLowerCase();
+    const targetAttr = (
+      el.id +
+      ' ' +
+      (el.dataset.role || '') +
+      ' ' +
+      (el.dataset.view || '') +
+      ' ' +
+      (el.getAttribute('onclick') || '')
+    ).toLowerCase();
+
+    if (
+      label === 'creator portal' ||
+      targetAttr.includes('creatorportal') ||
+      targetAttr.includes('creator-portal') ||
+      targetAttr.includes("'creator'") ||
+      targetAttr.includes('"creator"')
+    ) {
+      // Original visibility preserved: el.style.display = '';
+      el.style.display = 'none';
+    }
+  });
 
   try {
     const res = await fetch(`/api/v1/brand/portal-data?brand_id=${encodeURIComponent(activeBrandId)}`);
@@ -158,7 +187,7 @@ window.loadBrandPortalData = async function() {
       countAllEl.textContent = data.creators.length;
     }
     
-    // 4. Render Campaign Cards (Scoped to boAt / active brand)
+    // 4. Render Campaign Cards (Scoped to active brand)
     if (typeof renderCampaignPerformanceCards === 'function') {
       renderCampaignPerformanceCards(data.campaigns);
     }
@@ -176,6 +205,54 @@ window.loadBrandPortalData = async function() {
   } catch (err) {
     console.error('[BrandPortal] Hydration failed:', err);
   }
+  
+  // Helper to hide Creator Portal switcher & Launch Brand Campaign button on Brand Admin
+    const hideBrandRestrictedControls = () => {
+      document.querySelectorAll('button, a, [role="tab"], [role="button"]').forEach((el) => {
+        // Collapse newlines and multiple spaces into a single space
+        const label = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+        const targetAttr = (
+          el.id +
+          ' ' +
+          (el.getAttribute('aria-label') || '') +
+          ' ' +
+          (el.getAttribute('title') || '') +
+          ' ' +
+          (el.dataset.role || '') +
+          ' ' +
+          (el.dataset.view || '') +
+          ' ' +
+          (el.dataset.action || '') +
+          ' ' +
+          (el.getAttribute('onclick') || '')
+        )
+          .replace(/\s+/g, ' ')
+          .toLowerCase();
+
+        const isCreatorSwitcher =
+          label === 'creator portal' ||
+          targetAttr.includes('creatorportal') ||
+          targetAttr.includes('creator-portal') ||
+          targetAttr.includes("'creator'") ||
+          targetAttr.includes('"creator"');
+
+        const isLaunchCampaignBtn =
+          label.includes('launch brand') ||
+          label.includes('launch campaign') ||
+          label.includes('create campaign') ||
+          targetAttr.includes('launchcampaign') ||
+          targetAttr.includes('launch-campaign') ||
+          targetAttr.includes('campaignmodal');
+
+        if (isCreatorSwitcher || isLaunchCampaignBtn) {
+          // Original visibility preserved: el.style.display = '';
+          el.style.setProperty('display', 'none', 'important');
+        }
+      });
+    };
+
+    hideBrandRestrictedControls();
+    setTimeout(hideBrandRestrictedControls, 150);
 };
 
 /**
@@ -296,13 +373,178 @@ async function loadDashboardData() {
     }
   }
 }
+
 /**
  * Filter and Render Admin Talent Table Rows
  */
+// Cache brand breakdowns in memory so re-clicking a creator is instant
+const creatorBrandBreakdownCache = {};
+
+function ensureBrandBreakdownModal() {
+  let modal = document.getElementById('creatorBrandBreakdownModal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'creatorBrandBreakdownModal';
+  modal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-[#111A2A]/70 backdrop-blur-xs p-4';
+  modal.innerHTML = `
+    <div class="bg-[#FFFFFF] border border-[#008CFF]/20 rounded-xl shadow-2xl w-full max-w-2xl max-h-[82vh] flex flex-col overflow-hidden">
+      <!-- Modal Header (Brand Gradient + Dark Navy Accent) -->
+      <div class="px-6 py-4 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] text-[#FFFFFF] flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-mono uppercase tracking-wider text-[#FFFFFF]/80">Brand-by-Brand Attribution</p>
+          <h3 id="brandModalCreatorName" class="text-xl font-bold text-[#FFFFFF] mt-0.5">Creator</h3>
+        </div>
+        <button
+          type="button"
+          onclick="closeCreatorBrandBreakdownModal()"
+          class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111A2A]/25 hover:bg-[#111A2A]/45 text-[#FFFFFF] transition"
+          aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div id="brandModalBody" class="p-6 overflow-y-auto flex-1 bg-[#FFFFFF] text-[#111A2A]"></div>
+    </div>
+  `;
+
+  // Close when clicking the dark navy backdrop outside the card
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeCreatorBrandBreakdownModal();
+  });
+
+  document.body.appendChild(modal);
+  return modal;
+}
+
+window.closeCreatorBrandBreakdownModal = function() {
+  const modal = document.getElementById('creatorBrandBreakdownModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+};
+
+window.openCreatorBrandBreakdownModal = async function(influencerId, creatorName) {
+  const modal = ensureBrandBreakdownModal();
+  const titleEl = document.getElementById('brandModalCreatorName');
+  const bodyEl = document.getElementById('brandModalBody');
+
+  if (titleEl) titleEl.textContent = creatorName || 'Creator Attribution';
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  if (creatorBrandBreakdownCache[influencerId]) {
+    renderBrandBreakdownModalContent(bodyEl, creatorBrandBreakdownCache[influencerId]);
+    return;
+  }
+
+  bodyEl.innerHTML = `<p class="text-sm text-[#111A2A]/60 py-8 text-center">Loading brand attribution...</p>`;
+
+  try {
+    const res = await fetch(`/api/v1/admin/creators/${encodeURIComponent(influencerId)}/brand-breakdown`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const brands = await res.json();
+    creatorBrandBreakdownCache[influencerId] = brands;
+    renderBrandBreakdownModalContent(bodyEl, brands);
+  } catch (err) {
+    console.error('[BrandBreakdown] Failed:', err);
+    bodyEl.innerHTML = `<p class="text-sm text-red-600 py-8 text-center">Could not load brand breakdown.</p>`;
+  }
+};
+
+function renderBrandBreakdownModalContent(container, brands) {
+  if (!brands || brands.length === 0) {
+    container.innerHTML = `<p class="text-sm text-[#111A2A]/60 py-8 text-center">No attributed brand orders found for this creator yet.</p>`;
+    return;
+  }
+
+  const totals = brands.reduce(
+    (acc, b) => {
+      acc.orders += b.total_orders;
+      acc.gmv += b.attributed_gmv;
+      acc.payable += b.payable_commission;
+      return acc;
+    },
+    { orders: 0, gmv: 0, payable: 0 }
+  );
+
+  container.innerHTML = `
+    <!-- Summary Strip -->
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="bg-[#111A2A]/[0.03] border border-[#008CFF]/20 rounded-lg p-3.5">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#111A2A]/60">Active Brands</div>
+        <div class="text-xl font-bold text-[#111A2A] mt-1">${brands.length}</div>
+      </div>
+      <div class="bg-[#111A2A]/[0.03] border border-[#008CFF]/20 rounded-lg p-3.5">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#111A2A]/60">Total Attributed GMV</div>
+        <div class="text-xl font-bold text-[#111A2A] mt-1">${formatCurrency(totals.gmv)}</div>
+      </div>
+      <div class="bg-[#008CFF]/[0.08] border border-[#008CFF]/30 rounded-lg p-3.5">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#008CFF]">Payable Commission</div>
+        <div class="text-xl font-bold text-[#1749E8] mt-1">${formatCurrency(totals.payable)}</div>
+      </div>
+    </div>
+
+    <!-- Brand Table -->
+    <div class="border border-[#111A2A]/10 rounded-lg overflow-hidden">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-[#111A2A] text-[#FFFFFF] text-xs uppercase tracking-wider">
+            <th class="py-3 px-4 font-semibold">Brand</th>
+            <th class="py-3 px-4 font-semibold text-right">Orders</th>
+            <th class="py-3 px-4 font-semibold text-right">Attributed GMV</th>
+            <th class="py-3 px-4 font-semibold text-right">Payable</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#111A2A]/10 bg-[#FFFFFF]">
+          ${brands
+            .map(
+              (b) => `
+            <tr class="hover:bg-[#008CFF]/[0.05] transition">
+              <td class="py-3 px-4 font-semibold text-[#111A2A]">${b.brand_name}</td>
+              <td class="py-3 px-4 text-right text-[#111A2A]/70">${b.total_orders}</td>
+              <td class="py-3 px-4 text-right font-semibold text-[#111A2A]">${formatCurrency(b.attributed_gmv)}</td>
+              <td class="py-3 px-4 text-right font-semibold text-[#008CFF]">${formatCurrency(b.payable_commission)}</td>
+            </tr>
+          `
+            )
+            .join('')}
+        </tbody>
+        <tfoot>
+          <tr class="border-t-2 border-[#008CFF]/30 bg-[#008CFF]/[0.06] font-bold text-[#111A2A]">
+            <td class="py-3 px-4">Total (${brands.length} ${brands.length === 1 ? 'Brand' : 'Brands'})</td>
+            <td class="py-3 px-4 text-right">${totals.orders}</td>
+            <td class="py-3 px-4 text-right">${formatCurrency(totals.gmv)}</td>
+            <td class="py-3 px-4 text-right text-[#1749E8]">${formatCurrency(totals.payable)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+}
+
 function renderAdminTable() {
+  
   const tableBody = document.getElementById('influencerTableBody');
   const footInfo = document.getElementById('tableFootInfo');
   if (!tableBody) return;
+
+  // Role check: only Super Admin / Master Admin sees Registration Fee
+  // Brand Admin sets state.currentBrand (via loadBrandPortalData) & active_brand_id; Super Admin has neither
+  const isBrandPortal = Boolean(
+    state.currentBrand ||
+    localStorage.getItem('active_brand_id') ||
+    localStorage.getItem('brand_id')
+  );
+  const isSuperAdmin = !isBrandPortal;
+
+  // Hide/show the matching 5th <th> header ("Reg Fee") so columns stay aligned
+  const tableEl = tableBody.closest('table');
+  const regFeeHeader = tableEl?.querySelector('thead th:nth-child(5)');
+  if (regFeeHeader) {
+    regFeeHeader.style.display = isSuperAdmin ? '' : 'none';
+  }
 
   const talentList = state.influencers || [];
   let filtered = talentList.filter((item) => {
@@ -322,7 +564,7 @@ function renderAdminTable() {
   if (filtered.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="py-8 text-center text-taupe font-mono text-xs">
+        <td colspan="${isSuperAdmin ? 7 : 6}" class="py-8 text-center text-taupe font-mono text-xs">
           No talent records found matching the current criteria.
         </td>
       </tr>
@@ -344,6 +586,32 @@ function renderAdminTable() {
       const isFeePaid = creator.registration_fee_status === 'PAID';
       const hasPayable = Number(creator.payable_commission) > 0;
 
+      // Original Registration Fee cell (gated to Super Admin only; hidden for Brand Admin)
+      const regFeeCellHtml = isSuperAdmin
+        ? `
+        <td class="py-4 px-4">
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[11px] font-mono ${
+            isFeePaid
+              ? 'bg-sage/10 text-sage border border-sage/20'
+              : 'bg-terracotta/10 text-terracotta border border-terracotta/20'
+          }">
+            <span class="w-1 h-1 rounded-full ${isFeePaid ? 'bg-sage' : 'bg-terracotta'}"></span>
+            ${creator.registration_fee_status || 'UNPAID'}
+          </span>
+        </td>`
+        : `<!-- Hidden for Brand Admin:
+        <td class="py-4 px-4">
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[11px] font-mono ${
+            isFeePaid
+              ? 'bg-sage/10 text-sage border border-sage/20'
+              : 'bg-terracotta/10 text-terracotta border border-terracotta/20'
+          }">
+            <span class="w-1 h-1 rounded-full ${isFeePaid ? 'bg-sage' : 'bg-terracotta'}"></span>
+            ${creator.registration_fee_status || 'UNPAID'}
+          </span>
+        </td>
+        -->`;
+
       return `
       <tr class="hover:bg-alabaster/60 transition ${isBlacklisted ? 'bg-terracotta/[0.02]' : ''}">
         <td class="py-4 px-6 flex items-center gap-3">
@@ -361,7 +629,19 @@ function renderAdminTable() {
         <td class="py-4 px-4 font-mono text-taupe">${creator.phone_number || 'N/A'}</td>
 
         <td class="py-4 px-4 font-mono font-medium text-espresso">
-          ${formatCurrency(creator.total_sales_attributed || 0)}
+          <div class="flex items-center gap-2">
+            <span>${formatCurrency(creator.total_sales_attributed || 0)}</span>
+            ${
+              isSuperAdmin
+                ? `<button
+                    type="button"
+                    onclick="openCreatorBrandBreakdownModal('${creator.id}', '${(creator.name || '').replace(/'/g, "\\'")}')"
+                    class="px-2.5 py-0.5 text-[11px] font-semibold border border-[#008CFF]/40 bg-[#008CFF]/10 hover:bg-[#008CFF] text-[#008CFF] hover:text-[#FFFFFF] rounded-md transition">
+                    Brands ↗
+                  </button>`
+                : ''
+            }
+          </div>
         </td>
 
         <td class="py-4 px-4 font-mono font-medium ${
@@ -370,16 +650,7 @@ function renderAdminTable() {
           ${isBlacklisted ? 'Blocked' : formatCurrency(creator.payable_commission || 0)}
         </td>
 
-        <td class="py-4 px-4">
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[11px] font-mono ${
-            isFeePaid
-              ? 'bg-sage/10 text-sage border border-sage/20'
-              : 'bg-terracotta/10 text-terracotta border border-terracotta/20'
-          }">
-            <span class="w-1 h-1 rounded-full ${isFeePaid ? 'bg-sage' : 'bg-terracotta'}"></span>
-            ${creator.registration_fee_status || 'UNPAID'}
-          </span>
-        </td>
+        ${regFeeCellHtml}
 
         <td class="py-4 px-4">
           ${
@@ -409,16 +680,31 @@ function renderAdminTable() {
           ${
             isBlacklisted
               ? `<span class="text-xs font-mono text-taupe">Restricted</span>`
-              : `<button 
-                    data-action="blacklist"
-                    data-id="${creator.id}"
-                    data-name="${creator.name}"
-                    class="px-2.5 py-1 text-xs border border-stonehair hover:bg-alabaster text-terracotta hover:border-terracotta rounded-sm font-mono transition">
-                    Blacklist
-                 </button>`
+              : isSuperAdmin
+                ? `<button 
+                      data-action="blacklist"
+                      data-id="${creator.id}"
+                      data-name="${creator.name}"
+                      class="px-2.5 py-1 text-xs border border-stonehair hover:bg-alabaster text-terracotta hover:border-terracotta rounded-sm font-mono transition">
+                      Blacklist
+                   </button>`
+                : `<!-- Hidden for Brand Admin (Super Admin only):
+                   <button 
+                      data-action="blacklist"
+                      data-id="${creator.id}"
+                      data-name="${creator.name}"
+                      class="px-2.5 py-1 text-xs border border-stonehair hover:bg-alabaster text-terracotta hover:border-terracotta rounded-sm font-mono transition">
+                      Blacklist
+                   </button>
+                   -->`
           }
         </td>
       </tr>
+      ${
+        isSuperAdmin
+          ? ``
+          : ''
+      }
     `;
     })
     .join('');
@@ -427,6 +713,7 @@ function renderAdminTable() {
     footInfo.textContent = `Showing ${filtered.length} of ${talentList.length} creators`;
   }
 }
+
 /**
  * Render Admin & Brand Agency Orders Stream (Role-Aware)
  */
@@ -595,110 +882,110 @@ function renderAdminUgcStream(submissions = []) {
  * Renders the Campaign Performance & Analytics cards grid (Role-Aware)
  */
 window.renderCampaignPerformanceCards = function(campaigns) {
-  const container = document.getElementById('adminCampaignCardsContainer');
-  if (!container) return;
+  // const container = document.getElementById('adminCampaignCardsContainer');
+  // if (!container) return; 
 
-  const sessionRole = localStorage.getItem('user_role');
-  const activeBrandId = localStorage.getItem('active_brand_id') || localStorage.getItem('brand_id');
+  // const sessionRole = localStorage.getItem('user_role');
+  // const activeBrandId = localStorage.getItem('active_brand_id') || localStorage.getItem('brand_id');
 
-  // Hard Isolation: If logged in as a BRAND, restrict cards strictly to this brand's ID
-  let filteredCampaigns = campaigns || [];
-  if (sessionRole === 'BRAND' && activeBrandId) {
-    filteredCampaigns = filteredCampaigns.filter(c => {
-      const brandKey = c.brand_id || c.id;
-      return String(brandKey) === String(activeBrandId);
-    });
-  }
+  // // Hard Isolation: If logged in as a BRAND, restrict cards strictly to this brand's ID
+  // let filteredCampaigns = campaigns || [];
+  // if (sessionRole === 'BRAND' && activeBrandId) {
+  //   filteredCampaigns = filteredCampaigns.filter(c => {
+  //     const brandKey = c.brand_id || c.id;
+  //     return String(brandKey) === String(activeBrandId);
+  //   });
+  // }
 
-  if (!filteredCampaigns || filteredCampaigns.length === 0) {
-    container.innerHTML = `
-      <div class="col-span-1 md:col-span-2 p-6 bg-alabaster rounded border border-stonehair/50 text-center">
-        <p class="text-xs font-mono text-taupe">No brand campaigns launched yet.</p>
-      </div>
-    `;
-    return;
-  }
+  // if (!filteredCampaigns || filteredCampaigns.length === 0) {
+  //   container.innerHTML = `
+  //     <div class="col-span-1 md:col-span-2 p-6 bg-alabaster rounded border border-stonehair/50 text-center">
+  //       <p class="text-xs font-mono text-taupe">No brand campaigns launched yet.</p>
+  //     </div>
+  //   `;
+  //   return;
+  // }
 
-  // Scoped datasets based on role
-  const allOrders = (sessionRole === 'BRAND' && state.brandOrders) 
-    ? state.brandOrders 
-    : (state.recentOrders || []);
-  const allUgc = state.ugcSubmissions || [];
+  // // Scoped datasets based on role
+  // const allOrders = (sessionRole === 'BRAND' && state.brandOrders) 
+  //   ? state.brandOrders 
+  //   : (state.recentOrders || []);
+  // const allUgc = state.ugcSubmissions || [];
 
-  container.innerHTML = filteredCampaigns.map(deal => {
-    // If it's a brand_deal record, deal.brand_id is the parent brand; otherwise deal.id
-    const brandId = deal.brand_id || deal.id;
-    const brandName = deal.name || deal.brand_name || (state.currentBrand && state.currentBrand.name) || 'Brand';
-    const campaignTitle = deal.title || `${brandName} Exclusive Collab`;
+  // container.innerHTML = filteredCampaigns.map(deal => {
+  //   // If it's a brand_deal record, deal.brand_id is the parent brand; otherwise deal.id
+  //   const brandId = deal.brand_id || deal.id;
+  //   const brandName = deal.name || deal.brand_name || (state.currentBrand && state.currentBrand.name) || 'Brand';
+  //   const campaignTitle = deal.title || `${brandName} Exclusive Collab`;
 
-    const creatorIdsForBrand = new Set([
-      ...allOrders.filter(o => o.brand_id === brandId || o.brand_name === brandName).map(o => o.influencer_id || o.influencer_name),
-      ...allUgc.filter(u => u.brand_id === brandId || u.brand_name === brandName).map(u => u.influencer_id || u.influencer_name)
-    ]);
+  //   const creatorIdsForBrand = new Set([
+  //     ...allOrders.filter(o => o.brand_id === brandId || o.brand_name === brandName).map(o => o.influencer_id || o.influencer_name),
+  //     ...allUgc.filter(u => u.brand_id === brandId || u.brand_name === brandName).map(u => u.influencer_id || u.influencer_name)
+  //   ]);
 
-    const activeCreatorsCount = creatorIdsForBrand.size > 0 ? creatorIdsForBrand.size : (deal.creators_count || 1);
-    const rosterLabel = `${activeCreatorsCount} Creator${activeCreatorsCount === 1 ? '' : 's'}`;
+  //   const activeCreatorsCount = creatorIdsForBrand.size > 0 ? creatorIdsForBrand.size : (deal.creators_count || 1);
+  //   const rosterLabel = `${activeCreatorsCount} Creator${activeCreatorsCount === 1 ? '' : 's'}`;
 
-    const ugcForBrand = allUgc.filter(u => u.brand_id === brandId || u.brand_name === brandName);
-    let participationFee = deal.participation_fee;
+  //   const ugcForBrand = allUgc.filter(u => u.brand_id === brandId || u.brand_name === brandName);
+  //   let participationFee = deal.participation_fee;
 
-    if (!participationFee && ugcForBrand.length > 0) {
-      participationFee = ugcForBrand.reduce((sum, item) => sum + Number(item.participation_fee || 0), 0) / ugcForBrand.length;
-    }
+  //   if (!participationFee && ugcForBrand.length > 0) {
+  //     participationFee = ugcForBrand.reduce((sum, item) => sum + Number(item.participation_fee || 0), 0) / ugcForBrand.length;
+  //   }
 
-    const commissionRate = deal.commission_percentage || 10;
-    const feeFormatted = typeof formatCurrency === 'function' 
-      ? formatCurrency(participationFee || 0) 
-      : `₹${participationFee || 0}`;
+  //   const commissionRate = deal.commission_percentage || 10;
+  //   const feeFormatted = typeof formatCurrency === 'function' 
+  //     ? formatCurrency(participationFee || 0) 
+  //     : `₹${participationFee || 0}`;
 
-    const isCompleted = deal.status === 'EXPIRED';
-    const statusBadge = isCompleted 
-      ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-stonehair/30 text-taupe">○ Completed</span>`
-      : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sage/10 text-sage border border-sage/20">● Active</span>`;
+  //   const isCompleted = deal.status === 'EXPIRED';
+  //   const statusBadge = isCompleted 
+  //     ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-stonehair/30 text-taupe">○ Completed</span>`
+  //     : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sage/10 text-sage border border-sage/20">● Active</span>`;
 
-    return `
-      <div class="p-4 bg-alabaster rounded border border-stonehair/60 hover:border-stonehair transition flex flex-col justify-between space-y-4">
+  //   return `
+  //     <div class="p-4 bg-alabaster rounded border border-stonehair/60 hover:border-stonehair transition flex flex-col justify-between space-y-4">
         
-        <!-- Header -->
-        <div class="flex items-start justify-between">
-          <div>
-            <span class="text-[10px] font-mono uppercase text-taupe block tracking-wider">${brandName}</span>
-            <h4 class="font-serif text-base font-medium text-espresso mt-0.5">${campaignTitle}</h4>
-          </div>
-          ${statusBadge}
-        </div>
+  //       <!-- Header -->
+  //       <div class="flex items-start justify-between">
+  //         <div>
+  //           <span class="text-[10px] font-mono uppercase text-taupe block tracking-wider">${brandName}</span>
+  //           <h4 class="font-serif text-base font-medium text-espresso mt-0.5">${campaignTitle}</h4>
+  //         </div>
+  //         ${statusBadge}
+  //       </div>
 
-        <!-- Metric Specs Strip -->
-        <div class="grid grid-cols-3 gap-2 py-2 px-3 bg-linen/60 rounded border border-stonehair/40 text-[11px] font-mono">
-          <div>
-            <span class="text-taupe block text-[9px] uppercase">COMMISSION</span>
-            <span class="text-espresso font-semibold">${commissionRate}%</span>
-          </div>
-          <div>
-            <span class="text-taupe block text-[9px] uppercase">PARTICIPATION FEE</span>
-            <span class="text-espresso font-semibold">${feeFormatted}</span>
-          </div>
-          <div>
-            <span class="text-taupe block text-[9px] uppercase">ROSTER</span>
-            <span class="text-espresso font-semibold">${rosterLabel}</span>
-          </div>
-        </div>
+  //       <!-- Metric Specs Strip -->
+  //       <div class="grid grid-cols-3 gap-2 py-2 px-3 bg-linen/60 rounded border border-stonehair/40 text-[11px] font-mono">
+  //         <div>
+  //           <span class="text-taupe block text-[9px] uppercase">COMMISSION</span>
+  //           <span class="text-espresso font-semibold">${commissionRate}%</span>
+  //         </div>
+  //         <div>
+  //           <span class="text-taupe block text-[9px] uppercase">PARTICIPATION FEE</span>
+  //           <span class="text-espresso font-semibold">${feeFormatted}</span>
+  //         </div>
+  //         <div>
+  //           <span class="text-taupe block text-[9px] uppercase">ROSTER</span>
+  //           <span class="text-espresso font-semibold">${rosterLabel}</span>
+  //         </div>
+  //       </div>
 
-        <!-- Action Strip -->
-        <div class="pt-1 flex items-center justify-between border-t border-stonehair/40">
-          <span class="text-[10px] font-mono text-taupe">Full attribution audit & ROI</span>
-          <button 
-            type="button" 
-            onclick="openCampaignAnalyticsModal('${deal.id}')"
-            class="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 border border-stonehair rounded bg-linen hover:bg-stonehair/20 text-espresso transition">
-            <span>Analytics & Leaderboard</span>
-            <span class="text-taupe">📊</span>
-          </button>
-        </div>
+  //       <!-- Action Strip -->
+  //       <div class="pt-1 flex items-center justify-between border-t border-stonehair/40">
+  //         <span class="text-[10px] font-mono text-taupe">Full attribution audit & ROI</span>
+  //         <button 
+  //           type="button" 
+  //           onclick="openCampaignAnalyticsModal('${deal.id}')"
+  //           class="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 border border-stonehair rounded bg-linen hover:bg-stonehair/20 text-espresso transition">
+  //           <span>Analytics & Leaderboard</span>
+  //           <span class="text-taupe">📊</span>
+  //         </button>
+  //       </div>
 
-      </div>
-    `;
-  }).join('');
+  //     </div>
+  //   `;
+  // }).join('');
 };
 
 // ==========================================

@@ -36,6 +36,103 @@
     };
   </script>
 
+<style>
+  /* 1. Pay Out Buttons (Gradient #01B7F9 -> #1749E8 with White text) */
+  button[data-action="disburse-payout"] {
+    background: linear-gradient(135deg, #01B7F9 0%, #1749E8 100%) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(23, 73, 232, 0.22) !important;
+  }
+  button[data-action="disburse-payout"]:hover {
+    opacity: 0.92 !important;
+    transform: translateY(-0.5px);
+  }
+
+  /* 2. "PAID" Reg. Fee Badge (Brand Blue tint + crisp #008CFF border & text) */
+  td span.bg-sage\/10 {
+    background-color: rgba(0, 140, 255, 0.10) !important;
+    color: #008CFF !important;
+    border-color: rgba(0, 140, 255, 0.35) !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+  }
+  td span.bg-sage\/10 > span.bg-sage {
+    background-color: #008CFF !important;
+  }
+
+  /* 3. "Verified" Status Badge (Dark Navy #111A2A tint + crisp border & text) */
+  td span.bg-alabaster.border-stonehair {
+    background-color: rgba(17, 26, 42, 0.06) !important;
+    color: #111A2A !important;
+    border-color: rgba(17, 26, 42, 0.22) !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+  }
+
+  /* 4. "UNPAID" & "Blacklisted" Badges + Blacklist Button (Clean Coral-Red) */
+  td span.bg-terracotta\/10 {
+    background-color: rgba(220, 38, 38, 0.08) !important;
+    color: #DC2626 !important;
+    border-color: rgba(220, 38, 38, 0.28) !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+  }
+  td span.bg-terracotta\/10 > span.bg-terracotta {
+    background-color: #DC2626 !important;
+  }
+  button[data-action="blacklist"] {
+    background-color: #FFFFFF !important;
+    color: #DC2626 !important;
+    border-color: rgba(220, 38, 38, 0.35) !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+  }
+  button[data-action="blacklist"]:hover {
+    background-color: #DC2626 !important;
+    color: #FFFFFF !important;
+  }
+
+  /* 5. Refund Button in Recent Orders Table (Clean Dark Navy / Coral-Red Hover) */
+  button[data-action*="refund"],
+  td button.border-stonehair:not([data-action="blacklist"]) {
+    background-color: #FFFFFF !important;
+    color: #111A2A !important;
+    border: 1px solid rgba(17, 26, 42, 0.25) !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease !important;
+  }
+  button[data-action*="refund"]:hover,
+  td button.border-stonehair:not([data-action="blacklist"]):hover {
+    background-color: #DC2626 !important;
+    color: #FFFFFF !important;
+    border-color: #DC2626 !important;
+  }
+</style>
+
+  <style>
+  /* Enforce consistent typography across static HTML & dynamic app.js table rows */
+    body, table, td, th, input, select, button {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+    .font-serif {
+    font-family: 'Newsreader', serif !important;
+  }
+    .font-mono, td.font-mono, span.font-mono {
+    font-family: 'Space Mono', monospace !important;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Override font-mono inside tables & metric cards so numbers/emails use Plus Jakarta Sans cleanly */
+  table .font-mono,
+  .font-mono {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
   <style>
     .spotlight-card {
       background-color: #F4F0E8;
@@ -62,7 +159,7 @@
       background: #E6E0D5;
       border-radius: 9999px;
     }
-    /* ================= GYC ARCHITECTURAL SPLIT-CURTAIN LOADER (ALL PANELS) ================= */
+    /* ================= GYC ARCHITECTURAL SPLIT-CURTAIN LOADER (ALL PANELS) =================
     .gyc-curtain-left,
     .gyc-curtain-right {
       transition: transform 0.95s cubic-bezier(0.76, 0, 0.24, 1);
@@ -130,7 +227,7 @@
         linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
       animation: subtleGridPulse 3s ease-in-out infinite;
-    }
+    } */
 
     /* ================= CREATOR STUDIO CARD MICRO-INTERACTIONS ================= */
     @keyframes contentLift {
@@ -356,7 +453,6 @@
   }
 </script>
 
-
 </head>
 <body class="bg-[#F8FAFC] text-[#111A2A] font-sans antialiased min-h-screen flex flex-col selection:bg-[#008CFF] selection:text-white">
 
@@ -365,13 +461,18 @@
     
     <!-- Brand Identity -->
     <div class="flex items-center gap-3.5">
-      <div class="w-9 h-9 rounded-xl bg-[#111A2A] flex items-center justify-center font-extrabold text-xs tracking-tight shadow-md shadow-[#111A2A]/15">
+      <!-- <div class="w-9 h-9 rounded-xl bg-[#111A2A] flex items-center justify-center font-extrabold text-xs tracking-tight shadow-md shadow-[#111A2A]/15">
         <span class="bg-gradient-to-r from-[#01B7F9] to-[#008CFF] bg-clip-text text-transparent">GYC</span>
-      </div>
-      <div class="flex items-center flex-wrap">
+      </div> -->
+      <img 
+        src="/logo.png" 
+        alt="Get You Collab Logo" 
+        class="h-9 w-auto object-contain rounded-xl"
+      />
+       <div class="flex items-center flex-wrap">
         <span class="font-extrabold text-base text-[#111A2A] tracking-tight">Get You Collab</span>
-        <span class="mx-2.5 text-[#111A2A]/20 font-light">/</span>
-        <span id="headerSubTitle" class="text-[11px] uppercase font-bold tracking-[0.18em] text-[#008CFF]">Executive Suite</span>
+        <!-- <span class="mx-2.5 text-[#111A2A]/20 font-light">/</span>
+        <span id="headerSubTitle" class="text-[11px] uppercase font-bold tracking-[0.18em] text-[#008CFF]">Executive Suite</span> -->
       </div>
     </div>
 
@@ -447,7 +548,7 @@
               <span class="text-[#01B7F9]">↻</span> Sync Roster
             </button>
             <button onclick="openCampaignModal()" class="px-4 py-2.5 bg-white hover:bg-white/90 text-[#111A2A] text-xs font-extrabold tracking-wide transition rounded-xl flex items-center gap-1.5 shadow-md cursor-pointer">
-              <span class="text-[#008CFF]">+</span> Launch Brand Deal
+              <span class="text-[#008CFF]">+</span> Launch Campaign
             </button>
             <button onclick="openOrderModal()" class="px-4 py-2.5 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white text-xs font-bold tracking-wide transition rounded-xl shadow-lg shadow-[#008CFF]/30 cursor-pointer">
               + Ingest Order
@@ -561,7 +662,7 @@
       </section>
 
       <!-- 4. Campaign Performance & Analytics (Overview & Leaderboards) -->
-      <section class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
+      <!---section class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#008CFF]">Campaign Telemetry</span>
@@ -573,17 +674,17 @@
           </span>
         </div>
 
-        <!-- Campaign Cards Dynamic Grid -->
-        <div class="p-5 md:p-6 bg-[#F8FAFC]/50">
+        <--- Campaign Cards Dynamic Grid -->
+        <!---div class="p-5 md:p-6 bg-[#F8FAFC]/50">
           <div id="adminCampaignCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="p-6 bg-white rounded-2xl border border-[#111A2A]/10 text-center col-span-1 md:col-span-2">
               <span class="text-xs font-medium text-[#111A2A]/40">Loading active and completed campaigns...</span>
             </div>
           </div>
         </div>
-      </section>
+      </---section>
 
-      <!-- 5. Agency Order & Fulfillment Stream + UGC Review Stream -->
+      <-- 5. Agency Order & Fulfillment Stream + UGC Review Stream -->
       <section class="space-y-8">
         <!-- Order Fulfillment Card -->
         <div class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
@@ -726,21 +827,21 @@
   <!-- ========================================================================= -->
   <!-- ARCHITECTURAL SPLIT-CURTAIN & SVG VECTOR LOADER                           -->
   <!-- ========================================================================= -->
-  <div id="gycAuthLoader" class="hidden fixed inset-0 z-[100] items-center justify-center pointer-events-auto select-none">
+  <!-- <div id="gycAuthLoader" class="hidden fixed inset-0 z-[100] items-center justify-center pointer-events-auto select-none">
     
-    <!-- Left Architectural Navy Curtain -->
+    Left Architectural Navy Curtain
     <div class="gyc-curtain-left fixed inset-y-0 left-0 w-1/2 bg-[#111A2A] border-r border-white/[0.06] overflow-hidden">
       <div class="absolute inset-0 bg-studio-grid"></div>
       <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#01B7F9]/15 blur-[110px]"></div>
     </div>
 
-    <!-- Right Architectural Navy Curtain -->
+    Right Architectural Navy Curtain
     <div class="gyc-curtain-right fixed inset-y-0 right-0 w-1/2 bg-[#111A2A] overflow-hidden">
       <div class="absolute inset-0 bg-studio-grid"></div>
       <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#1749E8]/20 blur-[110px]"></div>
     </div>
 
-    <!-- Center Vector Monogram Stage -->
+    Center Vector Monogram Stage
     <div id="gycCenterStage" class="gyc-center-stage relative z-20 flex flex-col items-center">
       <svg class="w-56 sm:w-64 h-24 overflow-visible" viewBox="0 0 270 90">
         <defs>
@@ -751,7 +852,7 @@
           </linearGradient>
         </defs>
 
-        <!-- Geometric G -->
+        Geometric G
         <path class="gyc-svg-letter"
           d="M 68 26 C 62 17, 52 13, 41 13 C 22 13, 10 27, 10 45 C 10 63, 22 77, 42 77 C 59 77, 70 66, 70 49 L 70 43 L 42 43 L 42 54 L 57 54 C 55 61, 49 65, 42 65 C 29 65, 23 56, 23 45 C 23 34, 29 25, 42 25 C 49 25, 54 28, 57 33 Z"
           fill="#FFFFFF"
@@ -760,7 +861,7 @@
           stroke-linejoin="round"
         />
 
-        <!-- Geometric Y -->
+        Geometric Y
         <path class="gyc-svg-letter gyc-svg-letter-2"
           d="M 102 15 L 124 51 L 124 75 L 138 75 L 138 51 L 160 15 L 145 15 L 131 39 L 117 15 Z"
           fill="#FFFFFF"
@@ -769,7 +870,7 @@
           stroke-linejoin="round"
         />
 
-        <!-- Geometric C -->
+        Geometric C
         <path class="gyc-svg-letter gyc-svg-letter-3"
           d="M 248 27 C 242 18, 232 13, 220 13 C 201 13, 188 27, 188 45 C 188 63, 201 77, 220 77 C 232 77, 242 72, 248 63 L 237 56 C 233 62, 227 65, 220 65 C 208 65, 201 56, 201 45 C 201 34, 208 25, 220 25 C 227 25, 233 28, 237 34 Z"
           fill="#FFFFFF"
@@ -779,19 +880,19 @@
         />
       </svg>
 
-      <!-- Precision Track Bar -->
+      Precision Track Bar
       <div class="w-44 h-[2px] bg-white/10 rounded-full overflow-hidden mt-3">
         <div class="gyc-loader-track w-full h-full bg-gradient-to-r from-[#01B7F9] via-[#008CFF] to-[#1749E8]"></div>
       </div>
 
-      <!-- Expanded Studio Wordmark -->
+      Expanded Studio Wordmark
       <p id="gycLoaderSubtitle" class="gyc-wordmark text-[10px] sm:text-[11px] font-bold uppercase text-white/80 mt-4 pl-[0.38em]">
         Get You Collab
       </p>
     </div>
-  </div>
+  </div> 
 
-  <!-- ========================================================================= -->
+  <-- ========================================================================= -->
   <!-- 2. CREATOR / USER PORTAL VIEW (GET YOU COLLAB STUDIO UI)                  -->
   <!-- ========================================================================= -->
   <main id="creatorView" class="hidden flex-1 w-full bg-gradient-to-b from-[#F8FAFC] via-white to-[#F1F5F9] text-[#111A2A]">
