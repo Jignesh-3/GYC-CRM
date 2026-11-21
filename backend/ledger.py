@@ -317,9 +317,8 @@ async def review_ugc_deliverable(
 ) -> Dict[str, Any]:
     """
     Admin approval/revision workflow for UGC drafts.
-    When APPROVED:
-    - Sets review_status = 'APPROVED'
-    - Automatically credits the campaign's participation_fee to the creator's ledger as PAYABLE.
+    Sets review_status ('APPROVED', 'REVISION_REQUESTED', or 'REJECTED') and logs the audit trail.
+    Campaign participation fees are collected separately via QR and do not alter commission_ledger.
     """
     valid_statuses = {"APPROVED", "REVISION_REQUESTED", "REJECTED"}
     if review_status not in valid_statuses:
@@ -355,21 +354,7 @@ async def review_ugc_deliverable(
             (review_status, admin_feedback, ugc_id)
         )
 
-        # 2. If APPROVED and has a participation fee, credit it to commission_ledger as PAYABLE
-        payout_ledger_id = None
-        if review_status == "APPROVED" and old_status != "APPROVED" and participation_fee > Decimal("0.00"):
-            payout_ledger_id = str(uuid.uuid4())
-            await cursor.execute(
-                """
-                INSERT INTO commission_ledger (
-                    id, order_id, influencer_id, commission_rate, commission_amount, 
-                    commission_status
-                ) VALUES (%s, NULL, %s, 100.00, %s, 'PAYABLE');
-                """,
-                (payout_ledger_id, ugc["influencer_id"], participation_fee)
-            )
-
-        # 3. Create Audit Trail Entry
+        # 2. Create Audit Trail Entry (no commission_ledger modification)
         audit_id = str(uuid.uuid4())
         metadata = json.dumps({
             "ugc_id": ugc_id,
@@ -377,8 +362,7 @@ async def review_ugc_deliverable(
             "old_status": old_status,
             "new_status": review_status,
             "admin_feedback": admin_feedback,
-            "participation_fee_credited": float(participation_fee) if review_status == "APPROVED" else 0.00,
-            "ledger_id": payout_ledger_id
+            "participation_fee": float(participation_fee)
         })
         await cursor.execute(
             """
@@ -394,7 +378,7 @@ async def review_ugc_deliverable(
         "ugc_id": ugc_id,
         "old_status": old_status,
         "review_status": review_status,
-        "fee_credited": float(participation_fee) if review_status == "APPROVED" else 0.00
+        "participation_fee": float(participation_fee)
     }
 
 async def execute_batch_payout(

@@ -1223,6 +1223,154 @@ function ensureCampaignPitchesModal() {
   document.body.appendChild(modal);
   return modal;
 }
+function ensureUgcRevisionModal() {
+  let modal = document.getElementById('ugcRevisionModal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'ugcRevisionModal';
+  modal.className = 'fixed inset-0 z-[60] hidden items-center justify-center bg-[#111A2A]/75 backdrop-blur-sm p-4';
+  modal.innerHTML = `
+    <div class="bg-[#FFFFFF] border border-[#008CFF]/25 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+      <!-- Gradient Header -->
+      <div class="px-6 py-4 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] text-[#FFFFFF] flex items-center justify-between">
+        <div>
+          <p class="text-[10px] font-mono uppercase tracking-widest text-[#FFFFFF]/85">Editorial Feedback</p>
+          <h3 class="text-lg font-extrabold text-[#FFFFFF] mt-0.5">Request UGC Revision</h3>
+        </div>
+        <button
+          type="button"
+          id="ugcRevisionCloseBtn"
+          class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111A2A]/25 hover:bg-[#111A2A]/45 text-[#FFFFFF] transition cursor-pointer"
+          aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <form id="ugcRevisionForm" class="p-6 space-y-4 bg-[#FFFFFF] text-[#111A2A]">
+        <div>
+          <label for="ugcRevisionFeedbackInput" class="block text-xs font-bold text-[#111A2A] mb-1.5">
+            What should the creator update?
+          </label>
+          <textarea
+            id="ugcRevisionFeedbackInput"
+            rows="4"
+            required
+            placeholder="e.g., Brighten the lighting in the opening 3 seconds, mention the discount code clearly, or trim the outro..."
+            class="w-full rounded-xl border border-[#111A2A]/15 bg-[#F8FAFC] px-3.5 py-2.5 text-xs font-medium text-[#111A2A] placeholder:text-[#111A2A]/40 focus:bg-[#FFFFFF] focus:border-[#008CFF] focus:outline-none focus:ring-2 focus:ring-[#008CFF]/20 transition resize-none"></textarea>
+        </div>
+
+        <!-- Quick Feedback Chips -->
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" data-chip="Improve video lighting & audio clarity." class="ugc-rev-chip px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#F1F5F9] hover:bg-[#008CFF]/10 hover:text-[#008CFF] text-[#111A2A]/75 border border-[#111A2A]/10 transition cursor-pointer">
+            + Lighting / Audio
+          </button>
+          <button type="button" data-chip="Highlight the brand CTA & link in the first 5 seconds." class="ugc-rev-chip px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#F1F5F9] hover:bg-[#008CFF]/10 hover:text-[#008CFF] text-[#111A2A]/75 border border-[#111A2A]/10 transition cursor-pointer">
+            + Stronger Hook / CTA
+          </button>
+          <button type="button" data-chip="Update caption copy to match campaign guidelines." class="ugc-rev-chip px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#F1F5F9] hover:bg-[#008CFF]/10 hover:text-[#008CFF] text-[#111A2A]/75 border border-[#111A2A]/10 transition cursor-pointer">
+            + Caption Copy
+          </button>
+        </div>
+
+        <!-- Actions -->
+        <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-[#111A2A]/10">
+          <button
+            type="button"
+            id="ugcRevisionCancelBtn"
+            class="px-4 py-2 rounded-xl text-xs font-bold bg-[#F8FAFC] hover:bg-[#111A2A]/10 text-[#111A2A]/75 border border-[#111A2A]/15 transition cursor-pointer">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-[#FFFFFF] shadow-md transition cursor-pointer">
+            Send Revision Note ↗
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function promptUgcRevisionModal(existingNote = '', options = {}) {
+  return new Promise((resolve) => {
+    const modal = ensureUgcRevisionModal();
+    const form = document.getElementById('ugcRevisionForm');
+    const textarea = document.getElementById('ugcRevisionFeedbackInput');
+    const cancelBtn = document.getElementById('ugcRevisionCancelBtn');
+    const closeBtn = document.getElementById('ugcRevisionCloseBtn');
+
+    // Customize header & button text for Revision vs Rejection
+    const subtitleEl = modal.querySelector('p');
+    const titleEl = modal.querySelector('h3');
+    const labelEl = modal.querySelector('label[for="ugcRevisionFeedbackInput"]');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const chipsContainer = modal.querySelector('.ugc-rev-chip')?.parentElement;
+
+    if (subtitleEl) subtitleEl.textContent = options.subtitle || 'Editorial Feedback';
+    if (titleEl) titleEl.textContent = options.title || 'Request UGC Revision';
+    if (labelEl) labelEl.textContent = options.label || 'What should the creator update?';
+    if (submitBtn) submitBtn.textContent = options.submitLabel || 'Send Revision Note ↗';
+    textarea.placeholder =
+      options.placeholder ||
+      'e.g., Brighten the lighting in the opening 3 seconds, mention the discount code clearly, or trim the outro...';
+    if (chipsContainer) {
+      chipsContainer.style.display = options.showChips === false ? 'none' : 'flex';
+    }
+
+    textarea.value = existingNote || '';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => textarea.focus(), 40);
+
+    const cleanup = (result) => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      form.removeEventListener('submit', onSubmit);
+      cancelBtn.removeEventListener('click', onCancel);
+      closeBtn.removeEventListener('click', onCancel);
+      modal.removeEventListener('click', onBackdropClick);
+      textarea.removeEventListener('keydown', onKeyDown);
+      resolve(result);
+    };
+
+    const onSubmit = (e) => {
+      e.preventDefault();
+      const note = textarea.value.trim();
+      if (!note) return;
+      cleanup(note);
+    };
+
+    const onCancel = () => cleanup(null);
+    const onBackdropClick = (e) => {
+      if (e.target === modal) cleanup(null);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') cleanup(null);
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') onSubmit(e);
+    };
+
+    modal.querySelectorAll('.ugc-rev-chip').forEach((chip) => {
+      chip.onclick = () => {
+        const text = chip.getAttribute('data-chip');
+        textarea.value = textarea.value.trim()
+          ? `${textarea.value.trim()} ${text}`
+          : text;
+        textarea.focus();
+      };
+    });
+
+    form.addEventListener('submit', onSubmit);
+    cancelBtn.addEventListener('click', onCancel);
+    closeBtn.addEventListener('click', onCancel);
+    modal.addEventListener('click', onBackdropClick);
+    textarea.addEventListener('keydown', onKeyDown);
+  });
+}
 
 window.closeCampaignPitchesModal = function() {
   const modal = document.getElementById('campaignPitchesModal');
@@ -1318,7 +1466,7 @@ window.openCampaignPitchesModal = function(groupKey) {
                       data-action="ugc-approve" 
                       data-ugc-id="${s.id}" 
                       class="px-3 py-1.5 text-[11px] bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white rounded-lg font-bold shadow-sm transition cursor-pointer">
-                      Approve (Credit Fee)
+                      "Approve Deliverable"
                     </button>
                     <button 
                       data-action="ugc-revision" 
@@ -2484,10 +2632,17 @@ async function submitUgcForm(e) {
 async function reviewUgc(ugcId, status) {
   let feedback = null;
   if (status === 'REVISION_REQUESTED') {
-    feedback = prompt('Enter editorial revision feedback for the creator:');
+    feedback = await promptUgcRevisionModal();
     if (!feedback) return;
   } else if (status === 'REJECTED') {
-    feedback = prompt('Enter rejection reason:');
+    feedback = await promptUgcRevisionModal('', {
+      subtitle: 'Submission Decision',
+      title: 'Reject UGC Deliverable',
+      label: 'Reason for rejecting this submission:',
+      placeholder: 'e.g., Video does not follow campaign brief or product guidelines...',
+      submitLabel: 'Confirm Rejection',
+      showChips: false,
+    });
     if (!feedback) return;
   }
 
