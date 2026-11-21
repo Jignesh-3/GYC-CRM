@@ -550,8 +550,13 @@
             <button onclick="openCampaignModal()" class="px-4 py-2.5 bg-white hover:bg-white/90 text-[#111A2A] text-xs font-extrabold tracking-wide transition rounded-xl flex items-center gap-1.5 shadow-md cursor-pointer">
               <span class="text-[#008CFF]">+</span> Launch Campaign
             </button>
+            <!-- Removed Ingest Order button:
             <button onclick="openOrderModal()" class="px-4 py-2.5 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white text-xs font-bold tracking-wide transition rounded-xl shadow-lg shadow-[#008CFF]/30 cursor-pointer">
               + Ingest Order
+            </button>
+            -->
+            <button id="superAdminAddBrandHeroBtn" type="button" onclick="openAddBrandModal()" class="hidden px-4 py-2.5 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white text-xs font-bold tracking-wide transition rounded-xl shadow-lg shadow-[#008CFF]/30 cursor-pointer">
+              + Add Brand
             </button>
           </div>
         </div>
@@ -660,6 +665,39 @@
           <span class="text-[11px] font-bold text-[#008CFF]">Direct MySQL Attribution Query</span>
         </div>
       </section>
+      <!-- Super Admin Only: Partner Brands & Creator Roster Section -->
+<section id="superAdminBrandsSection" class="hidden bg-[#FFFFFF] border border-[#111A2A]/10 rounded-xl shadow-sm overflow-hidden mb-8">
+  <div class="px-6 py-4 border-b border-[#111A2A]/10 flex flex-wrap items-center justify-between gap-3 bg-[#111A2A]/[0.02]">
+    <div>
+      <p class="text-[11px] font-mono uppercase tracking-wider text-[#008CFF] font-bold">Partner Roster</p>
+      <h2 class="text-lg font-bold text-[#111A2A]">Brands &amp; Active Creators</h2>
+    </div>
+    <span id="superAdminBrandCountBadge" class="px-3 py-1 rounded-md text-xs font-mono font-semibold bg-[#008CFF]/10 text-[#008CFF] border border-[#008CFF]/30">
+      0 Brands
+    </span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse text-sm">
+      <thead>
+        <tr class="bg-[#111A2A] text-[#FFFFFF] text-[11px] font-mono uppercase tracking-wider">
+          <th class="py-3.5 px-6 font-semibold">Brand</th>
+          <th class="py-3.5 px-4 font-semibold text-center">Creators Working</th>
+          <th class="py-3.5 px-4 font-semibold text-right">Attributed Orders</th>
+          <th class="py-3.5 px-4 font-semibold text-right">Total Sales (GMV)</th>
+          <th class="py-3.5 px-6 font-semibold text-right">Total Commission</th>
+        </tr>
+      </thead>
+      <tbody id="superAdminBrandsTableBody" class="divide-y divide-[#111A2A]/10 bg-[#FFFFFF]">
+        <tr>
+          <td colspan="5" class="py-6 px-6 text-center text-xs font-mono text-[#111A2A]/50">
+            Loading partner brands...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
       <!-- 4. Campaign Performance & Analytics (Overview & Leaderboards) -->
       <!---section class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
@@ -722,9 +760,9 @@
         <div class="bg-white border border-[#111A2A]/10 rounded-2xl p-6 shadow-sm">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
             <div>
-              <h3 class="text-lg font-extrabold text-[#111A2A]">UGC Deliverable & Content Review Stream</h3>
+              <h3 class="text-lg font-extrabold text-[#111A2A]">UGC Deliverable &amp; Content Review Stream</h3>
               <p class="text-xs text-[#111A2A]/60 mt-0.5">
-                Review video draft submissions. Approving a submission automatically unlocks and credits the campaign participation fee.
+                Organized brand-by-brand. Open a campaign's pitches to review creator deliverables and credit participation fees.
               </p>
             </div>
             <button 
@@ -738,17 +776,14 @@
             <table class="w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="bg-[#F8FAFC] border-y border-[#111A2A]/10 text-[#111A2A]/50 font-bold uppercase tracking-wider text-[10px]">
-                  <th class="py-3.5 px-4">Campaign & Brand</th>
-                  <th class="py-3.5 px-4">Creator</th>
-                  <th class="py-3.5 px-4">Deliverable Preview</th>
-                  <th class="py-3.5 px-4">Fee Value</th>
-                  <th class="py-3.5 px-4">Review Status</th>
-                  <th class="py-3.5 px-6 text-right">Editorial Action</th>
+                  <th class="py-3.5 px-6">Brand</th>
+                  <th class="py-3.5 px-4">Campaign</th>
+                  <th class="py-3.5 px-6 text-right">Pitches</th>
                 </tr>
               </thead>
               <tbody id="adminUgcTableBody" class="divide-y divide-[#111A2A]/10 font-medium">
                 <tr>
-                  <td colspan="6" class="py-6 text-center text-[#111A2A]/40">
+                  <td colspan="3" class="py-6 text-center text-[#111A2A]/40">
                     Loading UGC submissions...
                   </td>
                 </tr>
@@ -1148,7 +1183,7 @@
                 <tr class="bg-[#F8FAFC] border-y border-[#111A2A]/10 text-[#111A2A]/50 font-bold uppercase tracking-wider text-[10px]">
                   <th class="py-3 px-4">Campaign</th>
                   <th class="py-3 px-4">Deliverable Link</th>
-                  <th class="py-3 px-4">Fee Credit</th>
+                  <th class="py-3 px-4">REG FEES</th>
                   <th class="py-3 px-4">Status</th>
                   <th class="py-3 px-4">Feedback / Notes</th>
                 </tr>

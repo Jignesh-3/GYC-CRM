@@ -188,3 +188,8 @@ class LoginResponse(BaseModel):
     brand_id: Optional[str] = None
     influencer_id: Optional[str] = None
     redirect_url: str
+
+# --- Create/Add Brands ---
+class BrandCreateRequest(BaseModel):
+    name: str
+    website_url: str | None = None

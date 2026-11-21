@@ -35,7 +35,8 @@ from backend.schemas import (
     BatchDisbursementRequest,
     LoginRequest,
     LoginResponse,
-    CreatorDossierUpdate
+    CreatorDossierUpdate,
+    BrandCreateRequest
 )
 
 
@@ -94,6 +95,32 @@ async def list_brands():
         await cursor.execute("SELECT id, name, website_url FROM brands ORDER BY name ASC;")
         rows = await cursor.fetchall()
     return rows
+
+# --- Brands Creation Endpoint ---
+@app.post("/api/v1/admin/brands", tags=["Admin Operations"])
+async def create_admin_brand(payload: BrandCreateRequest):
+    """Creates a new partner brand in the brands table."""
+    clean_name = (payload.name or "").strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Brand name is required.")
+
+    clean_website = (payload.website_url or "").strip() or None
+    new_brand_id = str(uuid.uuid4())
+
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            """
+            INSERT INTO brands (id, name, website_url)
+            VALUES (%s, %s, %s);
+            """,
+            (new_brand_id, clean_name, clean_website),
+        )
+
+    return {
+        "id": new_brand_id,
+        "name": clean_name,
+        "website_url": clean_website,
+    }
 
 
 # --- 2. Dashboard KPI Summary ---
@@ -216,22 +243,22 @@ async def blacklist_influencer(
 
 
 # --- 4. Order Ingestion & Commission Lifecycles ---
-@app.post("/api/v1/orders/ingest", status_code=status.HTTP_201_CREATED, tags=["Orders"])
-async def ingest_incoming_order(order_data: OrderIngestRequest):
-    """Direct webhook endpoint to record orders and generate initial pending commissions."""
-    try:
-        result = await record_new_order_and_commission(
-            order_reference=order_data.order_reference,
-            brand_id=order_data.brand_id,
-            influencer_id=order_data.influencer_id,
-            order_amount=order_data.order_amount,
-            commission_percentage=order_data.commission_percentage,
-            ugc_video_id=order_data.ugc_video_id,
-            customer_phone=order_data.customer_phone
-        )
-        return result
-    except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+# @app.post("/api/v1/orders/ingest", status_code=status.HTTP_201_CREATED, tags=["Orders"])
+# async def ingest_incoming_order(order_data: OrderIngestRequest):
+#     """Direct webhook endpoint to record orders and generate initial pending commissions."""
+#     try:
+#         result = await record_new_order_and_commission(
+#             order_reference=order_data.order_reference,
+#             brand_id=order_data.brand_id,
+#             influencer_id=order_data.influencer_id,
+#             order_amount=order_data.order_amount,
+#             commission_percentage=order_data.commission_percentage,
+#             ugc_video_id=order_data.ugc_video_id,
+#             customer_phone=order_data.customer_phone
+#         )
+#         return result
+#     except Exception as exc:
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
 @app.patch("/api/v1/orders/{order_id}/status", tags=["Orders"])
@@ -327,6 +354,74 @@ async def get_creator_brand_breakdown(influencer_id: str):
             for row in rows
         ]
 
+@app.get("/api/v1/admin/brands/summary", tags=["Admin Operations"])
+async def get_admin_brands_summary():
+    """Returns all brands with active creator count, total orders, attributed GMV, and commission totals for Super Admin."""
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            """
+            SELECT 
+                b.id AS brand_id,
+                b.name AS brand_name,
+                COUNT(DISTINCT o.influencer_id) AS active_creators,
+                COUNT(DISTINCT o.id) AS total_orders,
+                COALESCE(SUM(o.order_amount), 0) AS attributed_gmv,
+                COALESCE(SUM(cl.commission_amount), 0) AS total_commission
+            FROM brands b
+            LEFT JOIN orders o ON b.id = o.brand_id
+            LEFT JOIN commission_ledger cl ON o.id = cl.order_id
+            GROUP BY b.id, b.name
+            ORDER BY active_creators DESC, attributed_gmv DESC, b.name ASC;
+            """
+        )
+        rows = await cursor.fetchall()
+        return [
+            {
+                "brand_id": row["brand_id"],
+                "brand_name": row["brand_name"],
+                "active_creators": int(row["active_creators"] or 0),
+                "total_orders": int(row["total_orders"] or 0),
+                "attributed_gmv": float(row["attributed_gmv"] or 0),
+                "total_commission": float(row["total_commission"] or 0),
+            }
+            for row in rows
+        ]
+
+@app.get("/api/v1/admin/brands/{brand_id}/creators", tags=["Admin Operations"])
+async def get_brand_creators_breakdown(brand_id: str):
+    """Returns all creators who have generated attributed orders for a specific brand."""
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            """
+            SELECT 
+                i.id AS influencer_id,
+                i.name AS creator_name,
+                i.email AS creator_email,
+                COUNT(DISTINCT o.id) AS total_orders,
+                COALESCE(SUM(o.order_amount), 0) AS attributed_gmv,
+                COALESCE(SUM(cl.commission_amount), 0) AS payable_commission
+            FROM orders o
+            JOIN influencers i ON o.influencer_id = i.id
+            LEFT JOIN commission_ledger cl ON o.id = cl.order_id
+            WHERE o.brand_id = %s
+            GROUP BY i.id, i.name, i.email
+            ORDER BY attributed_gmv DESC, i.name ASC;
+            """,
+            (brand_id,),
+        )
+        rows = await cursor.fetchall()
+        return [
+            {
+                "influencer_id": row["influencer_id"],
+                "creator_name": row["creator_name"],
+                "creator_email": row["creator_email"],
+                "total_orders": int(row["total_orders"] or 0),
+                "attributed_gmv": float(row["attributed_gmv"] or 0),
+                "payable_commission": float(row["payable_commission"] or 0),
+            }
+            for row in rows
+        ]
+
 
 # --- 5. Creator Portal Endpoints ---
 @app.patch("/api/v1/creators/{influencer_id}/dossier", tags=["Creator Portal"])
@@ -416,10 +511,10 @@ async def get_creator_dashboard(influencer_id: str):
         )
         earnings = await cursor.fetchone()
 
-        # 3. Partner brands & active deals strictly associated with this creator's deliverables
+        # 3. All active partner brands & campaigns available for creators to pitch/participate in
         await cursor.execute(
             """
-            SELECT DISTINCT
+            SELECT
                 bd.id AS id,
                 bd.id AS campaign_id,
                 b.id AS brand_id, 
@@ -431,11 +526,9 @@ async def get_creator_dashboard(influencer_id: str):
                 COALESCE(bd.status, 'ACTIVE') AS status
             FROM brands b
             JOIN brand_deals bd ON b.id = bd.brand_id
-            JOIN ugc_videos uv ON bd.id = uv.brand_deal_id
-            WHERE uv.influencer_id = %s
-            ORDER BY b.name ASC;
-            """,
-            (influencer_id,)
+            WHERE COALESCE(bd.status, 'ACTIVE') = 'ACTIVE'
+            ORDER BY b.name ASC, bd.title ASC;
+            """
         )
         campaigns = await cursor.fetchall()
 
@@ -663,7 +756,9 @@ async def review_ugc(
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(ve))
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
 
 
 # --- 6. Admin Campaign Creation Endpoint ---

@@ -524,6 +524,244 @@ function renderBrandBreakdownModalContent(container, brands) {
   `;
 }
 
+async function loadAndRenderSuperAdminBrands(isSuperAdmin) {
+  const sectionEl = document.getElementById('superAdminBrandsSection');
+  const heroAddBrandBtn = document.getElementById('superAdminAddBrandHeroBtn');
+  if (heroAddBrandBtn) heroAddBrandBtn.classList.toggle('hidden', !isSuperAdmin);
+  const tbodyEl = document.getElementById('superAdminBrandsTableBody');
+  const badgeEl = document.getElementById('superAdminBrandCountBadge');
+  if (!sectionEl || !tbodyEl) return;
+
+  // Strictly gate to Super Admin only
+  if (!isSuperAdmin) {
+    sectionEl.classList.add('hidden');
+    return;
+  }
+
+  sectionEl.classList.remove('hidden');
+
+  try {
+    const res = await fetch('/api/v1/admin/brands/summary');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const brands = await res.json();
+
+    if (badgeEl) {
+      badgeEl.textContent = `${brands.length} ${brands.length === 1 ? 'Brand' : 'Brands'}`;
+    }
+
+    if (!brands.length) {
+      tbodyEl.innerHTML = `
+        <tr>
+          <td colspan="5" class="py-6 px-6 text-center text-xs font-mono text-[#111A2A]/50">
+            No brands onboarded yet.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tbodyEl.innerHTML = brands
+      .map((b) => {
+        const initials = (b.brand_name || 'BR')
+          .split(' ')
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+
+        return `
+          <tr class="hover:bg-[#008CFF]/[0.04] transition">
+            <td class="py-4 px-6">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#01B7F9] to-[#1749E8] text-[#FFFFFF] flex items-center justify-center font-bold text-xs shadow-xs">
+                  ${initials}
+                </div>
+                <div class="font-semibold text-[#111A2A]">${b.brand_name}</div>
+              </div>
+            </td>
+
+            <td class="py-4 px-4 text-center">
+              <button
+                type="button"
+                onclick="openBrandCreatorsModal('${b.brand_id}', '${(b.brand_name || '').replace(/'/g, "\\'")}')"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold transition ${
+                  b.active_creators > 0
+                    ? 'bg-[#008CFF]/10 hover:bg-[#008CFF] text-[#008CFF] hover:text-[#FFFFFF] border border-[#008CFF]/35 cursor-pointer'
+                    : 'bg-[#111A2A]/5 text-[#111A2A]/50 border border-[#111A2A]/15 cursor-pointer hover:bg-[#111A2A]/10'
+                }">
+                ${b.active_creators} ${b.active_creators === 1 ? 'Creator' : 'Creators'} ↗
+              </button>
+            </td>
+
+            <td class="py-4 px-4 text-right font-mono text-[#111A2A]/75">
+              ${b.total_orders}
+            </td>
+
+            <td class="py-4 px-4 text-right font-mono font-semibold text-[#111A2A]">
+              ${formatCurrency(b.attributed_gmv)}
+            </td>
+
+            <td class="py-4 px-6 text-right font-mono font-semibold text-[#1749E8]">
+              ${formatCurrency(b.total_commission)}
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+  } catch (err) {
+    console.error('[SuperAdminBrands] Failed to load:', err);
+    tbodyEl.innerHTML = `
+      <tr>
+        <td colspan="5" class="py-6 px-6 text-center text-xs font-mono text-red-600">
+          Could not load brands overview.
+        </td>
+      </tr>`;
+  }
+}
+
+function ensureAddBrandModal() {
+  let modal = document.getElementById('addBrandModal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'addBrandModal';
+  modal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-[#111A2A]/70 backdrop-blur-xs p-4';
+  modal.innerHTML = `
+    <div class="bg-[#FFFFFF] border border-[#008CFF]/20 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] text-[#FFFFFF] flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-mono uppercase tracking-wider text-[#FFFFFF]/80">Partner Onboarding</p>
+          <h3 class="text-lg font-bold text-[#FFFFFF] mt-0.5">Add New Brand</h3>
+        </div>
+        <button
+          type="button"
+          onclick="closeAddBrandModal()"
+          class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111A2A]/25 hover:bg-[#111A2A]/45 text-[#FFFFFF] transition"
+          aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <form id="addBrandForm" onsubmit="submitNewBrandForm(event)" class="p-6 space-y-4 bg-[#FFFFFF] text-[#111A2A]">
+        <div>
+          <label for="newBrandNameInput" class="block text-xs font-mono uppercase tracking-wider font-semibold text-[#111A2A]/75 mb-1.5">
+            Brand Name *
+          </label>
+          <input
+            id="newBrandNameInput"
+            type="text"
+            required
+            placeholder="e.g. Nykaa"
+            class="w-full px-3.5 py-2.5 text-sm border border-[#111A2A]/20 rounded-lg focus:outline-none focus:border-[#008CFF] text-[#111A2A]"
+          />
+        </div>
+
+        <div>
+          <label for="newBrandWebsiteInput" class="block text-xs font-mono uppercase tracking-wider font-semibold text-[#111A2A]/75 mb-1.5">
+            Website URL
+          </label>
+          <input
+            id="newBrandWebsiteInput"
+            type="url"
+            placeholder="https://www.brandwebsite.com"
+            class="w-full px-3.5 py-2.5 text-sm border border-[#111A2A]/20 rounded-lg focus:outline-none focus:border-[#008CFF] text-[#111A2A]"
+          />
+        </div>
+
+        <p id="addBrandFormError" class="hidden text-xs font-mono text-red-600"></p>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onclick="closeAddBrandModal()"
+            class="px-4 py-2 text-xs font-semibold rounded-lg border border-[#111A2A]/20 text-[#111A2A] hover:bg-[#111A2A]/5 transition">
+            Cancel
+          </button>
+          <button
+            id="submitAddBrandBtn"
+            type="submit"
+            class="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-[#01B7F9] to-[#1749E8] text-[#FFFFFF] shadow-sm hover:opacity-95 transition">
+            Save Brand
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeAddBrandModal();
+  });
+
+  document.body.appendChild(modal);
+  return modal;
+}
+
+window.openAddBrandModal = function() {
+  const modal = ensureAddBrandModal();
+  const form = document.getElementById('addBrandForm');
+  const errorEl = document.getElementById('addBrandFormError');
+  if (form) form.reset();
+  if (errorEl) errorEl.classList.add('hidden');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.getElementById('newBrandNameInput')?.focus();
+};
+
+window.closeAddBrandModal = function() {
+  const modal = document.getElementById('addBrandModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+};
+
+window.submitNewBrandForm = async function(event) {
+  event.preventDefault();
+  const nameInput = document.getElementById('newBrandNameInput');
+  const websiteInput = document.getElementById('newBrandWebsiteInput');
+  const errorEl = document.getElementById('addBrandFormError');
+  const submitBtn = document.getElementById('submitAddBrandBtn');
+
+  const name = (nameInput?.value || '').trim();
+  const website_url = (websiteInput?.value || '').trim() || null;
+
+  if (!name) return;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+  }
+  if (errorEl) errorEl.classList.add('hidden');
+
+  try {
+    const res = await fetch('/api/v1/admin/brands', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, website_url }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP ${res.status}`);
+    }
+
+    closeAddBrandModal();
+    // Refresh the Super Admin Brands table immediately
+    await loadAndRenderSuperAdminBrands(true);
+  } catch (err) {
+    console.error('[AddBrand] Failed:', err);
+    if (errorEl) {
+      errorEl.textContent = err.message || 'Could not create brand.';
+      errorEl.classList.remove('hidden');
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Brand';
+    }
+  }
+};
+
 function renderAdminTable() {
   
   const tableBody = document.getElementById('influencerTableBody');
@@ -538,6 +776,155 @@ function renderAdminTable() {
     localStorage.getItem('brand_id')
   );
   const isSuperAdmin = !isBrandPortal;
+  loadAndRenderSuperAdminBrands(isSuperAdmin);
+  // Cache brand-to-creator lists in memory so re-clicking a brand is instant
+const brandCreatorsBreakdownCache = {};
+
+function ensureBrandCreatorsModal() {
+  let modal = document.getElementById('brandCreatorsBreakdownModal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'brandCreatorsBreakdownModal';
+  modal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-[#111A2A]/70 backdrop-blur-xs p-4';
+  modal.innerHTML = `
+    <div class="bg-[#FFFFFF] border border-[#008CFF]/20 rounded-xl shadow-2xl w-full max-w-2xl max-h-[82vh] flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] text-[#FFFFFF] flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-mono uppercase tracking-wider text-[#FFFFFF]/80">Brand Creator Roster</p>
+          <h3 id="brandCreatorsModalTitle" class="text-xl font-bold text-[#FFFFFF] mt-0.5">Brand</h3>
+        </div>
+        <button
+          type="button"
+          onclick="closeBrandCreatorsModal()"
+          class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111A2A]/25 hover:bg-[#111A2A]/45 text-[#FFFFFF] transition"
+          aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div id="brandCreatorsModalBody" class="p-6 overflow-y-auto flex-1 bg-[#FFFFFF] text-[#111A2A]"></div>
+    </div>
+  `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeBrandCreatorsModal();
+  });
+
+  document.body.appendChild(modal);
+  return modal;
+}
+
+window.closeBrandCreatorsModal = function() {
+  const modal = document.getElementById('brandCreatorsBreakdownModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+};
+
+window.openBrandCreatorsModal = async function(brandId, brandName) {
+  const modal = ensureBrandCreatorsModal();
+  const titleEl = document.getElementById('brandCreatorsModalTitle');
+  const bodyEl = document.getElementById('brandCreatorsModalBody');
+
+  if (titleEl) titleEl.textContent = brandName || 'Brand Creators';
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  if (brandCreatorsBreakdownCache[brandId]) {
+    renderBrandCreatorsModalContent(bodyEl, brandCreatorsBreakdownCache[brandId]);
+    return;
+  }
+
+  bodyEl.innerHTML = `<p class="text-sm text-[#111A2A]/60 py-8 text-center">Loading active creators...</p>`;
+
+  try {
+    const res = await fetch(`/api/v1/admin/brands/${encodeURIComponent(brandId)}/creators`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const creators = await res.json();
+    brandCreatorsBreakdownCache[brandId] = creators;
+    renderBrandCreatorsModalContent(bodyEl, creators);
+  } catch (err) {
+    console.error('[BrandCreators] Failed:', err);
+    bodyEl.innerHTML = `<p class="text-sm text-red-600 py-8 text-center">Could not load creators for this brand.</p>`;
+  }
+};
+
+function renderBrandCreatorsModalContent(container, creators) {
+  if (!creators || creators.length === 0) {
+    container.innerHTML = `<p class="text-sm text-[#111A2A]/60 py-8 text-center">No creators have generated attributed orders for this brand yet.</p>`;
+    return;
+  }
+
+  const totals = creators.reduce(
+    (acc, c) => {
+      acc.orders += c.total_orders;
+      acc.gmv += c.attributed_gmv;
+      acc.commission += c.payable_commission;
+      return acc;
+    },
+    { orders: 0, gmv: 0, commission: 0 }
+  );
+
+  container.innerHTML = `
+    <!-- Summary Strip -->
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="bg-[#111A2A]/[0.03] border border-[#008CFF]/20 rounded-lg p-3.5">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#111A2A]/60">Active Creators</div>
+        <div class="text-xl font-bold text-[#111A2A] mt-1">${creators.length}</div>
+      </div>
+      <div class="bg-[#111A2A]/[0.03] border border-[#008CFF]/20 rounded-lg p-3.5">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#111A2A]/60">Brand Attributed GMV</div>
+        <div class="text-xl font-bold text-[#111A2A] mt-1">${formatCurrency(totals.gmv)}</div>
+      </div>
+      <div class="bg-[#008CFF]/[0.08] border border-[#008CFF]/30 rounded-lg p-3.5">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#008CFF]">Total Commission</div>
+        <div class="text-xl font-bold text-[#1749E8] mt-1">${formatCurrency(totals.commission)}</div>
+      </div>
+    </div>
+
+    <!-- Creators Table -->
+    <div class="border border-[#111A2A]/10 rounded-lg overflow-hidden">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-[#111A2A] text-[#FFFFFF] text-xs uppercase tracking-wider">
+            <th class="py-3 px-4 font-semibold">Creator</th>
+            <th class="py-3 px-4 font-semibold text-right">Orders</th>
+            <th class="py-3 px-4 font-semibold text-right">Attributed GMV</th>
+            <th class="py-3 px-4 font-semibold text-right">Commission</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#111A2A]/10 bg-[#FFFFFF]">
+          ${creators
+            .map(
+              (c) => `
+            <tr class="hover:bg-[#008CFF]/[0.05] transition">
+              <td class="py-3 px-4">
+                <div class="font-semibold text-[#111A2A]">${c.creator_name || 'Unknown Creator'}</div>
+                <div class="font-mono text-[11px] text-[#111A2A]/55">${c.creator_email || ''}</div>
+              </td>
+              <td class="py-3 px-4 text-right text-[#111A2A]/70">${c.total_orders}</td>
+              <td class="py-3 px-4 text-right font-semibold text-[#111A2A]">${formatCurrency(c.attributed_gmv)}</td>
+              <td class="py-3 px-4 text-right font-semibold text-[#008CFF]">${formatCurrency(c.payable_commission)}</td>
+            </tr>
+          `
+            )
+            .join('')}
+        </tbody>
+        <tfoot>
+          <tr class="border-t-2 border-[#008CFF]/30 bg-[#008CFF]/[0.06] font-bold text-[#111A2A]">
+            <td class="py-3 px-4">Total (${creators.length} ${creators.length === 1 ? 'Creator' : 'Creators'})</td>
+            <td class="py-3 px-4 text-right">${totals.orders}</td>
+            <td class="py-3 px-4 text-right">${formatCurrency(totals.gmv)}</td>
+            <td class="py-3 px-4 text-right text-[#1749E8]">${formatCurrency(totals.commission)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+}
 
   // Hide/show the matching 5th <th> header ("Reg Fee") so columns stay aligned
   const tableEl = tableBody.closest('table');
@@ -796,19 +1183,187 @@ function renderAdminOrders(orders = []) {
 /**
  * Render Admin UGC Review Stream
  */
+// Store latest pending UGC submissions & currently open campaign modal key for live updates
+window.__latestAdminUgcSubmissions = [];
+window.__activeUgcCampaignModalKey = null;
+
+function ensureCampaignPitchesModal() {
+  let modal = document.getElementById('campaignPitchesModal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'campaignPitchesModal';
+  modal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-[#111A2A]/70 backdrop-blur-xs p-4';
+  modal.innerHTML = `
+    <div class="bg-[#FFFFFF] border border-[#008CFF]/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-gradient-to-r from-[#01B7F9] to-[#1749E8] text-[#FFFFFF] flex items-center justify-between">
+        <div>
+          <p id="campaignPitchesModalBrand" class="text-[11px] font-mono uppercase tracking-wider text-[#FFFFFF]/85">Brand</p>
+          <h3 id="campaignPitchesModalTitle" class="text-xl font-bold text-[#FFFFFF] mt-0.5">Campaign Pitches</h3>
+        </div>
+        <button
+          type="button"
+          onclick="closeCampaignPitchesModal()"
+          class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111A2A]/25 hover:bg-[#111A2A]/45 text-[#FFFFFF] transition cursor-pointer"
+          aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div id="campaignPitchesModalBody" class="p-6 overflow-y-auto flex-1 bg-[#FFFFFF] text-[#111A2A]"></div>
+    </div>
+  `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeCampaignPitchesModal();
+  });
+
+  document.body.appendChild(modal);
+  return modal;
+}
+
+window.closeCampaignPitchesModal = function() {
+  const modal = document.getElementById('campaignPitchesModal');
+  window.__activeUgcCampaignModalKey = null;
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+};
+
+window.openCampaignPitchesModal = function(groupKey) {
+  const modal = ensureCampaignPitchesModal();
+  window.__activeUgcCampaignModalKey = groupKey;
+
+  const matching = (window.__latestAdminUgcSubmissions || []).filter((s) => {
+    const key = `${s.brand_name || 'Brand'}::${s.campaign_id || s.campaign_title || 'Collab Campaign'}`;
+    return key === groupKey;
+  });
+
+  const brandName = matching[0]?.brand_name || groupKey.split('::')[0] || 'Brand';
+  const campaignTitle = matching[0]?.campaign_title || 'Campaign Pitches';
+
+  const brandEl = document.getElementById('campaignPitchesModalBrand');
+  const titleEl = document.getElementById('campaignPitchesModalTitle');
+  const bodyEl = document.getElementById('campaignPitchesModalBody');
+
+  if (brandEl) brandEl.textContent = brandName;
+  if (titleEl) titleEl.textContent = campaignTitle;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  if (matching.length === 0) {
+    bodyEl.innerHTML = `
+      <div class="py-10 text-center text-sm font-medium text-[#111A2A]/55">
+        All creator pitches for this campaign have been reviewed!
+      </div>
+    `;
+    return;
+  }
+
+  bodyEl.innerHTML = `
+    <div class="border border-[#111A2A]/10 rounded-xl overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-[#111A2A] text-[#FFFFFF] text-[11px] font-mono uppercase tracking-wider">
+            <th class="py-3 px-4 font-semibold">Creator</th>
+            <th class="py-3 px-4 font-semibold">Deliverable</th>
+            <th class="py-3 px-4 font-semibold">Fee</th>
+            <th class="py-3 px-4 font-semibold">Status</th>
+            <th class="py-3 px-5 font-semibold text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#111A2A]/10 bg-[#FFFFFF]">
+          ${matching
+            .map((s) => {
+              const status = String(s.review_status || 'SUBMITTED').toUpperCase();
+              const isRevision = status === 'REVISION_REQUESTED';
+
+              return `
+                <tr class="hover:bg-[#008CFF]/[0.04] transition">
+                  <td class="py-3.5 px-4 text-xs font-bold text-[#111A2A]">
+                    ${s.influencer_name || 'Creator'}
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <a href="${s.video_url}" target="_blank" rel="noopener noreferrer" class="text-[#008CFF] hover:underline font-bold text-xs inline-flex items-center gap-1">
+                      Preview Video ↗
+                    </a>
+                    ${
+                      s.caption_copy
+                        ? `<div class="text-[11px] text-[#111A2A]/55 italic truncate max-w-[220px] mt-0.5" title="${s.caption_copy}">${s.caption_copy}</div>`
+                        : ''
+                    }
+                  </td>
+                  <td class="py-3.5 px-4 text-xs font-extrabold text-[#111A2A]">
+                    ${formatCurrency(s.participation_fee || 0)}
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                      isRevision
+                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                        : 'bg-[#F1F5F9] text-[#111A2A]/70 border border-[#111A2A]/15'
+                    }">
+                      ${status}
+                    </span>
+                    ${
+                      s.admin_feedback
+                        ? `<div class="text-[11px] font-medium text-[#111A2A]/50 mt-1 max-w-[160px] truncate" title="${s.admin_feedback}">Note: ${s.admin_feedback}</div>`
+                        : ''
+                    }
+                  </td>
+                  <td class="py-3.5 px-5 text-right space-x-1.5 whitespace-nowrap">
+                    <button 
+                      data-action="ugc-approve" 
+                      data-ugc-id="${s.id}" 
+                      class="px-3 py-1.5 text-[11px] bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white rounded-lg font-bold shadow-sm transition cursor-pointer">
+                      Approve (Credit Fee)
+                    </button>
+                    <button 
+                      data-action="ugc-revision" 
+                      data-ugc-id="${s.id}" 
+                      class="px-2.5 py-1.5 text-[11px] bg-white border border-[#111A2A]/15 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 text-[#111A2A] rounded-lg font-bold transition cursor-pointer">
+                      Revise
+                    </button>
+                    <button 
+                      data-action="ugc-reject" 
+                      data-ugc-id="${s.id}" 
+                      class="px-2.5 py-1.5 text-[11px] bg-white border border-[#111A2A]/15 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 text-[#111A2A] rounded-lg font-bold transition cursor-pointer">
+                      Reject
+                    </button>
+                  </td>
+                </tr>
+              `;
+            })
+            .join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
 function renderAdminUgcStream(submissions = []) {
   const tbody = document.getElementById('adminUgcTableBody');
   if (!tbody) return;
 
-  // Exclude REJECTED drafts from the active Admin review queue (preserved in DB for Creator analytics)
-  const activeQueue = (Array.isArray(submissions) ? submissions : []).filter(
-    (s) => String(s.review_status || '').toUpperCase() !== 'REJECTED'
-  );
+  // Exclude both REJECTED and APPROVED deliverables from the active pending review queue
+  const activeQueue = (Array.isArray(submissions) ? submissions : []).filter((s) => {
+    const status = String(s.review_status || '').toUpperCase();
+    return status !== 'REJECTED' && status !== 'APPROVED';
+  });
+
+  window.__latestAdminUgcSubmissions = activeQueue;
+
+  // If a campaign pitches modal is currently open, refresh its contents live
+  if (window.__activeUgcCampaignModalKey) {
+    openCampaignPitchesModal(window.__activeUgcCampaignModalKey);
+  }
 
   if (activeQueue.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="py-8 text-center text-xs font-medium text-[#111A2A]/45">
+        <td colspan="3" class="py-8 text-center text-xs font-medium text-[#111A2A]/45">
           No UGC deliverable submissions pending review.
         </td>
       </tr>
@@ -816,66 +1371,54 @@ function renderAdminUgcStream(submissions = []) {
     return;
   }
 
-  tbody.innerHTML = activeQueue.map((s) => {
-    const status = String(s.review_status || 'SUBMITTED').toUpperCase();
-    const isApproved = status === 'APPROVED';
-    const isRevision = status === 'REVISION_REQUESTED';
+  // Group pending pitches by Brand -> Campaign
+  const groupsMap = new Map();
+  activeQueue.forEach((s) => {
+    const brandName = s.brand_name || 'Brand';
+    const campaignTitle = s.campaign_title || 'Collab Campaign';
+    const key = `${brandName}::${s.campaign_id || campaignTitle}`;
 
-    return `
-      <tr class="hover:bg-[#F8FAFC] transition border-b border-[#111A2A]/10">
-        <td class="py-3.5 px-4">
-          <div class="font-bold text-xs text-[#111A2A]">${s.campaign_title || 'Collab Campaign'}</div>
-          <div class="text-[11px] font-medium text-[#111A2A]/50 mt-0.5">${s.brand_name || 'Brand'}</div>
-        </td>
-        <td class="py-3.5 px-4 text-xs font-semibold text-[#111A2A]">${s.influencer_name || 'Creator'}</td>
-        <td class="py-3.5 px-4">
-          <a href="${s.video_url}" target="_blank" rel="noopener noreferrer" class="text-[#008CFF] hover:underline font-bold text-xs inline-flex items-center gap-1">
-            Preview Video ↗
-          </a>
-          ${s.caption_copy ? `<div class="text-[11px] text-[#111A2A]/50 italic truncate max-w-[200px] mt-0.5" title="${s.caption_copy}">${s.caption_copy}</div>` : ''}
-        </td>
-        <td class="py-3.5 px-4 text-xs font-extrabold text-[#111A2A]">${formatCurrency(s.participation_fee || 0)}</td>
-        <td class="py-3.5 px-4">
-          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-            isApproved
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : isRevision
-              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-              : 'bg-[#F1F5F9] text-[#111A2A]/70 border border-[#111A2A]/15'
-          }">
-            ${status}
-          </span>
-          ${s.admin_feedback ? `<div class="text-[11px] font-medium text-[#111A2A]/50 mt-1 max-w-[160px] truncate" title="${s.admin_feedback}">Note: ${s.admin_feedback}</div>` : ''}
-        </td>
-        <td class="py-3.5 px-6 text-right space-x-1.5 whitespace-nowrap">
-          ${
-            isApproved
-              ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700">✓ Approved & Credited</span>`
-              : `
-                <button 
-                  data-action="ugc-approve" 
-                  data-ugc-id="${s.id}" 
-                  class="px-3 py-1.5 text-[11px] bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white rounded-lg font-bold shadow-sm transition cursor-pointer">
-                  Approve (Credit Fee)
-                </button>
-                <button 
-                  data-action="ugc-revision" 
-                  data-ugc-id="${s.id}" 
-                  class="px-2.5 py-1.5 text-[11px] bg-white border border-[#111A2A]/15 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 text-[#111A2A] rounded-lg font-bold transition cursor-pointer">
-                  Revise
-                </button>
-                <button 
-                  data-action="ugc-reject" 
-                  data-ugc-id="${s.id}" 
-                  class="px-2.5 py-1.5 text-[11px] bg-white border border-[#111A2A]/15 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 text-[#111A2A] rounded-lg font-bold transition cursor-pointer">
-                  Reject
-                </button>
-              `
-          }
-        </td>
-      </tr>
-    `;
-  }).join('');
+    if (!groupsMap.has(key)) {
+      groupsMap.set(key, {
+        key,
+        brandName,
+        campaignTitle,
+        count: 0,
+      });
+    }
+    groupsMap.get(key).count += 1;
+  });
+
+  // Sort strictly brand-to-brand, then campaign-to-campaign
+  const sortedGroups = Array.from(groupsMap.values()).sort((a, b) => {
+    const brandCompare = a.brandName.localeCompare(b.brandName);
+    if (brandCompare !== 0) return brandCompare;
+    return a.campaignTitle.localeCompare(b.campaignTitle);
+  });
+
+  tbody.innerHTML = sortedGroups
+    .map((g) => {
+      const safeKey = g.key.replace(/'/g, "\\'");
+      return `
+        <tr class="hover:bg-[#008CFF]/[0.04] transition border-b border-[#111A2A]/10">
+          <td class="py-3.5 px-6">
+            <span class="font-bold text-xs text-[#111A2A]">${g.brandName}</span>
+          </td>
+          <td class="py-3.5 px-4">
+            <span class="text-xs font-semibold text-[#111A2A]/85">${g.campaignTitle}</span>
+          </td>
+          <td class="py-3.5 px-6 text-right">
+            <button
+              type="button"
+              onclick="openCampaignPitchesModal('${safeKey}')"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-[#FFFFFF] shadow-sm transition cursor-pointer">
+              Pitches (${g.count}) ↗
+            </button>
+          </td>
+        </tr>
+      `;
+    })
+    .join('');
 }
 
 /**
