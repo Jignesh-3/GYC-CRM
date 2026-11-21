@@ -1105,6 +1105,68 @@ function renderBrandCreatorsModalContent(container, creators) {
  * Render Admin & Brand Agency Orders Stream (Role-Aware)
  */
 
+function populateAdminOrderFilterOptions(baseOrders = []) {
+  const refDatalist = document.getElementById('orderRefDatalist');
+  const brandDatalist = document.getElementById('orderBrandDatalist');
+  const creatorDatalist = document.getElementById('orderCreatorDatalist');
+  if (!refDatalist && !brandDatalist && !creatorDatalist) return;
+
+  // 1. Distinct Order Refs
+  const orderRefs = [...new Set(
+    baseOrders
+      .map((o) => String(o.order_reference || '').trim())
+      .filter(Boolean)
+  )];
+
+  // 2. All active onboarded brands + any brands present in orders
+  const brandSet = new Set();
+  if (typeof state !== 'undefined' && Array.isArray(state.brands)) {
+    state.brands.forEach((b) => {
+      if (b.is_active === false || String(b.status || '').toUpperCase() === 'INACTIVE') return;
+      const name = String(b.name || b.brand_name || '').trim();
+      if (name) brandSet.add(name);
+    });
+  }
+  baseOrders.forEach((o) => {
+    const name = String(o.brand_name || (typeof state !== 'undefined' && state.currentBrand && state.currentBrand.name) || '').trim();
+    if (name && name !== 'N/A') brandSet.add(name);
+  });
+
+  // 3. All active onboarded creators + any creators present in orders
+  const creatorSet = new Set();
+  const stateCreators = (typeof state !== 'undefined' && (state.influencers || state.creators)) || [];
+  if (Array.isArray(stateCreators)) {
+    stateCreators.forEach((c) => {
+      const name = String(c.name || c.full_name || c.influencer_name || '').trim();
+      if (name) creatorSet.add(name);
+    });
+  }
+  baseOrders.forEach((o) => {
+    const name = String(o.influencer_name || o.creator_name || '').trim();
+    if (name && name !== 'N/A') creatorSet.add(name);
+  });
+
+  if (refDatalist) {
+    refDatalist.innerHTML = orderRefs
+      .map((ref) => `<option value="${escapeHtml(ref)}"></option>`)
+      .join('');
+  }
+
+  if (brandDatalist) {
+    brandDatalist.innerHTML = [...brandSet]
+      .sort()
+      .map((b) => `<option value="${escapeHtml(b)}"></option>`)
+      .join('');
+  }
+
+  if (creatorDatalist) {
+    creatorDatalist.innerHTML = [...creatorSet]
+      .sort()
+      .map((c) => `<option value="${escapeHtml(c)}"></option>`)
+      .join('');
+  }
+}
+
 function renderAdminOrders(orders = []) {
   const tbody = document.getElementById('adminOrdersTableBody');
   if (!tbody) return;
@@ -1112,31 +1174,89 @@ function renderAdminOrders(orders = []) {
   const sessionRole = localStorage.getItem('user_role');
   const activeBrandId = localStorage.getItem('active_brand_id') || localStorage.getItem('brand_id');
 
-  // Hard Isolation: If BRAND or BRAND_ADMIN, filter down strictly to this brand's orders
-  let displayOrders = orders;
+  let baseOrders = orders;
   if ((sessionRole === 'BRAND' || sessionRole === 'BRAND_ADMIN') && activeBrandId) {
-    displayOrders = orders.filter(o => String(o.brand_id) === String(activeBrandId));
+    baseOrders = orders.filter((o) => String(o.brand_id) === String(activeBrandId));
   }
 
+  window._adminBaseOrders = baseOrders;
+  populateAdminOrderFilterOptions(baseOrders);
+
+  const searchQuery = (document.getElementById('adminOrderSearchInput')?.value || '').trim().toLowerCase();
+  const selectedRef = (document.getElementById('filterOrderRef')?.value || '').trim().toLowerCase();
+  const selectedBrand = (document.getElementById('filterOrderBrand')?.value || '').trim().toLowerCase();
+  const selectedCreator = (document.getElementById('filterOrderCreator')?.value || '').trim().toLowerCase();
+  const selectedStatus = (document.getElementById('filterOrderStatus')?.value || '').trim().toUpperCase();
+
+  // Toggle inline clear button inside global search bar
+  const clearSearchBtn = document.getElementById('clearOrderSearchBtn');
+  if (clearSearchBtn) {
+    clearSearchBtn.classList.toggle('hidden', !searchQuery);
+  }
+
+  // Highlight active filter controls in brand electric blue
+  [
+    ['adminOrderSearchInput', searchQuery],
+    ['filterOrderRef', selectedRef],
+    ['filterOrderBrand', selectedBrand],
+    ['filterOrderCreator', selectedCreator],
+    ['filterOrderStatus', selectedStatus],
+  ].forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (val) {
+      el.classList.add('border-[#008CFF]', 'text-[#1749E8]', 'bg-[#008CFF]/5', 'font-semibold');
+      el.classList.remove('border-[#111A2A]/15', 'text-[#111A2A]');
+    } else {
+      el.classList.remove('border-[#008CFF]', 'text-[#1749E8]', 'bg-[#008CFF]/5', 'font-semibold');
+      el.classList.add('border-[#111A2A]/15', 'text-[#111A2A]');
+    }
+  });
+
+  const hasAnyFilter = Boolean(searchQuery || selectedRef || selectedBrand || selectedCreator || selectedStatus);
+  const resetBtn = document.getElementById('resetOrderFiltersBtn');
+  if (resetBtn) {
+    resetBtn.classList.toggle('hidden', !hasAnyFilter);
+  }
+
+  const displayOrders = baseOrders.filter((o) => {
+    const orderRef = String(o.order_reference || '').trim();
+    const brandName = String(o.brand_name || (typeof state !== 'undefined' && state.currentBrand && state.currentBrand.name) || 'N/A').trim();
+    const creatorName = String(o.influencer_name || o.creator_name || 'N/A').trim();
+    const status = String(o.commission_status || 'PENDING').trim().toUpperCase();
+
+    if (searchQuery) {
+      const haystack = `${orderRef} ${brandName} ${creatorName} ${status}`.toLowerCase();
+      if (!haystack.includes(searchQuery)) return false;
+    }
+    if (selectedRef && !orderRef.toLowerCase().includes(selectedRef)) return false;
+    if (selectedBrand && !brandName.toLowerCase().includes(selectedBrand)) return false;
+    if (selectedCreator && !creatorName.toLowerCase().includes(selectedCreator)) return false;
+    if (selectedStatus && status !== selectedStatus) return false;
+    return true;
+  });
+
   if (!displayOrders || displayOrders.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-taupe font-mono">No agency orders recorded yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-taupe font-mono">${
+      hasAnyFilter ? 'No orders match your search or filters.' : 'No agency orders recorded yet.'
+    }</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = displayOrders.map((o) => {
-    const isPaid = o.commission_status === 'PAID';
-    const isPayable = o.commission_status === 'PAYABLE';
-    const isDelivered = o.order_status === 'DELIVERED';
-    const isRefunded = o.order_status === 'RETURNED_REFUNDED' || o.order_status === 'CANCELLED';
+  tbody.innerHTML = displayOrders
+    .map((o) => {
+      const isPaid = o.commission_status === 'PAID';
+      const isPayable = o.commission_status === 'PAYABLE';
+      const isDelivered = o.order_status === 'DELIVERED';
+      const isRefunded = o.order_status === 'RETURNED_REFUNDED' || o.order_status === 'CANCELLED';
 
-    // In portal-data, orders table might have id instead of order_id
-    const orderId = o.order_id || o.id;
+      const orderId = o.order_id || o.id;
 
-    return `
+      return `
       <tr class="hover:bg-alabaster/60 transition">
-        <td class="py-3.5 px-6 font-mono font-medium text-espresso">${o.order_reference}</td>
-        <td class="py-3.5 px-4 font-serif text-espresso">${o.brand_name || (state.currentBrand && state.currentBrand.name) || 'N/A'}</td>
-        <td class="py-3.5 px-4 font-medium text-espresso">${o.influencer_name || o.creator_name || 'N/A'}</td>
+        <td class="py-3.5 px-6 font-mono font-medium text-espresso">${escapeHtml(o.order_reference || '')}</td>
+        <td class="py-3.5 px-4 font-serif text-espresso">${escapeHtml(o.brand_name || (typeof state !== 'undefined' && state.currentBrand && state.currentBrand.name) || 'N/A')}</td>
+        <td class="py-3.5 px-4 font-medium text-espresso">${escapeHtml(o.influencer_name || o.creator_name || 'N/A')}</td>
         <td class="py-3.5 px-4 font-mono font-medium">${formatCurrency(o.order_amount || 0)}</td>
         <td class="py-3.5 px-4 font-mono ${isPaid ? 'text-sage font-bold' : isPayable ? 'text-sage font-medium' : isRefunded ? 'text-terracotta line-through' : 'text-espresso'}">
           ${formatCurrency(o.commission_amount || 0)}
@@ -1145,14 +1265,14 @@ function renderAdminOrders(orders = []) {
           <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[11px] font-mono ${
             isPaid
               ? 'bg-sage/20 text-sage font-semibold border border-sage/40'
-              : isPayable 
-              ? 'bg-sage/10 text-sage border border-sage/20' 
-              : isRefunded 
-              ? 'bg-terracotta/10 text-terracotta border border-terracotta/20' 
+              : isPayable
+              ? 'bg-sage/10 text-sage border border-sage/20'
+              : isRefunded
+              ? 'bg-terracotta/10 text-terracotta border border-terracotta/20'
               : 'bg-linen text-taupe border border-stonehair'
           }">
             <span class="w-1.5 h-1.5 rounded-full ${isPaid || isPayable ? 'bg-sage' : isRefunded ? 'bg-terracotta' : 'bg-taupe'}"></span>
-            ${o.commission_status || 'PENDING'}
+            ${escapeHtml(o.commission_status || 'PENDING')}
           </span>
         </td>
         <td class="py-3.5 px-6 text-right space-x-2">
@@ -1177,8 +1297,21 @@ function renderAdminOrders(orders = []) {
         </td>
       </tr>
     `;
-  }).join('');
+    })
+    .join('');
 }
+
+window.applyAdminOrderFilters = function () {
+  renderAdminOrders(window._adminBaseOrders || []);
+};
+
+window.resetAdminOrderFilters = function () {
+  ['adminOrderSearchInput', 'filterOrderRef', 'filterOrderBrand', 'filterOrderCreator', 'filterOrderStatus'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  renderAdminOrders(window._adminBaseOrders || []);
+};
 
 /**
  * Render Admin UGC Review Stream
@@ -1967,7 +2100,7 @@ function renderCreatorCampaigns(campaigns = []) {
             <div class="flex items-center gap-1.5">
               ${
                 Number(camp.participation_fee) > 0
-                  ? `<span class="px-2 py-0.5 bg-espresso text-alabaster text-[11px] font-mono rounded-sm">${formatCurrency(camp.participation_fee)} Fee</span>`
+                  ? `<span class="px-2 py-0.5 bg-white text-[#1749E8] border border-[#008CFF]/30 font-semibold text-[11px] font-mono rounded-sm">${formatCurrency(camp.participation_fee)} Fee</span>`
                   : ''
               }
               <span class="px-2 py-0.5 bg-sage/10 text-sage text-[11px] font-mono rounded-sm border border-sage/20">
@@ -2103,7 +2236,7 @@ function renderCreatorUgcTable(submissions = []) {
   if (!Array.isArray(submissions) || submissions.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-8 text-center text-taupe font-mono text-xs">
+        <td colspan="5" class="py-8 text-center text-[#111A2A]/60 font-mono text-xs">
           No deliverables submitted yet. Click "+ Submit Video Draft" above.
         </td>
       </tr>
@@ -2111,53 +2244,131 @@ function renderCreatorUgcTable(submissions = []) {
     return;
   }
 
+  window._creatorUgcSubmissions = submissions;
+
   tbody.innerHTML = submissions
-    .map((s) => {
-      const isApproved = s.review_status === 'APPROVED';
-      const isRevision = s.review_status === 'CHANGES_REQUESTED' || s.review_status === 'REVISION_REQUESTED';
-      const isRejected = s.review_status === 'REJECTED';
+    .map((s, idx) => {
+      const status = (s.review_status || 'SUBMITTED').toUpperCase();
+      const isApproved = status === 'APPROVED';
+      const isSubmitted = status === 'SUBMITTED' || status === 'PENDING';
+      const isRevision = status === 'CHANGES_REQUESTED' || status === 'REVISION_REQUESTED';
+      const isRejected = status === 'REJECTED';
 
       const campaignTitle = escapeHtml(s.campaign_title || 'Campaign');
       const brandName = escapeHtml(s.brand_name || 'Brand');
       const rawUrl = String(s.video_url || '#');
       const safeUrl = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
-      const feedback = escapeHtml(s.admin_feedback || '—');
+
+      const rawFeedback = (s.admin_feedback || '').trim();
+      const hasFeedback = rawFeedback.length > 0;
+      const words = rawFeedback.split(/\s+/);
+      const previewText = words.length > 5 ? `${words.slice(0, 5).join(' ')}...` : rawFeedback;
+
+      const statusBoxClass = isRejected
+        ? 'bg-red-50 text-red-700 border border-red-300 font-semibold'
+        : isRevision
+        ? 'bg-yellow-50 text-yellow-800 border border-yellow-300 font-semibold'
+        : isApproved
+        ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold'
+        : isSubmitted
+        ? 'bg-blue-50 text-[#1749E8] border border-[#01B7F9]/60 font-semibold'
+        : 'bg-[#111A2A]/5 text-[#111A2A]/70 border border-[#111A2A]/15';
+
+      const feedbackColorClass = isRevision
+        ? 'text-yellow-900 font-medium'
+        : isRejected
+        ? 'text-red-700'
+        : 'text-[#111A2A]/70';
 
       return `
-      <tr class="hover:bg-alabaster/60 transition">
+      <tr class="hover:bg-[#008CFF]/[0.04] transition">
         <td class="py-3 px-4">
-          <div class="font-medium text-espresso">${campaignTitle}</div>
-          <div class="text-[11px] font-mono text-taupe">${brandName}</div>
+          <div class="font-medium text-[#111A2A]">${campaignTitle}</div>
+          <div class="text-[11px] font-mono text-[#111A2A]/60">${brandName}</div>
         </td>
         <td class="py-3 px-4 font-mono">
-          <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-espresso underline hover:text-sage text-xs">
+          <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-[#1749E8] underline hover:text-[#008CFF] text-xs font-medium">
             View Draft ↗
           </a>
         </td>
-        <td class="py-3 px-4 font-mono font-medium ${isApproved ? 'text-sage font-bold' : 'text-espresso'}">
+        <td class="py-3 px-4 font-mono font-semibold ${isApproved ? 'text-[#008CFF] font-bold' : 'text-[#1749E8]'}">
           ${formatCurrency(s.participation_fee || 0)}
         </td>
         <td class="py-3 px-4">
-          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[11px] font-mono ${
-            isApproved
-              ? 'bg-sage/20 text-sage font-medium border border-sage/40'
-              : isRevision
-              ? 'bg-amber-500/10 text-amber-700 border border-amber-500/30'
-              : isRejected
-              ? 'bg-terracotta/10 text-terracotta border border-terracotta/20'
-              : 'bg-linen text-taupe border border-stonehair'
-          }">
-            ${escapeHtml(s.review_status || 'PENDING')}
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono ${statusBoxClass}">
+            ${escapeHtml(status)}
           </span>
         </td>
-        <td class="py-3 px-4 text-xs font-sans text-taupe max-w-xs truncate" title="${feedback}">
-          ${feedback}
+        <td class="py-3 px-4 text-xs font-sans ${feedbackColorClass}">
+          ${
+            hasFeedback
+              ? `<span onclick="openCreatorFeedbackPopover(event, ${idx})" class="cursor-pointer hover:underline" title="Click to read full feedback">${escapeHtml(previewText)}</span>`
+              : '—'
+          }
         </td>
       </tr>
     `;
     })
     .join('');
 }
+
+window.openCreatorFeedbackPopover = function (event, index) {
+  event.stopPropagation();
+  const item = (window._creatorUgcSubmissions || [])[index];
+  if (!item) return;
+
+  const existing = document.getElementById('creatorFeedbackPopover');
+  if (existing) existing.remove();
+
+  const status = (item.review_status || 'SUBMITTED').toUpperCase();
+  const isApproved = status === 'APPROVED';
+  const isRevision = status === 'CHANGES_REQUESTED' || status === 'REVISION_REQUESTED';
+  const isRejected = status === 'REJECTED';
+
+  const badgeClass = isRejected
+    ? 'bg-red-500/15 text-red-700 border border-red-400/40 font-semibold'
+    : isRevision
+    ? 'bg-yellow-400/20 text-yellow-800 border border-yellow-500/40 font-semibold'
+    : isApproved
+    ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-400/40 font-semibold'
+    : 'bg-[#008CFF]/15 text-[#1749E8] border border-[#01B7F9]/50 font-semibold';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'creatorFeedbackPopover';
+  overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-[#111A2A]/75 backdrop-blur-xs p-4';
+
+  overlay.innerHTML = `
+    <div id="creatorFeedbackCard" class="w-full max-w-lg rounded-2xl bg-[#FFFFFF] border-2 border-[#008CFF]/40 shadow-[0_20px_50px_rgba(17,26,42,0.45)] overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 bg-[#111A2A] border-b border-[#01B7F9]/30 text-[#FFFFFF]">
+        <div class="truncate pr-3">
+          <div class="text-base font-semibold tracking-wide text-[#FFFFFF] truncate">${escapeHtml(item.campaign_title || 'Review Feedback')}</div>
+          <div class="text-xs font-mono text-[#01B7F9] mt-0.5">${escapeHtml(item.brand_name || '')}</div>
+        </div>
+        <button type="button" onclick="document.getElementById('creatorFeedbackPopover')?.remove()" class="text-[#FFFFFF]/70 hover:text-[#01B7F9] text-xl leading-none px-2 py-1 transition cursor-pointer">&times;</button>
+      </div>
+      <div class="p-6 space-y-4 bg-[#FFFFFF]">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono uppercase tracking-wider text-[#111A2A]/60 font-semibold">Deliverable Status</span>
+          <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-mono ${badgeClass}">${escapeHtml(status)}</span>
+        </div>
+        <div class="rounded-xl bg-[#111A2A]/[0.03] border border-[#008CFF]/25 p-4 max-h-80 overflow-y-auto">
+          <p class="text-sm text-[#111A2A] whitespace-pre-wrap leading-relaxed">${escapeHtml(item.admin_feedback || '')}</p>
+        </div>
+      </div>
+      <div class="flex justify-end px-6 py-3.5 bg-[#111A2A]/[0.03] border-t border-[#111A2A]/10">
+        <button type="button" onclick="document.getElementById('creatorFeedbackPopover')?.remove()" class="px-5 py-2 rounded-lg bg-[#1749E8] hover:bg-[#008CFF] text-[#FFFFFF] text-xs font-semibold tracking-wide shadow-sm transition cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  document.body.appendChild(overlay);
+};
 
 /**
  * Render conversion efficiency metrics, UGC deliverable acceptance,

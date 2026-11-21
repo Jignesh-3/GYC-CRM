@@ -193,3 +193,32 @@ class LoginResponse(BaseModel):
 class BrandCreateRequest(BaseModel):
     name: str
     website_url: str | None = None
+
+# --- Google Login ---
+class GoogleLoginRequest(BaseModel):
+    credential: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+
+class GoogleAuthRequest(BaseModel):
+    credential: str
+    role: Optional[str] = "CREATOR"  # "CREATOR" or "BRAND_ADMIN"
+
+class RegisterRequest(BaseModel):
+    role: str = "CREATOR"  # "CREATOR" or "BRAND_ADMIN"
+    full_name: str
+    company_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    email: str
+    password: str
+
+
+class GoogleLoginRequest(BaseModel):
+    credential: str
+    role: Optional[str] = "CREATOR"

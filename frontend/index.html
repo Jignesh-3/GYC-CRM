@@ -726,27 +726,102 @@
       <section class="space-y-8">
         <!-- Order Fulfillment Card -->
         <div class="bg-white border border-[#111A2A]/10 rounded-2xl overflow-hidden shadow-sm">
-          <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex items-center justify-between">
+          <div class="p-5 md:p-6 border-b border-[#111A2A]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 class="text-lg font-extrabold text-[#111A2A]">Agency Order & Fulfillment Stream</h3>
               <p class="text-xs font-medium text-[#111A2A]/50 mt-0.5">Audit attribution and transition fulfillment to unlock payable creator commissions</p>
             </div>
-            <span class="px-3 py-1 rounded-full bg-[#008CFF]/10 text-[#008CFF] text-[11px] font-bold">Real-time Stream</span>
+            <div class="flex items-center gap-2.5">
+              <div class="relative">
+                <input
+                  type="text"
+                  id="adminOrderSearchInput"
+                  oninput="applyAdminOrderFilters()"
+                  placeholder="Search order, brand, creator..."
+                  class="w-56 sm:w-64 pl-3 pr-7 py-1.5 rounded-lg border border-[#111A2A]/15 bg-[#F8FAFC] text-xs font-medium text-[#111A2A] placeholder:text-[#111A2A]/40 focus:outline-none focus:border-[#008CFF] focus:bg-white transition"
+                />
+                <button
+                  type="button"
+                  id="clearOrderSearchBtn"
+                  onclick="document.getElementById('adminOrderSearchInput').value=''; applyAdminOrderFilters();"
+                  class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-[#111A2A]/40 hover:text-[#1749E8] text-xs font-bold cursor-pointer"
+                  title="Clear search"
+                >&times;</button>
+              </div>
+              <span class="shrink-0 px-3 py-1 rounded-full bg-[#008CFF]/10 text-[#008CFF] text-[11px] font-bold">Real-time Stream</span>
+            </div>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="border-b border-[#111A2A]/10 text-[10px] font-bold uppercase tracking-wider text-[#111A2A]/50 bg-[#F8FAFC]">
-                  <th class="py-3.5 px-6">Order Ref</th>
-                  <th class="py-3.5 px-4">Brand</th>
-                  <th class="py-3.5 px-4">Creator</th>
-                  <th class="py-3.5 px-4">Order Value</th>
-                  <th class="py-3.5 px-4">Commission</th>
-                  <th class="py-3.5 px-4">Ledger Status</th>
-                  <th class="py-3.5 px-6 text-right">Fulfillment Action</th>
+                <tr class="border-b border-[#111A2A]/10 text-[10px] font-bold uppercase tracking-wider text-[#111A2A]/60 bg-[#F8FAFC]">
+                  <th class="py-3 px-6 align-top">
+                    <div class="flex flex-col gap-1">
+                      <span>Order Ref</span>
+                      <input
+                        type="text"
+                        id="filterOrderRef"
+                        list="orderRefDatalist"
+                        oninput="applyAdminOrderFilters()"
+                        placeholder="Type or select..."
+                        class="w-full max-w-[140px] px-2 py-1 rounded border border-[#111A2A]/15 bg-white text-[11px] font-mono font-medium normal-case text-[#111A2A] placeholder:text-[#111A2A]/35 focus:outline-none focus:border-[#008CFF]"
+                      />
+                      <datalist id="orderRefDatalist"></datalist>
+                    </div>
+                  </th>
+                  <th class="py-3 px-4 align-top">
+                    <div class="flex flex-col gap-1">
+                      <span>Brand</span>
+                      <input
+                        type="text"
+                        id="filterOrderBrand"
+                        list="orderBrandDatalist"
+                        oninput="applyAdminOrderFilters()"
+                        placeholder="All Brands..."
+                        class="w-full max-w-[145px] px-2 py-1 rounded border border-[#111A2A]/15 bg-white text-[11px] font-sans font-medium normal-case text-[#111A2A] placeholder:text-[#111A2A]/35 focus:outline-none focus:border-[#008CFF]"
+                      />
+                      <datalist id="orderBrandDatalist"></datalist>
+                    </div>
+                  </th>
+                  <th class="py-3 px-4 align-top">
+                    <div class="flex flex-col gap-1">
+                      <span>Creator</span>
+                      <input
+                        type="text"
+                        id="filterOrderCreator"
+                        list="orderCreatorDatalist"
+                        oninput="applyAdminOrderFilters()"
+                        placeholder="All Creators..."
+                        class="w-full max-w-[145px] px-2 py-1 rounded border border-[#111A2A]/15 bg-white text-[11px] font-sans font-medium normal-case text-[#111A2A] placeholder:text-[#111A2A]/35 focus:outline-none focus:border-[#008CFF]"
+                      />
+                      <datalist id="orderCreatorDatalist"></datalist>
+                    </div>
+                  </th>
+                  <th class="py-3 px-4 align-top">Order Value</th>
+                  <th class="py-3 px-4 align-top">Commission</th>
+                  <th class="py-3 px-4 align-top">
+                    <div class="flex flex-col gap-1">
+                      <span>Ledger Status</span>
+                      <select id="filterOrderStatus" onchange="applyAdminOrderFilters()" class="w-full max-w-[125px] px-2 py-1 rounded border border-[#111A2A]/15 bg-white text-[11px] font-mono font-medium normal-case text-[#111A2A] focus:outline-none focus:border-[#008CFF] cursor-pointer">
+                        <option value="">All Statuses</option>
+                        <option value="PENDING">PENDING</option>
+                        <option value="PAYABLE">PAYABLE</option>
+                        <option value="PAID">PAID</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th class="py-3 px-6 text-right align-top">
+                    <div class="flex flex-col items-end gap-1">
+                      <span>Fulfillment Action</span>
+                      <button type="button" id="resetOrderFiltersBtn" onclick="resetAdminOrderFilters()" class="hidden px-2 py-0.5 rounded bg-[#008CFF]/10 text-[#1749E8] hover:bg-[#1749E8] hover:text-white text-[10px] font-mono normal-case transition cursor-pointer">
+                        ✕ Clear Filters
+                      </button>
+                    </div>
+                  </th>
                 </tr>
               </thead>
+              
               <tbody id="adminOrdersTableBody" class="divide-y divide-[#111A2A]/10 text-xs font-medium">
                 <tr>
                   <td colspan="7" class="py-6 text-center text-[#111A2A]/40">Loading fulfillment queue...</td>

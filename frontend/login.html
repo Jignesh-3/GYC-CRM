@@ -1,275 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Get You Collab | Portal Sign In</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get You Collab — Workspace Access</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    @keyframes subtleGridPulse {
-      0%, 100% { opacity: 0.04; }
-      50% { opacity: 0.09; }
-    }
-
-    @keyframes floatCard {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
-    }
-
-    @keyframes cardRise {
-      0% { opacity: 0; transform: translateY(18px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    .bg-studio-grid {
-      background-size: 44px 44px;
-      background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-      animation: subtleGridPulse 3.5s ease-in-out infinite;
-    }
-
-    .gyc-float {
-      animation: floatCard 4s ease-in-out infinite;
-    }
-
-    .gyc-form-enter {
-      animation: cardRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-  </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body class="bg-[#F8FAFC] text-[#111A2A] min-h-screen flex flex-col lg:flex-row antialiased selection:bg-[#008CFF] selection:text-white">
+<body class="min-h-screen bg-[#111A2A] text-white flex items-center justify-center p-4">
 
-  <!-- =========================================================================
-       LEFT PANEL: DARK NAVY (#111A2A) ARCHITECTURAL BRAND SHOWCASE
-       ========================================================================= -->
-  <section class="lg:w-[46%] bg-[#111A2A] text-white relative overflow-hidden flex flex-col justify-between p-8 sm:p-12 lg:p-14">
-    <!-- Architectural Grid & Ambient Brand Glows -->
-    <div class="absolute inset-0 bg-studio-grid pointer-events-none"></div>
-    <div class="absolute -top-28 -left-28 w-96 h-96 rounded-full bg-[#01B7F9]/20 blur-[120px] pointer-events-none"></div>
-    <div class="absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-[#1749E8]/25 blur-[120px] pointer-events-none"></div>
-
-    <!-- Top Brand Lockup -->
-    <div class="relative z-10 flex items-center gap-3.5">
-      <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center font-extrabold text-sm tracking-tight shadow-lg">
-        <span class="bg-gradient-to-r from-[#01B7F9] to-[#008CFF] bg-clip-text text-transparent">GYC</span>
-      </div>
+  <div class="w-full max-w-5xl grid md:grid-cols-2 bg-white text-slate-900 rounded-2xl shadow-2xl overflow-hidden">
+    
+    <!-- Left Branding Panel -->
+    <div class="bg-[#111A2A] text-white p-8 md:p-10 flex flex-col justify-between border-r border-slate-800">
       <div>
-        <span class="font-extrabold text-base tracking-tight text-white block leading-none">Get You Collab</span>
-        <span class="text-[11px] font-medium text-white/50 block mt-1">Creator Commerce Suite</span>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 rounded-xl bg-[#008CFF] flex items-center justify-center font-extrabold text-sm tracking-wider">GYC</div>
+          <div>
+            <div class="font-bold text-lg leading-tight">Get You Collab</div>
+            <div class="text-xs text-[#01B7F9]">Creator Commerce Suite</div>
+          </div>
+        </div>
+
+        <span class="inline-block text-[11px] font-bold tracking-widest uppercase px-3 py-1 rounded-full bg-slate-800/80 text-[#01B7F9] border border-slate-700 mb-5">
+          MULTI-TENANT ATTRIBUTION
+        </span>
+        <h1 class="text-3xl font-extrabold leading-tight mb-4">
+          Precision creator attribution &amp; <span class="text-[#01B7F9]">instant settlements.</span>
+        </h1>
+        <p class="text-sm text-slate-400 leading-relaxed">
+          Select your workspace portal on the right to sign in or create your account via Google or email.
+        </p>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <span>Get You Collab CRM © 2026</span>
+        <span class="text-[#01B7F9] font-semibold">● Live Sync</span>
       </div>
     </div>
 
-    <!-- Center Editorial Pitch -->
-    <div class="relative z-10 my-12 lg:my-0 space-y-6 max-w-md">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15">
-        <span class="w-1.5 h-1.5 rounded-full bg-[#01B7F9] animate-ping"></span>
-        <span class="text-[10px] font-bold uppercase tracking-[0.22em] text-[#01B7F9]">Multi-Tenant Attribution</span>
-      </div>
-
-      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.15] text-white">
-        Precision creator attribution & <span class="bg-gradient-to-r from-[#01B7F9] to-[#008CFF] bg-clip-text text-transparent">instant settlements.</span>
-      </h2>
-
-      <p class="text-xs sm:text-sm text-white/65 leading-relaxed font-medium">
-        Unified workspace for Super Admins, Brand Partners, and Verified Creators to track GMV, audit deliverables, and execute UTR-verified disbursements.
-      </p>
-
-      <!-- Floating Live Telemetry Preview Card -->
-      <div class="gyc-float hidden sm:block bg-white/[0.06] border border-white/10 backdrop-blur-md rounded-2xl p-4 mt-4">
-        <div class="flex items-center justify-between text-[11px] font-bold text-white/50 uppercase tracking-wider mb-2">
-          <span>Active Ledger Engine</span>
-          <span class="text-[#01B7F9]">● Live Sync</span>
-        </div>
-        <div class="grid grid-cols-3 gap-3 pt-2 border-t border-white/10">
-          <div>
-            <span class="text-[10px] text-white/45 block">Role Isolation</span>
-            <span class="text-xs font-extrabold text-white mt-0.5 block">RBAC JWT</span>
-          </div>
-          <div>
-            <span class="text-[10px] text-white/45 block">Attribution</span>
-            <span class="text-xs font-extrabold text-[#01B7F9] mt-0.5 block">Cookie + SKU</span>
-          </div>
-          <div>
-            <span class="text-[10px] text-white/45 block">Payout Audit</span>
-            <span class="text-xs font-extrabold text-white mt-0.5 block">UTR Locked</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Copyright -->
-    <div class="relative z-10 flex items-center justify-between text-[11px] font-medium text-white/40">
-      <span>Get You Collab CRM &copy; 2026</span>
-      <span>Mumbai • Enterprise Edition</span>
-    </div>
-  </section>
-
-  <!-- =========================================================================
-       RIGHT PANEL: CRISP WHITE (#FFFFFF) AUTHENTICATION FORM
-       ========================================================================= -->
-  <section class="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-14">
-    <div class="gyc-form-enter w-full max-w-md bg-white border border-[#111A2A]/10 rounded-2xl p-7 sm:p-9 shadow-2xl shadow-[#111A2A]/[0.06]">
-
-      <!-- Form Header -->
-      <div class="mb-6">
-        <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#008CFF]">Workspace Access</span>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111A2A] mt-1">Sign in to Studio</h1>
-        <p class="text-xs font-medium text-[#111A2A]/55 mt-1">Enter your registered workspace credentials to continue</p>
-      </div>
-
-      <!-- Error Alert Box -->
-      <div id="error-alert" class="hidden mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs text-center font-bold"></div>
-
-      <!-- Login Form -->
-      <form id="login-form" class="space-y-4">
-        <div>
-          <label for="email" class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Work Email</label>
-          <input 
-            type="email" 
-            id="email" 
-            required 
-            placeholder="name@company.com" 
-            class="w-full px-4 py-3 rounded-xl bg-[#F8FAFC] border border-[#111A2A]/15 text-[#111A2A] placeholder-[#111A2A]/35 focus:outline-none focus:border-[#008CFF] focus:bg-white focus:ring-4 focus:ring-[#008CFF]/10 text-sm font-medium transition"
-          >
-        </div>
-
-        <div>
-          <label for="password" class="block text-[11px] font-bold uppercase tracking-wider text-[#111A2A]/60 mb-1.5">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            required 
-            placeholder="••••••••" 
-            class="w-full px-4 py-3 rounded-xl bg-[#F8FAFC] border border-[#111A2A]/15 text-[#111A2A] placeholder-[#111A2A]/35 focus:outline-none focus:border-[#008CFF] focus:bg-white focus:ring-4 focus:ring-[#008CFF]/10 text-sm font-medium transition"
-          >
-        </div>
-
-        <button 
-          type="submit" 
-          id="submit-btn" 
-          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#01B7F9] to-[#1749E8] hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-[#008CFF]/25 transition duration-150 flex items-center justify-center gap-2 cursor-pointer mt-2 transform active:scale-[0.99]"
+    <!-- Right Dual-Portal Auth Card -->
+    <div class="p-8 md:p-10 bg-white">
+      
+      <!-- Step 1: Role Portal Switcher -->
+      <div class="grid grid-cols-2 gap-2 p-1.5 rounded-xl bg-slate-100 border border-slate-200 mb-6">
+        <button
+          type="button"
+          id="tabCreatorPortal"
+          onclick="switchPortal('CREATOR')"
+          class="py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#111A2A] text-white shadow"
         >
-          <span>Sign In to Portal</span>
-          <span>→</span>
+          I'm a Creator
+        </button>
+        <button
+          type="button"
+          id="tabBrandPortal"
+          onclick="switchPortal('BRAND_ADMIN')"
+          class="py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900"
+        >
+          I'm a Brand
+        </button>
+      </div>
+
+      <!-- Portal Header + Sign In / Sign Up Mode Toggle -->
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <p id="portalBadge" class="text-[11px] font-bold uppercase tracking-wider text-[#008CFF]">CREATOR WORKSPACE</p>
+          <h2 id="portalTitle" class="text-2xl font-extrabold text-slate-900">Creator Studio Access</h2>
+        </div>
+        <div class="flex rounded-lg bg-slate-100 p-0.5 text-xs font-semibold">
+          <button type="button" id="modeLoginBtn" onclick="switchAuthMode('login')" class="px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm">
+            Sign In
+          </button>
+          <button type="button" id="modeRegisterBtn" onclick="switchAuthMode('register')" class="px-3 py-1.5 rounded-md text-slate-600">
+            Sign Up
+          </button>
+        </div>
+      </div>
+
+      <!-- Error / Success Alert -->
+      <div id="authAlert" class="hidden mb-4 p-3 rounded-xl text-xs font-medium bg-red-50 text-red-700 border border-red-200"></div>
+
+      <!-- CREATOR FORM -->
+      <form id="creatorForm" onsubmit="handleEmailAuth(event, 'CREATOR')" class="space-y-3.5">
+        <div id="creatorSignupFields" class="hidden space-y-3.5">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Full Name</label>
+            <input type="text" id="creatorName" placeholder="e.g. Roshan Yadav" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#008CFF]" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">WhatsApp / Phone (Optional)</label>
+            <input type="text" id="creatorPhone" placeholder="e.g. 9867043805" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#008CFF]" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Email</label>
+          <input type="email" id="creatorEmail" required placeholder="creator@gmail.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#008CFF]" />
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password</label>
+            <a href="#forgot" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#008CFF] hover:underline">Forgot password?</a>
+          </div>
+          <input type="password" id="creatorPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#008CFF]" />
+        </div>
+
+        <button type="submit" id="creatorSubmitBtn" class="w-full py-3 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+          Sign In as Creator →
         </button>
       </form>
 
-      <!-- Role-Based Navigation Routing Reference -->
-      <div class="mt-6 pt-5 border-t border-[#111A2A]/10 text-[11px] text-[#111A2A]/50 space-y-1.5 font-medium">
-        <div class="flex justify-between items-center">
-          <span class="font-bold text-[#111A2A]/70">SUPER_ADMIN</span>
-          <span class="px-2 py-0.5 rounded bg-[#F8FAFC] border border-[#111A2A]/10 text-[#111A2A]/60 text-[10px] font-semibold">/admin/dashboard.html</span>
+      <!-- BRAND FORM (Hidden until "I'm a Brand" is clicked) -->
+      <form id="brandForm" onsubmit="handleEmailAuth(event, 'BRAND_ADMIN')" class="hidden space-y-3.5">
+        <div id="brandSignupFields" class="hidden space-y-3.5">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand / Company Name</label>
+            <input type="text" id="brandCompanyName" placeholder="e.g. Nykaa Cosmetics" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#1749E8]" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Your Full Name</label>
+            <input type="text" id="brandContactName" placeholder="e.g. Aarav Mehta" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#1749E8]" />
+          </div>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="font-bold text-[#111A2A]/70">BRAND_ADMIN</span>
-          <span class="px-2 py-0.5 rounded bg-[#F8FAFC] border border-[#111A2A]/10 text-[#111A2A]/60 text-[10px] font-semibold">/brand/dashboard.html</span>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Work Email</label>
+          <input type="email" id="brandEmail" required placeholder="founder@brand.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#1749E8]" />
         </div>
-        <div class="flex justify-between items-center">
-          <span class="font-bold text-[#008CFF]">CREATOR</span>
-          <span class="px-2 py-0.5 rounded bg-[#01B7F9]/10 border border-[#008CFF]/20 text-[#1749E8] text-[10px] font-semibold">/creator/dashboard.html</span>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password</label>
+            <a href="#forgot" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#1749E8] hover:underline">Forgot password?</a>
+          </div>
+          <input type="password" id="brandPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#1749E8]" />
         </div>
+
+        <button type="submit" id="brandSubmitBtn" class="w-full py-3 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+          Sign In as Brand →
+        </button>
+      </form>
+
+      <!-- Divider + Shared Google Sign-In -->
+      <div class="my-5 flex items-center gap-3">
+        <div class="h-px bg-slate-200 flex-1"></div>
+        <span id="googleDividerLabel" class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Or continue as Creator</span>
+        <div class="h-px bg-slate-200 flex-1"></div>
       </div>
 
+      <div id="googleBtnContainer" class="flex justify-center"></div>
+      <p id="googleConfigMsg" class="hidden text-center text-xs text-amber-600 mt-2"></p>
+
     </div>
-  </section>
+  </div>
 
   <script>
-    const form = document.getElementById('login-form');
-    const errorAlert = document.getElementById('error-alert');
-    const submitBtn = document.getElementById('submit-btn');
+    let activeRole = "CREATOR";   // "CREATOR" or "BRAND_ADMIN"
+    let authMode = "login";       // "login" or "register"
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      let isRateLimited = false;
+    function switchPortal(role) {
+      activeRole = role;
+      const isCreator = role === "CREATOR";
 
-      if (errorAlert) errorAlert.classList.add('hidden');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Authenticating...</span>';
+      document.getElementById("tabCreatorPortal").className = isCreator
+        ? "py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#111A2A] text-white shadow"
+        : "py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+
+      document.getElementById("tabBrandPortal").className = !isCreator
+        ? "py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#1749E8] text-white shadow"
+        : "py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+
+      document.getElementById("creatorForm").classList.toggle("hidden", !isCreator);
+      document.getElementById("brandForm").classList.toggle("hidden", isCreator);
+
+      document.getElementById("portalBadge").textContent = isCreator ? "CREATOR WORKSPACE" : "BRAND PARTNER WORKSPACE";
+      document.getElementById("portalTitle").textContent = isCreator ? "Creator Studio Access" : "Brand Campaign Portal";
+      document.getElementById("googleDividerLabel").textContent = isCreator ? "Or continue as Creator" : "Or continue as Brand";
+
+      updateSubmitLabels();
+      hideAlert();
+    }
+
+    function switchAuthMode(mode) {
+      authMode = mode;
+      const isRegister = mode === "register";
+
+      document.getElementById("modeLoginBtn").className = !isRegister
+        ? "px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm"
+        : "px-3 py-1.5 rounded-md text-slate-600";
+
+      document.getElementById("modeRegisterBtn").className = isRegister
+        ? "px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm"
+        : "px-3 py-1.5 rounded-md text-slate-600";
+
+      document.getElementById("creatorSignupFields").classList.toggle("hidden", !isRegister);
+      document.getElementById("brandSignupFields").classList.toggle("hidden", !isRegister);
+
+      updateSubmitLabels();
+      hideAlert();
+    }
+
+    function updateSubmitLabels() {
+      const isRegister = authMode === "register";
+      document.getElementById("creatorSubmitBtn").textContent = isRegister
+        ? "Create Creator Account →"
+        : "Sign In as Creator →";
+      document.getElementById("brandSubmitBtn").textContent = isRegister
+        ? "Create Brand Account →"
+        : "Sign In as Brand →";
+    }
+
+    function showAlert(msg) {
+      const el = document.getElementById("authAlert");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+    }
+
+    function hideAlert() {
+      document.getElementById("authAlert").classList.add("hidden");
+    }
+
+    function completeLogin(data) {
+      localStorage.setItem("gyc_token", data.access_token);
+      localStorage.setItem("gyc_role", data.role);
+      localStorage.setItem("gyc_email", data.email);
+
+      if (data.role === "SUPER_ADMIN") {
+        window.location.href = "/index.html?view=admin";
+      } else if (data.role === "BRAND_ADMIN") {
+        window.location.href = "/index.html?view=brand";
+      } else {
+        window.location.href = "/index.html?view=creator";
       }
+    }
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+    async function handleEmailAuth(e, role) {
+      e.preventDefault();
+      hideAlert();
+
+      const isCreator = role === "CREATOR";
+      const email = document.getElementById(isCreator ? "creatorEmail" : "brandEmail").value.trim();
+      const password = document.getElementById(isCreator ? "creatorPassword" : "brandPassword").value;
+
+      const endpoint = authMode === "register" ? "/api/v1/auth/register" : "/api/v1/auth/login";
+      const payload = authMode === "register"
+        ? {
+            role,
+            email,
+            password,
+            full_name: isCreator
+              ? document.getElementById("creatorName").value.trim()
+              : document.getElementById("brandContactName").value.trim(),
+            phone_number: isCreator ? document.getElementById("creatorPhone").value.trim() : null,
+            company_name: !isCreator ? document.getElementById("brandCompanyName").value.trim() : null
+          }
+        : { email, password };
 
       try {
-        const response = await fetch('/api/v1/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          if (response.status === 429) {
-            isRateLimited = true;
-            if (submitBtn) {
-              submitBtn.disabled = true;
-              submitBtn.innerHTML = '<span>Locked (Wait 60s)</span>';
-            }
-            setTimeout(() => {
-              if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>Sign In to Portal</span><span>→</span>';
-              }
-              if (errorAlert) errorAlert.classList.add('hidden');
-            }, 60000);
-          }
-          throw new Error(data.detail || 'Invalid email or password.');
-        }
-
-        // 1. Store session tokens & scoped IDs in localStorage
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('user_role', data.role || data.user?.role || '');
-        localStorage.setItem('user_id', data.user_id || data.user?.id || '');
-        localStorage.setItem('user_email', email);
-
-        // Resolve influencer_id from response or fallback to decoded JWT token
-        let influencerId = data.influencer_id || data.user?.influencer_id;
-        if (!influencerId && data.access_token) {
-          try {
-            const payload = JSON.parse(atob(data.access_token.split('.')[1]));
-            influencerId = payload.influencer_id;
-          } catch (err) {
-            console.error('Failed to parse token payload', err);
-          }
-        }
-
-        if (influencerId) {
-          localStorage.setItem('influencer_id', influencerId);
-        } else {
-          localStorage.removeItem('influencer_id');
-        }
-
-        if (data.brand_id || data.user?.brand_id) {
-          localStorage.setItem('brand_id', data.brand_id || data.user?.brand_id);
-        } else {
-          localStorage.removeItem('brand_id');
-        }
-
-        // 2. Dynamic Redirect: Sends each role to their designated page
-        const redirectUrl = data.redirect_url || (data.role === 'CREATOR' ? '/index.html?view=creator' : '/index.html');
-        window.location.href = redirectUrl;
-
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Authentication failed.");
+        completeLogin(data);
       } catch (err) {
-        if (errorAlert) {
-          errorAlert.textContent = err.message;
-          errorAlert.classList.remove('hidden');
+        showAlert(err.message);
+      }
+    }
+
+    async function handleGoogleResponse(response) {
+      hideAlert();
+      try {
+        const res = await fetch("/api/v1/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            credential: response.credential,
+            role: activeRole
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Google Sign-In failed.");
+        completeLogin(data);
+      } catch (err) {
+        showAlert(err.message);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch("/api/v1/auth/config");
+        const cfg = await res.json();
+        if (!cfg.google_client_id) {
+          const msg = document.getElementById("googleConfigMsg");
+          msg.textContent = "Google Sign-In is not configured yet.";
+          msg.classList.remove("hidden");
+          return;
         }
-      } finally {
-        if (submitBtn && !isRateLimited) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Sign In to Portal</span><span>→</span>';
-        }
+        google.accounts.id.initialize({
+          client_id: cfg.google_client_id,
+          callback: handleGoogleResponse
+        });
+        google.accounts.id.renderButton(
+          document.getElementById("googleBtnContainer"),
+          { theme: "outline", size: "large", width: 320, text: "continue_with" }
+        );
+      } catch (e) {
+        console.error("Auth config load failed:", e);
       }
     });
   </script>

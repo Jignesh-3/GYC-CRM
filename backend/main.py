@@ -1,6 +1,13 @@
 import uuid
 import os
+import json
+import random
+import smtplib
+import urllib.request
+import urllib.parse
 import logging
+from datetime import datetime, timedelta
+from email.message import EmailMessage
 from decimal import Decimal
 from contextlib import asynccontextmanager
 from typing import List, Dict, Any, Optional
@@ -36,7 +43,13 @@ from backend.schemas import (
     LoginRequest,
     LoginResponse,
     CreatorDossierUpdate,
-    BrandCreateRequest
+    BrandCreateRequest,
+    GoogleLoginRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    GoogleAuthRequest,
+    RegisterRequest,
+    GoogleLoginRequest
 )
 
 
@@ -363,7 +376,19 @@ async def get_admin_brands_summary():
             SELECT 
                 b.id AS brand_id,
                 b.name AS brand_name,
-                COUNT(DISTINCT o.influencer_id) AS active_creators,
+                (
+                    SELECT COUNT(DISTINCT creator_id)
+                    FROM (
+                        SELECT o2.influencer_id AS creator_id
+                        FROM orders o2
+                        WHERE o2.brand_id = b.id
+                        UNION
+                        SELECT uv.influencer_id AS creator_id
+                        FROM ugc_videos uv
+                        JOIN brand_deals bd ON uv.brand_deal_id = bd.id
+                        WHERE bd.brand_id = b.id AND uv.review_status = 'APPROVED'
+                    ) AS brand_creators
+                ) AS active_creators,
                 COUNT(DISTINCT o.id) AS total_orders,
                 COALESCE(SUM(o.order_amount), 0) AS attributed_gmv,
                 COALESCE(SUM(cl.commission_amount), 0) AS total_commission
@@ -386,10 +411,10 @@ async def get_admin_brands_summary():
             }
             for row in rows
         ]
-
+    
 @app.get("/api/v1/admin/brands/{brand_id}/creators", tags=["Admin Operations"])
 async def get_brand_creators_breakdown(brand_id: str):
-    """Returns all creators who have generated attributed orders for a specific brand."""
+    """Returns all creators who have attributed orders OR approved UGC deliverables for a specific brand."""
     async with get_db_cursor() as cursor:
         await cursor.execute(
             """
@@ -399,15 +424,22 @@ async def get_brand_creators_breakdown(brand_id: str):
                 i.email AS creator_email,
                 COUNT(DISTINCT o.id) AS total_orders,
                 COALESCE(SUM(o.order_amount), 0) AS attributed_gmv,
-                COALESCE(SUM(cl.commission_amount), 0) AS payable_commission
-            FROM orders o
-            JOIN influencers i ON o.influencer_id = i.id
-            LEFT JOIN commission_ledger cl ON o.id = cl.order_id
-            WHERE o.brand_id = %s
+                COALESCE(SUM(cl.commission_amount), 0) AS payable_commission,
+                COUNT(DISTINCT uv.id) AS approved_deliverables
+            FROM influencers i
+            LEFT JOIN orders o 
+                ON i.id = o.influencer_id AND o.brand_id = %s
+            LEFT JOIN commission_ledger cl 
+                ON o.id = cl.order_id
+            LEFT JOIN ugc_videos uv 
+                ON i.id = uv.influencer_id AND uv.review_status = 'APPROVED'
+            LEFT JOIN brand_deals bd 
+                ON uv.brand_deal_id = bd.id AND bd.brand_id = %s
+            WHERE o.id IS NOT NULL OR bd.id IS NOT NULL
             GROUP BY i.id, i.name, i.email
-            ORDER BY attributed_gmv DESC, i.name ASC;
+            ORDER BY attributed_gmv DESC, approved_deliverables DESC, i.name ASC;
             """,
-            (brand_id,),
+            (brand_id, brand_id),
         )
         rows = await cursor.fetchall()
         return [
@@ -418,11 +450,11 @@ async def get_brand_creators_breakdown(brand_id: str):
                 "total_orders": int(row["total_orders"] or 0),
                 "attributed_gmv": float(row["attributed_gmv"] or 0),
                 "payable_commission": float(row["payable_commission"] or 0),
+                "approved_deliverables": int(row["approved_deliverables"] or 0),
             }
             for row in rows
         ]
-
-
+    
 # --- 5. Creator Portal Endpoints ---
 @app.patch("/api/v1/creators/{influencer_id}/dossier", tags=["Creator Portal"])
 async def update_creator_dossier(influencer_id: str, payload: CreatorDossierUpdate):
@@ -1109,7 +1141,7 @@ async def disburse_batch_payouts(payload: BatchDisbursementRequest):
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Payout batch settlement failed: {str(exc)}")
 
-        # Import security functions from security.py
+# --- Login Endpoints ---
 from backend.security import verify_password, create_access_token
 
 @app.post("/api/v1/auth/login", response_model=LoginResponse)
@@ -1144,6 +1176,11 @@ async def login(request: Request, payload: LoginRequest):
                 detail="Invalid email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        if not user.get("password_hash"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Password not set yet. Sign in with Google or click 'Forgot Password' to create one.",
+            )
 
         token = create_access_token(
             user_id=user["id"],
@@ -1169,6 +1206,282 @@ async def login(request: Request, payload: LoginRequest):
             redirect_url=redirect_url
         )
 
+# --- Helpers ---
+def _build_login_response(user: dict) -> LoginResponse:
+    token = create_access_token(
+        user_id=user["id"],
+        role=user["role"],
+        brand_id=user["brand_id"],
+        influencer_id=user["influencer_id"]
+    )
+    redirect_map = {
+        "SUPER_ADMIN": "/index.html?view=admin",
+        "BRAND_ADMIN": "/index.html?view=brand",
+        "CREATOR": "/index.html?view=creator"
+    }
+    return LoginResponse(
+        access_token=token,
+        token_type="bearer",
+        role=user["role"],
+        user_id=user["id"],
+        brand_id=user["brand_id"],
+        influencer_id=user["influencer_id"],
+        redirect_url=redirect_map.get(user["role"], "/index.html")
+    )
+
+def _send_reset_otp_email(to_email: str, otp: str):
+    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER", "").strip()
+    smtp_pass = os.getenv("SMTP_PASS", "").strip()
+
+    if not smtp_user or not smtp_pass:
+        print(f"[DEV OTP] Password reset OTP for {to_email}: {otp}")
+        return
+
+    msg = EmailMessage()
+    msg["Subject"] = f"{otp} is your Get You Collab verification code"
+    msg["From"] = f"Get You Collab <{smtp_user}>"
+    msg["To"] = to_email
+
+    msg.set_content(
+        f"Your Get You Collab verification code is: {otp}\n\n"
+        "This code expires in 15 minutes. If you did not request this, please ignore this email."
+    )
+
+    msg.add_alternative(
+        f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0B1120; padding: 32px 16px; color: #FFFFFF;">
+          <div style="max-width: 480px; margin: 0 auto; background-color: #111A2A; border: 1px solid #1E293B; border-radius: 16px; padding: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #01B7F9; margin-bottom: 8px;">
+              Get You Collab
+            </div>
+            <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 700; color: #FFFFFF;">
+              Studio Access Verification
+            </h2>
+            <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #94A3B8;">
+              Use the 6-digit verification code below to set or reset your workspace password. This code expires in <strong style="color: #FFFFFF;">15 minutes</strong>.
+            </p>
+            <div style="background-color: #0B1120; border: 1px solid #1749E8; border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 24px;">
+              <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #01B7F9;">{otp}</span>
+            </div>
+            <p style="margin: 0; font-size: 12px; color: #64748B;">
+              If you didn't request this code, you can safely ignore this email.
+            </p>
+          </div>
+        </div>
+        """,
+        subtype="html"
+    )
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+
+def _extract_user_row(row, keys):
+    if not row:
+        return None
+    if isinstance(row, dict):
+        return row
+    return dict(zip(keys, row))
+
+def _is_user_active(val) -> bool:
+    if isinstance(val, (bytes, bytearray)):
+        return val == b"\x01"
+    return bool(val)
+
+# --- 1. Sign in with Google (Paid & Active Users Only) ---
+@app.post("/api/v1/auth/register", response_model=LoginResponse)
+@limiter.limit("10/minute")
+async def register_user(request: Request, payload: RegisterRequest):
+    email = payload.email.strip().lower()
+    full_name = payload.full_name.strip()
+    requested_role = (payload.role or "CREATOR").strip().upper()
+    phone = (payload.phone_number or "").strip() or None
+
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    if len(payload.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    if not full_name:
+        raise HTTPException(status_code=400, detail="Name is required.")
+
+    hashed_pw = get_password_hash(payload.password)
+
+    async with get_db_cursor() as cursor:
+        check = cursor.execute(
+            "SELECT id FROM users WHERE LOWER(TRIM(email)) = %s",
+            (email,)
+        )
+        if hasattr(check, "__await__"):
+            await check
+            existing = await cursor.fetchone()
+        else:
+            existing = cursor.fetchone()
+
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this email already exists. Please sign in instead."
+            )
+
+        brand_id = None
+        influencer_id = None
+
+        if requested_role == "BRAND_ADMIN":
+            brand_id = str(uuid.uuid4())
+            brand_title = (payload.company_name or f"{full_name}'s Brand").strip()
+            ins_brand = cursor.execute(
+                "INSERT INTO brands (id, name) VALUES (%s, %s)",
+                (brand_id, brand_title)
+            )
+            if hasattr(ins_brand, "__await__"):
+                await ins_brand
+            assigned_role = "BRAND_ADMIN"
+        else:
+            influencer_id = str(uuid.uuid4())
+            ins_inf = cursor.execute(
+                "INSERT INTO influencers (id, name, email, phone_number, password_hash) VALUES (%s, %s, %s, %s, %s)",
+                (influencer_id, full_name, email, phone, hashed_pw)
+            )
+            if hasattr(ins_inf, "__await__"):
+                await ins_inf
+            assigned_role = "CREATOR"
+
+        new_user_id = str(uuid.uuid4())
+        ins_user = cursor.execute(
+            """
+            INSERT INTO users (id, email, password_hash, role, brand_id, influencer_id, is_active)
+            VALUES (%s, %s, %s, %s, %s, %s, 1)
+            """,
+            (new_user_id, email, hashed_pw, assigned_role, brand_id, influencer_id)
+        )
+        if hasattr(ins_user, "__await__"):
+            await ins_user
+
+        user = {
+            "id": new_user_id,
+            "email": email,
+            "password_hash": hashed_pw,
+            "role": assigned_role,
+            "brand_id": brand_id,
+            "influencer_id": influencer_id,
+            "is_active": 1,
+            "google_sub": None,
+        }
+        return _build_login_response(user)
+    
+# --- 2. Forgot Password / First-Time Password Setup (Send 6-Digit OTP) ---
+@app.post("/api/v1/auth/forgot-password")
+@limiter.limit("5/minute")
+async def forgot_password(request: Request, payload: ForgotPasswordRequest):
+    email = payload.email.strip().lower()
+
+    async with get_db_cursor() as cursor:
+        db_res = cursor.execute("SELECT DATABASE()")
+        if hasattr(db_res, "__await__"):
+            await db_res
+            active_db = await cursor.fetchone()
+        else:
+            active_db = cursor.fetchone()
+
+        res = cursor.execute(
+            "SELECT id, email, is_active FROM users WHERE LOWER(TRIM(email)) = %s",
+            (email,)
+        )
+        if hasattr(res, "__await__"):
+            await res
+            raw_user = await cursor.fetchone()
+        else:
+            raw_user = cursor.fetchone()
+
+        user = _extract_user_row(raw_user, ["id", "email", "is_active"])
+        print(f"[AUTH DEBUG] DB={active_db} | forgot_password('{email}') -> {user}")
+
+        if not user or not _is_user_active(user.get("is_active")):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active paid account found for this email."
+            )
+
+        otp = f"{random.randint(100000, 999999)}"
+        expires_at = datetime.utcnow() + timedelta(minutes=15)
+
+        upd = cursor.execute(
+            "UPDATE users SET reset_otp = %s, reset_otp_expires_at = %s WHERE id = %s",
+            (otp, expires_at, user["id"])
+        )
+        if hasattr(upd, "__await__"):
+            await upd
+
+    _send_reset_otp_email(email, otp)
+    return {"message": "A 6-digit verification code has been sent to your registered email."}
+
+# --- 3. Verify OTP & Set New Password (Auto-Logs In) ---
+@app.post("/api/v1/auth/reset-password", response_model=LoginResponse)
+@limiter.limit("5/minute")
+async def reset_password(request: Request, payload: ResetPasswordRequest):
+    email = payload.email.strip().lower()
+    if len(payload.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters long."
+        )
+
+    async with get_db_cursor() as cursor:
+        res = cursor.execute(
+            """
+            SELECT id, email, role, brand_id, influencer_id, is_active, reset_otp, reset_otp_expires_at
+            FROM users
+            WHERE LOWER(TRIM(email)) = %s
+            """,
+            (email,)
+        )
+        if hasattr(res, "__await__"):
+            await res
+            raw_user = await cursor.fetchone()
+        else:
+            raw_user = cursor.fetchone()
+
+        user = _extract_user_row(
+            raw_user,
+            ["id", "email", "role", "brand_id", "influencer_id", "is_active", "reset_otp", "reset_otp_expires_at"]
+        )
+
+        if not user or not _is_user_active(user.get("is_active")):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No active paid account found for this email."
+            )
+
+        if not user.get("reset_otp") or str(user["reset_otp"]).strip() != payload.otp.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid verification code."
+            )
+
+        expires_at = user.get("reset_otp_expires_at")
+        if not expires_at or datetime.utcnow() > expires_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Verification code has expired. Please request a new one."
+            )
+
+        hashed = get_password_hash(payload.new_password)
+        upd = cursor.execute(
+            """
+            UPDATE users
+            SET password_hash = %s, reset_otp = NULL, reset_otp_expires_at = NULL
+            WHERE id = %s
+            """,
+            (hashed, user["id"])
+        )
+        if hasattr(upd, "__await__"):
+            await upd
+
+        return _build_login_response(user)
+    
 # --- Brands Login and Data ---
 @app.get("/api/v1/brand/portal-data", tags=["Brand Portal"])
 async def get_brand_portal_data(brand_id: str):
@@ -1322,6 +1635,18 @@ async def get_public_latest_campaigns(limit: int = 6):
         "campaigns": campaigns
     }
 
+
+from fastapi.responses import RedirectResponse
+
+@app.get("/")
+async def root_redirect():
+    return RedirectResponse(url="/login.html")
+
+@app.get("/api/v1/auth/config")
+async def get_auth_config():
+    return {
+        "google_client_id": os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    }
 
 import os
 from pathlib import Path
