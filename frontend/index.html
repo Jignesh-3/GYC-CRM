@@ -1876,6 +1876,7 @@
     <span class="text-[11px] font-semibold text-[#111A2A]/40">Enterprise Creator Commerce Suite // FastAPI & MySQL</span>
   </footer>
 
+
   <!-- NON-DISMISSIBLE CREATOR ONBOARDING LOCK MODAL -->
 <div id="creatorOnboardingModal" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
   <div class="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4">
@@ -2042,6 +2043,193 @@
     } finally {
       btn.disabled = false;
       btn.textContent = "Save & Unlock Creator Studio →";
+    }
+  }
+</script>
+
+<!-- NON-DISMISSIBLE BRAND ONBOARDING LOCK MODAL -->
+<div id="brandOnboardingModal" class="hidden fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4">
+    <div>
+      <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#1749E8]/10 text-[#1749E8]">Required Setup</span>
+      <h2 class="text-xl font-extrabold text-slate-900 mt-1.5">Complete Your Brand Profile</h2>
+      <p class="text-xs text-slate-500 mt-1">Fill in these mandatory brand details once to unlock your Brand Console.</p>
+    </div>
+
+    <div id="brandOnboardingAlert" class="hidden p-3 rounded-xl text-xs font-medium bg-red-50 text-red-700 border border-red-200"></div>
+
+    <form id="brandOnboardingForm" onsubmit="submitBrandOnboarding(event)" class="space-y-3">
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand / Company Name <span class="text-rose-500">*</span></label>
+        <input type="text" id="obBrandCompany" required placeholder="e.g. Nykaa Cosmetics" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#1749E8]" />
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Website Link <span class="text-rose-500">*</span></label>
+        <input type="url" id="obBrandWebsite" required placeholder="https://yourbrand.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#1749E8]" />
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Social Media Link <span class="text-rose-500">*</span></label>
+        <input type="url" id="obBrandSocial" required placeholder="https://instagram.com/yourbrand" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#1749E8]" />
+      </div>
+
+      <!-- Searchable Brand Niche Dropdown -->
+      <div id="obBrandNicheWrap" class="relative">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Niche <span class="text-rose-500">*</span></label>
+        <input type="hidden" id="obBrandNiche" value="" />
+        <button type="button" onclick="toggleObBrandNicheMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
+          <span id="obBrandNicheLabel" class="text-slate-400 truncate">Select your brand niche...</span>
+          <span class="text-slate-400 text-xs">▼</span>
+        </button>
+        <div id="obBrandNicheMenu" class="hidden absolute z-50 left-0 right-0 top-full mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+          <div class="p-2 border-b border-slate-100 bg-slate-50">
+            <input type="text" id="obBrandNicheSearch" oninput="renderObBrandNiches(this.value)" placeholder="Search 30+ niches..." class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#1749E8]" />
+          </div>
+          <ul id="obBrandNicheList" class="max-h-44 overflow-y-auto divide-y divide-slate-50 text-sm text-slate-700"></ul>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5">
+        <div id="obBrandObjWrap" class="relative">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Campaign Objectives <span class="text-rose-500">*</span></label>
+          <input type="hidden" id="obBrandObjective" value="" />
+          <button type="button" onclick="toggleObBrandObjMenu()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
+            <span id="obBrandObjLabel" class="text-slate-400 truncate">Select objectives...</span>
+            <span class="text-slate-400 text-xs">▼</span>
+          </button>
+          <div id="obBrandObjMenu" class="hidden absolute z-50 left-0 w-60 bottom-full mb-1.5 rounded-xl border border-slate-200 bg-white shadow-xl py-1.5 divide-y divide-slate-50">
+            <label class="flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+              <input type="checkbox" value="Brand Awareness" onchange="syncObBrandObjectives()" class="ob-brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+              <span>Brand Awareness</span>
+            </label>
+            <label class="flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+              <input type="checkbox" value="Lead Generation / Sales" onchange="syncObBrandObjectives()" class="ob-brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+              <span>Lead Generation / Sales</span>
+            </label>
+            <label class="flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+              <input type="checkbox" value="App Installs" onchange="syncObBrandObjectives()" class="ob-brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+              <span>App Installs</span>
+            </label>
+            <label class="flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+              <input type="checkbox" value="Content Creation & UGC" onchange="syncObBrandObjectives()" class="ob-brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+              <span>Content Creation & UGC</span>
+            </label>
+            <label class="flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+              <input type="checkbox" value="Event Promotion" onchange="syncObBrandObjectives()" class="ob-brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+              <span>Event Promotion</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Estimated Budget <span class="text-rose-500">*</span></label>
+          <select id="obBrandBudget" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:outline-none focus:border-[#1749E8]">
+            <option value="" disabled selected>Select...</option>
+            <option value="Under ₹50,000">Under ₹50,000</option>
+            <option value="₹50,000 - ₹2,00,000">₹50,000 - ₹2,00,000</option>
+            <option value="₹2,00,000 - ₹5,00,000">₹2,00,000 - ₹5,00,000</option>
+            <option value="₹5,00,000+">₹5,00,000+</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="obBrandSubmitBtn" class="w-full py-3 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+        Save & Unlock Brand Console →
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function renderObBrandNiches(q = "") {
+    const sel = document.getElementById("obBrandNiche").value;
+    const list = OB_NICHES.filter(n => n.toLowerCase().includes(q.trim().toLowerCase()));
+    document.getElementById("obBrandNicheList").innerHTML = list.length
+      ? list.map(n => `<li onclick="pickObBrandNiche('${n}')" class="px-3.5 py-2 cursor-pointer hover:bg-[#1749E8]/10 hover:text-[#1749E8] flex justify-between"><span>${n}</span>${sel === n ? '<span class="text-[#1749E8] font-bold">✓</span>' : ''}</li>`).join("")
+      : `<li class="px-3.5 py-2 text-xs text-slate-400 text-center">No match found</li>`;
+  }
+
+  function toggleObBrandNicheMenu() {
+    const m = document.getElementById("obBrandNicheMenu");
+    if (!m.classList.toggle("hidden")) {
+      const s = document.getElementById("obBrandNicheSearch");
+      s.value = ""; renderObBrandNiches(); setTimeout(() => s.focus(), 20);
+    }
+  }
+
+  function pickObBrandNiche(n) {
+    document.getElementById("obBrandNiche").value = n;
+    const lbl = document.getElementById("obBrandNicheLabel");
+    lbl.textContent = n;
+    lbl.classList.replace("text-slate-400", "text-slate-900");
+    document.getElementById("obBrandNicheMenu").classList.add("hidden");
+  }
+
+  document.addEventListener("click", e => {
+    if (!document.getElementById("obBrandNicheWrap")?.contains(e.target)) {
+      document.getElementById("obBrandNicheMenu")?.classList.add("hidden");
+    }
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const role = (localStorage.getItem("gyc_role") || localStorage.getItem("user_role") || "").toUpperCase();
+    const needsOnboarding = localStorage.getItem("gyc_onboarding_required") === "true";
+    if (role === "BRAND_ADMIN" && needsOnboarding) {
+      renderObBrandNiches();
+      document.body.style.overflow = "hidden";
+      document.getElementById("brandOnboardingModal").classList.remove("hidden");
+    }
+  });
+
+  async function submitBrandOnboarding(e) {
+    e.preventDefault();
+    const alertEl = document.getElementById("brandOnboardingAlert");
+    alertEl.classList.add("hidden");
+
+    const brandId = localStorage.getItem("brand_id") || localStorage.getItem("active_brand_id");
+    const brand_niche = document.getElementById("obBrandNiche").value.trim();
+    const campaign_objectives = document.getElementById("obBrandObjective").value.trim();
+
+    if (!brand_niche || !campaign_objectives) {
+      alertEl.textContent = "Please select your Brand Niche and at least one Campaign Objective.";
+      alertEl.classList.remove("hidden");
+      return;
+    }
+
+    const btn = document.getElementById("obBrandSubmitBtn");
+    btn.disabled = true;
+    btn.textContent = "Saving Brand Profile...";
+
+    try {
+      const res = await fetch(`/api/v1/brands/${brandId}/onboarding`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("gyc_token") || ""}`
+        },
+        body: JSON.stringify({
+          company_name: document.getElementById("obBrandCompany").value.trim(),
+          website_url: document.getElementById("obBrandWebsite").value.trim(),
+          social_media_link: document.getElementById("obBrandSocial").value.trim(),
+          brand_niche,
+          campaign_objectives,
+          estimated_campaign_budget: document.getElementById("obBrandBudget").value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to save brand profile.");
+
+      localStorage.removeItem("gyc_onboarding_required");
+      document.body.style.overflow = "";
+      document.getElementById("brandOnboardingModal").classList.add("hidden");
+      window.location.reload();
+    } catch (err) {
+      alertEl.textContent = err.message;
+      alertEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save & Unlock Brand Console →";
     }
   }
 </script>

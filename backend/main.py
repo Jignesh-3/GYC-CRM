@@ -50,6 +50,7 @@ from backend.schemas import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     CreatorOnboardingRequest,
+    BrandOnboardingRequest,
     RegisterRequest
 )
 
@@ -1350,6 +1351,18 @@ async def google_login(request: Request, payload: GoogleLoginRequest):
                     inf = cursor.fetchone()
                 if not inf or not (inf.get("creator_handle") or "").strip() or not (inf.get("primary_niche") or "").strip():
                     onboarding_required = True
+            elif user["role"] == "BRAND_ADMIN" and user.get("brand_id"):
+                br_q = cursor.execute(
+                    "SELECT website_url, brand_niche, estimated_campaign_budget FROM brands WHERE id = %s",
+                    (user["brand_id"],)
+                )
+                if hasattr(br_q, "__await__"):
+                    await br_q
+                    br = await cursor.fetchone()
+                else:
+                    br = cursor.fetchone()
+                if not br or not (br.get("website_url") or "").strip() or not (br.get("brand_niche") or "").strip():
+                    onboarding_required = True
         else:
             new_user_id = str(uuid.uuid4())
             brand_id, influencer_id = None, None
@@ -1360,6 +1373,7 @@ async def google_login(request: Request, payload: GoogleLoginRequest):
                 if hasattr(ins_b, "__await__"):
                     await ins_b
                 assigned_role = "BRAND_ADMIN"
+                onboarding_required = True
             else:
                 influencer_id = str(uuid.uuid4())
                 ins_i = cursor.execute(
@@ -1419,6 +1433,33 @@ async def complete_creator_onboarding(influencer_id: str, payload: CreatorOnboar
 
     return {"status": "ok", "message": "Creator profile completed."}
 
+@app.post("/api/v1/brands/{brand_id}/onboarding")
+async def complete_brand_onboarding(brand_id: str, payload: BrandOnboardingRequest):
+    company = payload.company_name.strip()
+    website = payload.website_url.strip()
+    social = payload.social_media_link.strip()
+    niche = payload.brand_niche.strip()
+    objective = payload.campaign_objectives.strip()
+    budget = payload.estimated_campaign_budget.strip()
+
+    if not all([company, website, social, niche, objective, budget]):
+        raise HTTPException(status_code=400, detail="All brand profile fields are required to unlock your Brand Console.")
+
+    async with get_db_cursor() as cursor:
+        upd = cursor.execute(
+            """
+            UPDATE brands
+            SET name = %s, website_url = %s, social_media_link = %s,
+                brand_niche = %s, campaign_objectives = %s, estimated_campaign_budget = %s
+            WHERE id = %s
+            """,
+            (company, website, social, niche, objective, budget, brand_id)
+        )
+        if hasattr(upd, "__await__"):
+            await upd
+
+    return {"status": "ok", "message": "Brand profile completed."}
+
 
 @app.post("/api/v1/auth/register", response_model=LoginResponse)
 @limiter.limit("10/minute")
@@ -1476,9 +1517,30 @@ async def register_user(request: Request, payload: RegisterRequest):
         if requested_role == "BRAND_ADMIN":
             brand_id = str(uuid.uuid4())
             brand_title = (payload.company_name or f"{full_name}'s Brand").strip()
+            website_url = (payload.website_url or "").strip()
+            social_media_link = (payload.social_media_link or "").strip()
+            brand_niche = (payload.brand_niche or "").strip()
+            campaign_objectives = (payload.campaign_objectives or "").strip()
+            estimated_campaign_budget = (payload.estimated_campaign_budget or "").strip()
+
+            if not all([website_url, social_media_link, brand_niche, campaign_objectives, estimated_campaign_budget]):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Website link, social media link, brand niche, campaign objective, and estimated budget are all required."
+                )
+
             ins_brand = cursor.execute(
-                "INSERT INTO brands (id, name) VALUES (%s, %s)",
-                (brand_id, brand_title)
+                """
+                INSERT INTO brands (
+                    id, name, website_url, social_media_link,
+                    brand_niche, campaign_objectives, estimated_campaign_budget
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    brand_id, brand_title, website_url, social_media_link,
+                    brand_niche, campaign_objectives, estimated_campaign_budget
+                )
             )
             if hasattr(ins_brand, "__await__"):
                 await ins_brand

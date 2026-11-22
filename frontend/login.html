@@ -209,30 +209,140 @@
 
       <!-- BRAND FORM (Hidden until "I'm a Brand" is clicked) -->
       <form id="brandForm" onsubmit="handleEmailAuth(event, 'BRAND_ADMIN')" class="hidden space-y-3.5">
-        <div id="brandSignupFields" class="hidden space-y-3.5">
+        <!-- SIGN-UP PROGRESS BAR (Only visible in Sign Up mode) -->
+        <div id="brandWizardHeader" class="hidden flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 pb-1">
+          <span id="brandStepLabel">Step 1 of 3 • Account Basics</span>
+          <div class="flex gap-1.5">
+            <span id="brandDot1" class="h-1.5 w-6 rounded-full bg-[#1749E8]"></span>
+            <span id="brandDot2" class="h-1.5 w-6 rounded-full bg-slate-200"></span>
+            <span id="brandDot3" class="h-1.5 w-6 rounded-full bg-slate-200"></span>
+          </div>
+        </div>
+
+        <!-- STEP 1: Account Basics (Name fields hidden in Sign In mode) -->
+        <div id="brandStep1" class="space-y-3.5">
+          <div id="brandSignupFields" class="hidden space-y-3.5">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand / Company Name <span class="text-rose-500">*</span></label>
+              <input type="text" id="brandCompanyName" placeholder="e.g. Nykaa Cosmetics" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Your Full Name <span class="text-rose-500">*</span></label>
+              <input type="text" id="brandContactName" placeholder="e.g. Aarav Mehta" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+            </div>
+          </div>
+
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand / Company Name</label>
-            <input type="text" id="brandCompanyName" placeholder="e.g. Nykaa Cosmetics" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Work Email <span class="text-rose-500">*</span></label>
+            <input type="email" id="brandEmail" required placeholder="founder@brand.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
           </div>
+
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Your Full Name</label>
-            <input type="text" id="brandContactName" placeholder="e.g. Aarav Mehta" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password <span class="text-rose-500">*</span></label>
+              <a href="#forgot" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#1749E8] hover:underline">Forgot password?</a>
+            </div>
+            <input type="password" id="brandPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+          </div>
+
+          <!-- Sign-Up Step 1 Next Button -->
+          <button type="button" id="brandStep1NextBtn" onclick="nextBrandStep(2)" class="hidden w-full py-3 rounded-xl bg-[#1749E8] hover:bg-[#111A2A] text-white font-bold text-sm transition">
+            Next: Brand Links →
+          </button>
+        </div>
+
+        <!-- STEP 2: Brand Links (Sign Up only) -->
+        <div id="brandStep2" class="hidden space-y-3.5">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Website Link <span class="text-rose-500">*</span></label>
+            <input type="url" id="brandWebsiteUrl" placeholder="https://yourbrand.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Social Media Link <span class="text-rose-500">*</span></label>
+            <input type="url" id="brandSocialLink" placeholder="https://instagram.com/yourbrand" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+          </div>
+
+          <div class="flex gap-2">
+            <button type="button" onclick="goBrandStep(1)" class="w-1/3 py-3 rounded-xl border border-slate-300 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">
+              ← Back
+            </button>
+            <button type="button" onclick="nextBrandStep(3)" class="w-2/3 py-3 rounded-xl bg-[#1749E8] hover:bg-[#111A2A] text-white font-bold text-sm transition">
+              Next: Campaign Goals →
+            </button>
           </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Work Email</label>
-          <input type="email" id="brandEmail" required placeholder="founder@brand.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
-        </div>
-
-        <div>
-          <div class="flex justify-between items-center mb-1">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password</label>
-            <a href="#forgot" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#1749E8] hover:underline">Forgot password?</a>
+        <!-- STEP 3: Campaign Profile & Submit (Sign Up only) -->
+        <div id="brandStep3" class="hidden space-y-3.5">
+          <div id="brandNicheWrap" class="relative">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Niche <span class="text-rose-500">*</span></label>
+            <input type="hidden" id="brandNiche" value="" />
+            <button type="button" onclick="toggleBrandNicheMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
+              <span id="brandNicheLabel" class="text-slate-400 truncate">Select your brand niche...</span>
+              <span class="text-slate-400 text-xs">▼</span>
+            </button>
+            <div id="brandNicheMenu" class="hidden absolute z-50 left-0 right-0 top-full mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+              <div class="p-2 border-b border-slate-100 bg-slate-50">
+                <input type="text" id="brandNicheSearch" oninput="renderBrandNiches(this.value)" placeholder="Search 30+ niches..." class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#1749E8]" />
+              </div>
+              <ul id="brandNicheList" class="max-h-44 overflow-y-auto divide-y divide-slate-50 text-sm text-slate-700"></ul>
+            </div>
           </div>
-          <input type="password" id="brandPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+
+          <div id="brandObjWrap" class="relative">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Campaign Objectives <span class="text-rose-500">*</span></label>
+            <input type="hidden" id="brandCampaignObjective" value="" />
+            <button type="button" onclick="toggleBrandObjMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
+              <span id="brandObjLabel" class="text-slate-400 truncate">Select one or more objectives...</span>
+              <span class="text-slate-400 text-xs">▼</span>
+            </button>
+            <div id="brandObjMenu" class="hidden absolute z-50 left-0 right-0 top-full mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl py-1.5 divide-y divide-slate-50">
+              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                <input type="checkbox" value="Brand Awareness" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                <span>Brand Awareness</span>
+              </label>
+              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                <input type="checkbox" value="Lead Generation / Sales" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                <span>Lead Generation / Sales</span>
+              </label>
+              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                <input type="checkbox" value="App Installs" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                <span>App Installs</span>
+              </label>
+              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                <input type="checkbox" value="Content Creation & UGC" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                <span>Content Creation & UGC</span>
+              </label>
+              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                <input type="checkbox" value="Event Promotion" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                <span>Event Promotion</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Estimated Campaign Budget <span class="text-rose-500">*</span></label>
+            <select id="brandEstimatedBudget" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:outline-none focus:border-[#1749E8]">
+              <option value="" disabled selected>Select estimated budget...</option>
+              <option value="Under ₹50,000">Under ₹50,000</option>
+              <option value="₹50,000 - ₹2,00,000">₹50,000 - ₹2,00,000</option>
+              <option value="₹2,00,000 - ₹5,00,000">₹2,00,000 - ₹5,00,000</option>
+              <option value="₹5,00,000+">₹5,00,000+</option>
+            </select>
+          </div>
+
+          <div class="flex gap-2">
+            <button type="button" onclick="goBrandStep(2)" class="w-1/3 py-3 rounded-xl border border-slate-300 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">
+              ← Back
+            </button>
+            <button type="submit" id="brandWizardSubmitBtn" class="w-2/3 py-3 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+              Create Brand Account →
+            </button>
+          </div>
         </div>
 
+        <!-- Sign-In Submit Button (Hidden during Sign Up wizard) -->
         <button type="submit" id="brandSubmitBtn" class="w-full py-3 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white font-bold text-sm transition">
           Sign In as Brand →
         </button>
@@ -457,6 +567,14 @@
       hideAlert();
     }
 
+    function syncBrandFormMode(isRegister) {
+      document.getElementById("brandWizardHeader")?.classList.toggle("hidden", !isRegister);
+      document.getElementById("brandSignupFields")?.classList.toggle("hidden", !isRegister);
+      document.getElementById("brandStep1NextBtn")?.classList.toggle("hidden", !isRegister);
+      document.getElementById("brandSubmitBtn")?.classList.toggle("hidden", isRegister);
+      goBrandStep(1);
+    }
+
     function switchAuthMode(mode) {
       authMode = mode;
       const isRegister = mode === "register";
@@ -470,7 +588,7 @@
         : "px-3 py-1.5 rounded-md text-slate-600";
 
       syncCreatorFormMode(isRegister);
-      document.getElementById("brandSignupFields").classList.toggle("hidden", !isRegister);
+      syncBrandFormMode(isRegister);
 
       updateSubmitLabels();
       hideAlert();
@@ -565,13 +683,30 @@
             primary_niche
           };
         } else {
+          const company_name = document.getElementById("brandCompanyName").value.trim();
+          const full_name = document.getElementById("brandContactName").value.trim();
+          const website_url = document.getElementById("brandWebsiteUrl").value.trim();
+          const social_media_link = document.getElementById("brandSocialLink").value.trim();
+          const brand_niche = document.getElementById("brandNiche").value.trim();
+          const campaign_objectives = document.getElementById("brandCampaignObjective").value;
+          const estimated_campaign_budget = document.getElementById("brandEstimatedBudget").value;
+
+          if (!brand_niche) return showAlert("Please select your Brand Niche.");
+          if (!campaign_objectives) return showAlert("Please select your Campaign Objective.");
+          if (!estimated_campaign_budget) return showAlert("Please select your Estimated Campaign Budget.");
+
           payload = {
             role,
             email,
             password,
-            full_name: document.getElementById("brandContactName").value.trim(),
+            full_name,
             phone_number: null,
-            company_name: document.getElementById("brandCompanyName").value.trim()
+            company_name,
+            website_url,
+            social_media_link,
+            brand_niche,
+            campaign_objectives,
+            estimated_campaign_budget
           };
         }
       } else {
@@ -736,6 +871,101 @@
         console.error("Auth config load failed:", e);
       }
     });
+
+    const BRAND_STEP_LABELS = {
+    1: "Step 1 of 3 • Account Basics",
+    2: "Step 2 of 3 • Brand Links",
+    3: "Step 3 of 3 • Campaign Goals"
+  };
+
+  function goBrandStep(step) {
+    [1, 2, 3].forEach(s => {
+      document.getElementById(`brandStep${s}`)?.classList.toggle("hidden", s !== step);
+      const dot = document.getElementById(`brandDot${s}`);
+      if (dot) dot.className = `h-1.5 w-6 rounded-full ${s <= step ? "bg-[#1749E8]" : "bg-slate-200"}`;
+    });
+    const lbl = document.getElementById("brandStepLabel");
+    if (lbl) lbl.textContent = BRAND_STEP_LABELS[step];
+  }
+
+  function nextBrandStep(targetStep) {
+    hideAlert();
+    if (targetStep === 2) {
+      const company = document.getElementById("brandCompanyName").value.trim();
+      const name = document.getElementById("brandContactName").value.trim();
+      const email = document.getElementById("brandEmail").value.trim();
+      const pw = document.getElementById("brandPassword").value;
+      if (!company || !name || !email || !pw) {
+        return showAlert("Please fill in Brand Name, Your Full Name, Work Email, and Password.");
+      }
+      if (pw.length < 6) {
+        return showAlert("Password must be at least 6 characters.");
+      }
+    }
+    if (targetStep === 3) {
+      const website = document.getElementById("brandWebsiteUrl").value.trim();
+      const social = document.getElementById("brandSocialLink").value.trim();
+      if (!website || !social) {
+        return showAlert("Please enter both your Brand Website Link and Brand Social Media Link.");
+      }
+      renderBrandNiches();
+    }
+    goBrandStep(targetStep);
+  }
+
+  function renderBrandNiches(q = "") {
+    const sel = document.getElementById("brandNiche").value;
+    const list = NICHES.filter(n => n.toLowerCase().includes(q.trim().toLowerCase()));
+    document.getElementById("brandNicheList").innerHTML = list.length
+      ? list.map(n => `<li onclick="pickBrandNiche('${n}')" class="px-3.5 py-2 cursor-pointer hover:bg-[#1749E8]/10 hover:text-[#1749E8] flex justify-between"><span>${n}</span>${sel === n ? '<span class="text-[#1749E8] font-bold">✓</span>' : ''}</li>`).join("")
+      : `<li class="px-3.5 py-2 text-xs text-slate-400 text-center">No match found</li>`;
+  }
+
+  function toggleBrandNicheMenu() {
+    const m = document.getElementById("brandNicheMenu");
+    if (!m.classList.toggle("hidden")) {
+      const s = document.getElementById("brandNicheSearch");
+      s.value = ""; renderBrandNiches(); setTimeout(() => s.focus(), 20);
+    }
+  }
+
+  function pickBrandNiche(n) {
+    document.getElementById("brandNiche").value = n;
+    const lbl = document.getElementById("brandNicheLabel");
+    lbl.textContent = n;
+    lbl.classList.replace("text-slate-400", "text-slate-900");
+    document.getElementById("brandNicheMenu").classList.add("hidden");
+  }
+
+  document.addEventListener("click", e => {
+    if (!document.getElementById("brandNicheWrap")?.contains(e.target)) {
+      document.getElementById("brandNicheMenu")?.classList.add("hidden");
+    }
+  });
+
+  // --- Dropdown Menu in Brands Sign up ---
+  function toggleBrandObjMenu() {
+    document.getElementById("brandObjMenu")?.classList.toggle("hidden");
+  }
+
+  function syncBrandObjectives() {
+    const selected = Array.from(document.querySelectorAll(".brand-obj-cb:checked")).map(cb => cb.value);
+    document.getElementById("brandCampaignObjective").value = selected.join(", ");
+    const lbl = document.getElementById("brandObjLabel");
+    if (selected.length) {
+      lbl.textContent = selected.join(", ");
+      lbl.classList.replace("text-slate-400", "text-slate-900");
+    } else {
+      lbl.textContent = "Select one or more objectives...";
+      lbl.classList.replace("text-slate-900", "text-slate-400");
+    }
+  }
+
+  document.addEventListener("click", e => {
+    if (!document.getElementById("brandObjWrap")?.contains(e.target)) {
+      document.getElementById("brandObjMenu")?.classList.add("hidden");
+    }
+  });
 
   </script>
 </body>

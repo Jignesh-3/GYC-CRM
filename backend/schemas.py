@@ -220,6 +220,12 @@ class RegisterRequest(BaseModel):
     follower_tier: Optional[str] = None
     profile_link: Optional[str] = None
     primary_niche: Optional[str] = None
+    # Mandatory Brand Profile Fields
+    website_url: Optional[str] = None
+    social_media_link: Optional[str] = None
+    brand_niche: Optional[str] = None
+    campaign_objectives: Optional[str] = None
+    estimated_campaign_budget: Optional[str] = None
 
 class CreatorOnboardingRequest(BaseModel):
     phone_number: str
@@ -228,3 +234,11 @@ class CreatorOnboardingRequest(BaseModel):
     follower_tier: str
     profile_link: str
     primary_niche: str
+    
+class BrandOnboardingRequest(BaseModel):
+    company_name: str
+    website_url: str
+    social_media_link: str
+    brand_niche: str
+    campaign_objectives: str
+    estimated_campaign_budget: str
