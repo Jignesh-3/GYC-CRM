@@ -967,6 +967,48 @@
     }
   });
 
+  window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const portalParam = (params.get("portal") || params.get("role") || "").toLowerCase();
+    const modeParam = (params.get("mode") || "").toLowerCase();
+
+    if (portalParam === "brand" || portalParam === "brand_admin") {
+      switchPortal("BRAND_ADMIN");
+    } else if (portalParam === "creator") {
+      switchPortal("CREATOR");
+    }
+
+    if (modeParam === "register" || modeParam === "signup") {
+      switchAuthMode("register");
+    } else if (modeParam === "login" || modeParam === "signin") {
+      switchAuthMode("login");
+    }
+  });
+
+  function applyUrlPortalAndMode() {
+    const params = new URLSearchParams(window.location.search);
+    const portalParam = (params.get("portal") || params.get("role") || "").trim().toLowerCase();
+    const modeParam = (params.get("mode") || "").trim().toLowerCase();
+
+    if (portalParam === "brand" || portalParam === "brand_admin") {
+      switchPortal("BRAND_ADMIN");
+    } else if (portalParam === "creator") {
+      switchPortal("CREATOR");
+    }
+
+    if (modeParam === "register" || modeParam === "signup") {
+      switchAuthMode("register");
+    } else if (modeParam === "login" || modeParam === "signin") {
+      switchAuthMode("login");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyUrlPortalAndMode);
+  } else {
+    applyUrlPortalAndMode();
+  }
+
   </script>
 </body>
 </html>
