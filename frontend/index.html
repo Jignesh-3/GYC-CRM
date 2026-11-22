@@ -1876,6 +1876,176 @@
     <span class="text-[11px] font-semibold text-[#111A2A]/40">Enterprise Creator Commerce Suite // FastAPI & MySQL</span>
   </footer>
 
+  <!-- NON-DISMISSIBLE CREATOR ONBOARDING LOCK MODAL -->
+<div id="creatorOnboardingModal" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4">
+    <div>
+      <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#008CFF]/10 text-[#008CFF]">Required Setup</span>
+      <h2 class="text-xl font-extrabold text-slate-900 mt-1.5">Complete Your Creator Profile</h2>
+      <p class="text-xs text-slate-500 mt-1">Fill in these mandatory details once to unlock your Creator Studio.</p>
+    </div>
+
+    <div id="onboardingAlert" class="hidden p-3 rounded-xl text-xs font-medium bg-red-50 text-red-700 border border-red-200"></div>
+
+    <form id="creatorOnboardingForm" onsubmit="submitCreatorOnboarding(event)" class="space-y-3">
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">WhatsApp / Phone <span class="text-rose-500">*</span></label>
+        <input type="tel" id="obPhone" required placeholder="e.g. 9867043805" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#008CFF]" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Handle <span class="text-rose-500">*</span></label>
+          <input type="text" id="obHandle" required placeholder="@yourhandle" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#008CFF]" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Primary Platform <span class="text-rose-500">*</span></label>
+          <select id="obPlatform" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:outline-none focus:border-[#008CFF]">
+            <option value="" disabled selected>Select...</option>
+            <option value="Instagram">Instagram</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Snapchat">Snapchat</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Followers / Subscriber Count <span class="text-rose-500">*</span></label>
+        <select id="obTier" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:outline-none focus:border-[#008CFF]">
+          <option value="" disabled selected>Select audience size</option>
+          <option value="1K - 10K (Nano Creator)">1K - 10K (Nano Creator)</option>
+          <option value="10K - 50K (Micro Creator)">10K - 50K (Micro Creator)</option>
+          <option value="50K - 200K (Mid-Tier Creator)">50K - 200K (Mid-Tier Creator)</option>
+          <option value="200K - 1M (Macro Creator)">200K - 1M (Macro Creator)</option>
+          <option value="1M+ (Mega / Celebrity)">1M+ (Mega / Celebrity)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Profile Link <span class="text-rose-500">*</span></label>
+        <input type="url" id="obLink" required placeholder="https://instagram.com/yourhandle" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#008CFF]" />
+      </div>
+
+      <div id="obNicheWrap" class="relative">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Primary Content Niche <span class="text-rose-500">*</span></label>
+        <input type="hidden" id="obNiche" value="" />
+        <button type="button" onclick="toggleObNicheMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#008CFF]">
+          <span id="obNicheLabel" class="text-slate-400 truncate">Select your primary niche...</span>
+          <span class="text-slate-400 text-xs">▼</span>
+        </button>
+        <div id="obNicheMenu" class="hidden absolute z-50 left-0 right-0 bottom-full mb-1.5 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+          <div class="p-2 border-b border-slate-100 bg-slate-50">
+            <input type="text" id="obNicheSearch" oninput="renderObNiches(this.value)" placeholder="Search 30+ niches..." class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#008CFF]" />
+          </div>
+          <ul id="obNicheList" class="max-h-44 overflow-y-auto divide-y divide-slate-50 text-sm text-slate-700"></ul>
+        </div>
+      </div>
+
+      <button type="submit" id="obSubmitBtn" class="w-full py-3 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+        Save & Unlock Creator Studio →
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const OB_NICHES = [
+    "Fashion & Style", "Beauty & Makeup", "Fitness & Health", "Food & Cooking",
+    "Travel & Adventure", "Technology & Gadgets", "Home & Lifestyle", "Parenting & Family",
+    "Business & Finance", "Education & Knowledge", "Entertainment & Comedy",
+    "Photography & Videography", "Automotive", "Pets & Animals", "Music & Dance",
+    "Art & Creativity", "Luxury & Premium Lifestyle", "Motivation & Self Development",
+    "Gaming & Esports", "Sports", "Vlogging & Daily Life", "Fashion & Beauty Reviews",
+    "Product Reviews & Unboxing", "DIY & Crafts", "Books & Literature",
+    "Spirituality & Astrology", "Relationships & Dating", "News & Current Affairs",
+    "Technology & AI", "Other"
+  ];
+
+  function renderObNiches(q = "") {
+    const sel = document.getElementById("obNiche").value;
+    const list = OB_NICHES.filter(n => n.toLowerCase().includes(q.trim().toLowerCase()));
+    document.getElementById("obNicheList").innerHTML = list.length
+      ? list.map(n => `<li onclick="pickObNiche('${n}')" class="px-3.5 py-2 cursor-pointer hover:bg-[#008CFF]/10 hover:text-[#008CFF] flex justify-between"><span>${n}</span>${sel === n ? '<span class="text-[#008CFF] font-bold">✓</span>' : ''}</li>`).join("")
+      : `<li class="px-3.5 py-2 text-xs text-slate-400 text-center">No match found</li>`;
+  }
+
+  function toggleObNicheMenu() {
+    const m = document.getElementById("obNicheMenu");
+    if (!m.classList.toggle("hidden")) {
+      const s = document.getElementById("obNicheSearch");
+      s.value = ""; renderObNiches(); setTimeout(() => s.focus(), 20);
+    }
+  }
+
+  function pickObNiche(n) {
+    document.getElementById("obNiche").value = n;
+    const lbl = document.getElementById("obNicheLabel");
+    lbl.textContent = n; lbl.classList.replace("text-slate-400", "text-slate-900");
+    document.getElementById("obNicheMenu").classList.add("hidden");
+  }
+
+  document.addEventListener("click", e => {
+    if (!document.getElementById("obNicheWrap")?.contains(e.target))
+      document.getElementById("obNicheMenu")?.classList.add("hidden");
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const role = (localStorage.getItem("gyc_role") || localStorage.getItem("user_role") || "").toUpperCase();
+    const needsOnboarding = localStorage.getItem("gyc_onboarding_required") === "true";
+    if (role === "CREATOR" && needsOnboarding) {
+      renderObNiches();
+      document.getElementById("creatorOnboardingModal").classList.remove("hidden");
+    }
+  });
+
+  async function submitCreatorOnboarding(e) {
+    e.preventDefault();
+    const alertEl = document.getElementById("onboardingAlert");
+    alertEl.classList.add("hidden");
+
+    const influencerId = localStorage.getItem("influencer_id") || localStorage.getItem("active_influencer_id");
+    const primary_niche = document.getElementById("obNiche").value.trim();
+    if (!primary_niche) {
+      alertEl.textContent = "Please select your Primary Content Niche.";
+      alertEl.classList.remove("hidden");
+      return;
+    }
+
+    const btn = document.getElementById("obSubmitBtn");
+    btn.disabled = true;
+    btn.textContent = "Saving Profile...";
+
+    try {
+      const res = await fetch(`/api/v1/creators/${influencerId}/onboarding`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("gyc_token") || ""}`
+        },
+        body: JSON.stringify({
+          phone_number: document.getElementById("obPhone").value.trim(),
+          creator_handle: document.getElementById("obHandle").value.trim(),
+          primary_platform: document.getElementById("obPlatform").value,
+          follower_tier: document.getElementById("obTier").value,
+          profile_link: document.getElementById("obLink").value.trim(),
+          primary_niche
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to save creator profile.");
+
+      localStorage.removeItem("gyc_onboarding_required");
+      document.getElementById("creatorOnboardingModal").classList.add("hidden");
+    } catch (err) {
+      alertEl.textContent = err.message;
+      alertEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save & Unlock Creator Studio →";
+    }
+  }
+</script>
+
   <!-- Include Client Controller Script -->
   <script type="module" src="/app.js"></script>
 </body>

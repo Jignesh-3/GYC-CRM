@@ -194,9 +194,9 @@ class BrandCreateRequest(BaseModel):
     name: str
     website_url: str | None = None
 
-# --- Google Login ---
 class GoogleLoginRequest(BaseModel):
     credential: str
+    role: Optional[str] = "CREATOR"  # "CREATOR" or "BRAND_ADMIN"
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
@@ -207,19 +207,24 @@ class ResetPasswordRequest(BaseModel):
     otp: str
     new_password: str
 
-class GoogleAuthRequest(BaseModel):
-    credential: str
-    role: Optional[str] = "CREATOR"  # "CREATOR" or "BRAND_ADMIN"
-
 class RegisterRequest(BaseModel):
-    role: str = "CREATOR"  # "CREATOR" or "BRAND_ADMIN"
-    full_name: str
-    company_name: Optional[str] = None
-    phone_number: Optional[str] = None
+    role: Optional[str] = "CREATOR"  # "CREATOR" or "BRAND_ADMIN"
     email: str
     password: str
+    full_name: str
+    phone_number: Optional[str] = None
+    company_name: Optional[str] = None
+    # Mandatory Creator Profile Fields
+    creator_handle: Optional[str] = None
+    primary_platform: Optional[str] = None
+    follower_tier: Optional[str] = None
+    profile_link: Optional[str] = None
+    primary_niche: Optional[str] = None
 
-
-class GoogleLoginRequest(BaseModel):
-    credential: str
-    role: Optional[str] = "CREATOR"
+class CreatorOnboardingRequest(BaseModel):
+    phone_number: str
+    creator_handle: str
+    primary_platform: str
+    follower_tier: str
+    profile_link: str
+    primary_niche: str

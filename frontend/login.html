@@ -82,35 +82,130 @@
       <div id="authAlert" class="hidden mb-4 p-3 rounded-xl text-xs font-medium bg-red-50 text-red-700 border border-red-200"></div>
 
       <!-- CREATOR FORM -->
-      <form id="creatorForm" onsubmit="handleEmailAuth(event, 'CREATOR')" class="space-y-3.5">
-        <div id="creatorSignupFields" class="hidden space-y-3.5">
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Full Name</label>
-            <input type="text" id="creatorName" placeholder="e.g. Roshan Yadav" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">WhatsApp / Phone (Optional)</label>
-            <input type="text" id="creatorPhone" placeholder="e.g. 9867043805" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
-          </div>
-        </div>
+<form id="creatorForm" onsubmit="handleEmailAuth(event, 'CREATOR')" class="space-y-3.5">
 
-        <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Email</label>
-          <input type="email" id="creatorEmail" required placeholder="creator@gmail.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
-        </div>
+  <!-- STEP PROGRESS INDICATOR (Only visible in Sign Up mode) -->
+  <div id="creatorStepIndicator" class="hidden items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
+    <span id="creatorStepLabel" class="text-[11px] font-bold uppercase tracking-wider text-[#008CFF]">Step 1 of 3 — Basic Info</span>
+    <div class="flex items-center gap-1.5">
+      <span id="stepDot1" class="w-5 h-1.5 rounded-full bg-[#008CFF] transition-all"></span>
+      <span id="stepDot2" class="w-5 h-1.5 rounded-full bg-slate-200 transition-all"></span>
+      <span id="stepDot3" class="w-5 h-1.5 rounded-full bg-slate-200 transition-all"></span>
+    </div>
+  </div>
 
-        <div>
-          <div class="flex justify-between items-center mb-1">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password</label>
-            <a href="#forgot" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#008CFF] hover:underline">Forgot password?</a>
-          </div>
-          <input type="password" id="creatorPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
-        </div>
+  <!-- STEP 1: Name, Phone, Email (Email also doubles as Sign In field) -->
+  <div id="creatorStep1" class="space-y-3.5">
+    <div id="creatorSignupStep1Fields" class="hidden space-y-3.5">
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Full Name <span class="text-rose-500">*</span></label>
+        <input type="text" id="creatorName" placeholder="e.g. Roshan Yadav" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">WhatsApp / Phone <span class="text-rose-500">*</span></label>
+        <input type="tel" id="creatorPhone" placeholder="e.g. 9867043805" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
+      </div>
+    </div>
 
-        <button type="submit" id="creatorSubmitBtn" class="w-full py-3 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white font-bold text-sm transition">
-          Sign In as Creator →
-        </button>
-      </form>
+    <div>
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Email <span class="text-rose-500">*</span></label>
+      <input type="email" id="creatorEmail" required placeholder="creator@gmail.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
+    </div>
+
+    <!-- Step 1 Next Button (Sign Up mode only) -->
+    <button type="button" id="creatorStep1NextBtn" onclick="nextCreatorStep(2)" class="hidden w-full py-3 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+      Continue →
+    </button>
+  </div>
+
+  <!-- STEP 2: Handle, Platform, Followers, Profile Link (Sign Up mode only) -->
+  <div id="creatorStep2" class="hidden space-y-3.5">
+    <div>
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Creator Handle <span class="text-rose-500">*</span></label>
+      <input type="text" id="creatorHandle" placeholder="@yourhandle" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
+    </div>
+
+    <div>
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Primary Platform <span class="text-rose-500">*</span></label>
+      <select id="creatorPlatform" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-[#008CFF]">
+        <option value="" disabled selected>Select primary platform</option>
+        <option value="Instagram">Instagram</option>
+        <option value="YouTube">YouTube</option>
+        <option value="Snapchat">Snapchat</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Followers / Subscriber Count <span class="text-rose-500">*</span></label>
+      <select id="creatorFollowerTier" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-[#008CFF]">
+        <option value="" disabled selected>Select audience size</option>
+        <option value="1K - 10K (Nano Creator)">1K - 10K (Nano Creator)</option>
+        <option value="10K - 50K (Micro Creator)">10K - 50K (Micro Creator)</option>
+        <option value="50K - 200K (Mid-Tier Creator)">50K - 200K (Mid-Tier Creator)</option>
+        <option value="200K - 1M (Macro Creator)">200K - 1M (Macro Creator)</option>
+        <option value="1M+ (Mega / Celebrity)">1M+ (Mega / Celebrity)</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Profile Link <span class="text-rose-500">*</span></label>
+      <input type="url" id="creatorProfileLink" placeholder="https://instagram.com/yourhandle" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
+    </div>
+
+    <div class="flex gap-2.5 pt-1">
+      <button type="button" onclick="nextCreatorStep(1)" class="w-1/3 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm transition">
+        ← Back
+      </button>
+      <button type="button" onclick="nextCreatorStep(3)" class="w-2/3 py-3 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Searchable Primary Niche & Password (Password also visible in Sign In mode) -->
+  <div id="creatorStep3" class="space-y-3.5">
+    <!-- Searchable & Scrollable Niche Dropdown (Sign Up mode only) -->
+    <div id="creatorNicheWrapper" class="hidden relative">
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Primary Content Niche <span class="text-rose-500">*</span></label>
+      <input type="hidden" id="creatorPrimaryNiche" value="" />
+
+      <button type="button" id="nicheDropdownTrigger" onclick="toggleNicheDropdown()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#008CFF]">
+        <span id="nicheSelectedText" class="text-slate-400 truncate">Select your primary niche...</span>
+        <svg class="w-4 h-4 text-slate-400 shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <!-- Dropdown Popover with Search Bar + Scrollable List -->
+      <div id="nicheDropdownMenu" class="hidden absolute z-50 left-0 right-0 mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+        <div class="p-2 border-b border-slate-100 bg-slate-50">
+          <input type="text" id="nicheSearchInput" oninput="filterCreatorNiches(this.value)" placeholder="Search 30+ niches..." class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-[#008CFF]" />
+        </div>
+        <ul id="nicheOptionsList" class="max-h-48 overflow-y-auto divide-y divide-slate-50 text-sm text-slate-700">
+          <!-- Populated dynamically by JS -->
+        </ul>
+      </div>
+    </div>
+
+    <div>
+      <div class="flex justify-between items-center mb-1">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password <span class="text-rose-500">*</span></label>
+        <a href="#forgot" id="creatorForgotLink" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#008CFF] hover:underline">Forgot password?</a>
+      </div>
+      <input type="password" id="creatorPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]" />
+    </div>
+
+    <div class="flex gap-2.5 pt-1">
+      <button type="button" id="creatorStep3BackBtn" onclick="nextCreatorStep(2)" class="hidden w-1/3 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm transition">
+        ← Back
+      </button>
+      <button type="submit" id="creatorSubmitBtn" class="w-full py-3 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+        Sign In as Creator →
+      </button>
+    </div>
+  </div>
+
+</form>
 
       <!-- BRAND FORM (Hidden until "I'm a Brand" is clicked) -->
       <form id="brandForm" onsubmit="handleEmailAuth(event, 'BRAND_ADMIN')" class="hidden space-y-3.5">
@@ -255,8 +350,89 @@
   </div>
 
   <script>
-    let activeRole = "CREATOR";   // "CREATOR" or "BRAND_ADMIN"
+   let activeRole = "CREATOR";   // "CREATOR" or "BRAND_ADMIN"
     let authMode = "login";       // "login" or "register"
+
+    const NICHES = [
+      "Fashion & Style", "Beauty & Makeup", "Fitness & Health", "Food & Cooking",
+      "Travel & Adventure", "Technology & Gadgets", "Home & Lifestyle", "Parenting & Family",
+      "Business & Finance", "Education & Knowledge", "Entertainment & Comedy",
+      "Photography & Videography", "Automotive", "Pets & Animals", "Music & Dance",
+      "Art & Creativity", "Luxury & Premium Lifestyle", "Motivation & Self Development",
+      "Gaming & Esports", "Sports", "Vlogging & Daily Life", "Fashion & Beauty Reviews",
+      "Product Reviews & Unboxing", "DIY & Crafts", "Books & Literature",
+      "Spirituality & Astrology", "Relationships & Dating", "News & Current Affairs",
+      "Technology & AI", "Other"
+    ];
+
+    function filterCreatorNiches(q = "") {
+      const selected = document.getElementById("creatorPrimaryNiche").value;
+      const matches = NICHES.filter(n => n.toLowerCase().includes(q.trim().toLowerCase()));
+      document.getElementById("nicheOptionsList").innerHTML = matches.length
+        ? matches.map(n => `<li onclick="selectCreatorNiche('${n}')" class="px-3.5 py-2 cursor-pointer hover:bg-[#008CFF]/10 hover:text-[#008CFF] flex justify-between"><span>${n}</span>${selected === n ? '<span class="text-[#008CFF] font-bold">✓</span>' : ''}</li>`).join("")
+        : `<li class="px-3.5 py-2 text-xs text-slate-400 text-center">No match found</li>`;
+    }
+
+    function toggleNicheDropdown() {
+      const menu = document.getElementById("nicheDropdownMenu");
+      if (!menu.classList.toggle("hidden")) {
+        const inp = document.getElementById("nicheSearchInput");
+        inp.value = "";
+        filterCreatorNiches();
+        setTimeout(() => inp.focus(), 20);
+      }
+    }
+
+    function selectCreatorNiche(n) {
+      document.getElementById("creatorPrimaryNiche").value = n;
+      const txt = document.getElementById("nicheSelectedText");
+      txt.textContent = n;
+      txt.classList.replace("text-slate-400", "text-slate-900");
+      document.getElementById("nicheDropdownMenu").classList.add("hidden");
+    }
+
+    document.addEventListener("click", e => {
+      if (!document.getElementById("creatorNicheWrapper")?.contains(e.target)) {
+        document.getElementById("nicheDropdownMenu")?.classList.add("hidden");
+      }
+    });
+
+    function syncCreatorFormMode(isReg) {
+      ["creatorSignupStep1Fields", "creatorStep1NextBtn", "creatorNicheWrapper", "creatorStep3BackBtn"]
+        .forEach(id => document.getElementById(id).classList.toggle("hidden", !isReg));
+      const ind = document.getElementById("creatorStepIndicator");
+      ind.classList.toggle("hidden", !isReg);
+      ind.classList.toggle("flex", isReg);
+      document.getElementById("creatorForgotLink").classList.toggle("hidden", isReg);
+      document.getElementById("creatorSubmitBtn").className = `${isReg ? "w-2/3" : "w-full"} py-3 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white font-bold text-sm transition`;
+
+      if (isReg) {
+        nextCreatorStep(1, true);
+      } else {
+        ["creatorStep1", "creatorStep3"].forEach(id => document.getElementById(id).classList.remove("hidden"));
+        document.getElementById("creatorStep2").classList.add("hidden");
+      }
+    }
+
+    function nextCreatorStep(step, skip = false) {
+      hideAlert();
+      if (!skip && step === 2) {
+        const [n, p, e] = ["creatorName", "creatorPhone", "creatorEmail"].map(id => document.getElementById(id).value.trim());
+        if (!n || !p || !e.includes("@")) return showAlert("Please enter your full name, WhatsApp/phone, and a valid email.");
+      }
+      if (!skip && step === 3) {
+        const hEl = document.getElementById("creatorHandle");
+        const [h, pl, t, l] = ["creatorHandle", "creatorPlatform", "creatorFollowerTier", "creatorProfileLink"].map(id => document.getElementById(id).value.trim());
+        if (!h || !pl || !t || !l) return showAlert("Please fill in your handle, platform, follower count, and profile link.");
+        if (!h.startsWith("@")) hEl.value = "@" + h;
+      }
+      [1, 2, 3].forEach(i => {
+        document.getElementById(`creatorStep${i}`).classList.toggle("hidden", i !== step);
+        document.getElementById(`stepDot${i}`).classList.toggle("bg-[#008CFF]", i <= step);
+        document.getElementById(`stepDot${i}`).classList.toggle("bg-slate-200", i > step);
+      });
+      document.getElementById("creatorStepLabel").textContent = ["", "Step 1 of 3 — Basic Info", "Step 2 of 3 — Creator Profile", "Step 3 of 3 — Niche & Password"][step];
+    }
 
     function switchPortal(role) {
       activeRole = role;
@@ -293,7 +469,7 @@
         ? "px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm"
         : "px-3 py-1.5 rounded-md text-slate-600";
 
-      document.getElementById("creatorSignupFields").classList.toggle("hidden", !isRegister);
+      syncCreatorFormMode(isRegister);
       document.getElementById("brandSignupFields").classList.toggle("hidden", !isRegister);
 
       updateSubmitLabels();
@@ -326,19 +502,13 @@
     function completeLogin(data) {
       const normalizedRole = (data.role || "CREATOR").toUpperCase();
 
-      // Token keys (used by index.html & app.js)
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("gyc_token", data.access_token);
-
-      // Role keys
       localStorage.setItem("user_role", normalizedRole);
       localStorage.setItem("gyc_role", normalizedRole);
-
-      // Email keys
       localStorage.setItem("user_email", data.email || "");
       localStorage.setItem("gyc_email", data.email || "");
 
-      // Entity IDs for Creator & Brand portals (clear opposing ID to prevent state bleed)
       if (data.influencer_id) {
         localStorage.setItem("influencer_id", data.influencer_id);
         localStorage.setItem("active_influencer_id", data.influencer_id);
@@ -355,7 +525,9 @@
         localStorage.removeItem("brand_id");
         localStorage.removeItem("active_brand_id");
       }
-
+      
+      if (data.onboarding_required) localStorage.setItem("gyc_onboarding_required", "true");
+        else localStorage.removeItem("gyc_onboarding_required");
       if (normalizedRole === "SUPER_ADMIN" || normalizedRole === "ADMIN") {
         window.location.href = "/index.html?view=admin";
       } else if (normalizedRole === "BRAND_ADMIN" || normalizedRole === "BRAND") {
@@ -363,6 +535,7 @@
       } else {
         window.location.href = "/index.html?view=creator";
       }
+      
     }
 
     async function handleEmailAuth(e, role) {
@@ -373,19 +546,39 @@
       const email = document.getElementById(isCreator ? "creatorEmail" : "brandEmail").value.trim();
       const password = document.getElementById(isCreator ? "creatorPassword" : "brandPassword").value;
 
-      const endpoint = authMode === "register" ? "/api/v1/auth/register" : "/api/v1/auth/login";
-      const payload = authMode === "register"
-        ? {
+      let payload;
+      if (authMode === "register") {
+        if (isCreator) {
+          const primary_niche = document.getElementById("creatorPrimaryNiche").value.trim();
+          if (!primary_niche) return showAlert("Please select your Primary Content Niche.");
+
+          payload = {
             role,
             email,
             password,
-            full_name: isCreator
-              ? document.getElementById("creatorName").value.trim()
-              : document.getElementById("brandContactName").value.trim(),
-            phone_number: isCreator ? document.getElementById("creatorPhone").value.trim() : null,
-            company_name: !isCreator ? document.getElementById("brandCompanyName").value.trim() : null
-          }
-        : { email, password };
+            full_name: document.getElementById("creatorName").value.trim(),
+            phone_number: document.getElementById("creatorPhone").value.trim(),
+            creator_handle: document.getElementById("creatorHandle").value.trim(),
+            primary_platform: document.getElementById("creatorPlatform").value,
+            follower_tier: document.getElementById("creatorFollowerTier").value,
+            profile_link: document.getElementById("creatorProfileLink").value.trim(),
+            primary_niche
+          };
+        } else {
+          payload = {
+            role,
+            email,
+            password,
+            full_name: document.getElementById("brandContactName").value.trim(),
+            phone_number: null,
+            company_name: document.getElementById("brandCompanyName").value.trim()
+          };
+        }
+      } else {
+        payload = { email, password, role };
+      }
+
+      const endpoint = authMode === "register" ? "/api/v1/auth/register" : "/api/v1/auth/login";
 
       try {
         const res = await fetch(endpoint, {
@@ -521,6 +714,7 @@
     }
 
     window.addEventListener("DOMContentLoaded", async () => {
+      filterCreatorNiches();
       try {
         const res = await fetch("/api/v1/auth/config");
         const cfg = await res.json();
@@ -542,6 +736,7 @@
         console.error("Auth config load failed:", e);
       }
     });
+
   </script>
 </body>
 </html>

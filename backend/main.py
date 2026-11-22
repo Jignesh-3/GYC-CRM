@@ -14,6 +14,8 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 import pymysql
 
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 from fastapi import FastAPI, HTTPException, status, Query, Depends, Request
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
@@ -47,9 +49,8 @@ from backend.schemas import (
     GoogleLoginRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
-    GoogleAuthRequest,
-    RegisterRequest,
-    GoogleLoginRequest
+    CreatorOnboardingRequest,
+    RegisterRequest
 )
 
 
@@ -1292,13 +1293,140 @@ def _is_user_active(val) -> bool:
     return bool(val)
 
 # --- 1. Sign in with Google (Paid & Active Users Only) ---
+@app.post("/api/v1/auth/google")
+@limiter.limit("15/minute")
+async def google_login(request: Request, payload: GoogleLoginRequest):
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    if not client_id:
+        raise HTTPException(status_code=500, detail="Google OAuth is not configured on server.")
+
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            payload.credential, google_requests.Request(), client_id
+        )
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired Google token.")
+
+    email = (idinfo.get("email") or "").strip().lower()
+    full_name = (idinfo.get("name") or email.split("@")[0]).strip()
+    google_sub = idinfo.get("sub")
+    requested_role = (payload.role or "CREATOR").strip().upper()
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account did not provide an email.")
+
+    async with get_db_cursor() as cursor:
+        q = cursor.execute("SELECT * FROM users WHERE LOWER(TRIM(email)) = %s", (email,))
+        if hasattr(q, "__await__"):
+            await q
+            user = await cursor.fetchone()
+        else:
+            user = cursor.fetchone()
+
+        onboarding_required = False
+
+        if user:
+            if not user.get("is_active"):
+                raise HTTPException(status_code=403, detail="Account is inactive. Contact support.")
+            if user["role"] != "SUPER_ADMIN" and user["role"] != requested_role:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"This email is registered as {user['role']}. Please switch portal tabs to sign in."
+                )
+            if not user.get("google_sub") and google_sub:
+                upd = cursor.execute("UPDATE users SET google_sub = %s WHERE id = %s", (google_sub, user["id"]))
+                if hasattr(upd, "__await__"):
+                    await upd
+
+            if user["role"] == "CREATOR" and user.get("influencer_id"):
+                inf_q = cursor.execute(
+                    "SELECT creator_handle, primary_niche FROM influencers WHERE id = %s",
+                    (user["influencer_id"],)
+                )
+                if hasattr(inf_q, "__await__"):
+                    await inf_q
+                    inf = await cursor.fetchone()
+                else:
+                    inf = cursor.fetchone()
+                if not inf or not (inf.get("creator_handle") or "").strip() or not (inf.get("primary_niche") or "").strip():
+                    onboarding_required = True
+        else:
+            new_user_id = str(uuid.uuid4())
+            brand_id, influencer_id = None, None
+
+            if requested_role == "BRAND_ADMIN":
+                brand_id = str(uuid.uuid4())
+                ins_b = cursor.execute("INSERT INTO brands (id, name) VALUES (%s, %s)", (brand_id, f"{full_name}'s Brand"))
+                if hasattr(ins_b, "__await__"):
+                    await ins_b
+                assigned_role = "BRAND_ADMIN"
+            else:
+                influencer_id = str(uuid.uuid4())
+                ins_i = cursor.execute(
+                    "INSERT INTO influencers (id, name, email, password_hash) VALUES (%s, %s, %s, %s)",
+                    (influencer_id, full_name, email, "")
+                )
+                if hasattr(ins_i, "__await__"):
+                    await ins_i
+                assigned_role = "CREATOR"
+                onboarding_required = True
+
+            ins_u = cursor.execute(
+                "INSERT INTO users (id, email, password_hash, role, brand_id, influencer_id, is_active, google_sub) VALUES (%s, %s, %s, %s, %s, %s, 1, %s)",
+                (new_user_id, email, "", assigned_role, brand_id, influencer_id, google_sub)
+            )
+            if hasattr(ins_u, "__await__"):
+                await ins_u
+
+            user = {
+                "id": new_user_id, "email": email, "password_hash": "",
+                "role": assigned_role, "brand_id": brand_id,
+                "influencer_id": influencer_id, "is_active": 1,
+                "google_sub": google_sub
+            }
+
+        login_data = _build_login_response(user)
+        resp = login_data.model_dump() if hasattr(login_data, "model_dump") else dict(login_data)
+        resp["onboarding_required"] = onboarding_required
+        return resp
+
+@app.post("/api/v1/creators/{influencer_id}/onboarding")
+async def complete_creator_onboarding(influencer_id: str, payload: CreatorOnboardingRequest):
+    phone = payload.phone_number.strip()
+    handle = payload.creator_handle.strip()
+    platform = payload.primary_platform.strip()
+    tier = payload.follower_tier.strip()
+    link = payload.profile_link.strip()
+    niche = payload.primary_niche.strip()
+
+    if not all([phone, handle, platform, tier, link, niche]):
+        raise HTTPException(status_code=400, detail="All 6 fields are required to unlock your Creator account.")
+    if not handle.startswith("@"):
+        handle = f"@{handle}"
+
+    async with get_db_cursor() as cursor:
+        upd = cursor.execute(
+            """
+            UPDATE influencers
+            SET phone_number = %s, creator_handle = %s, primary_platform = %s,
+                follower_tier = %s, profile_link = %s, primary_niche = %s
+            WHERE id = %s
+            """,
+            (phone, handle, platform, tier, link, niche, influencer_id)
+        )
+        if hasattr(upd, "__await__"):
+            await upd
+
+    return {"status": "ok", "message": "Creator profile completed."}
+
+
 @app.post("/api/v1/auth/register", response_model=LoginResponse)
 @limiter.limit("10/minute")
 async def register_user(request: Request, payload: RegisterRequest):
     email = payload.email.strip().lower()
     full_name = payload.full_name.strip()
     requested_role = (payload.role or "CREATOR").strip().upper()
-    phone = (payload.phone_number or "").strip() or None
+    phone = (payload.phone_number or "").strip()
 
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
@@ -1306,6 +1434,22 @@ async def register_user(request: Request, payload: RegisterRequest):
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
     if not full_name:
         raise HTTPException(status_code=400, detail="Name is required.")
+
+    # Enforce mandatory creator fields upfront
+    if requested_role != "BRAND_ADMIN":
+        creator_handle = (payload.creator_handle or "").strip()
+        primary_platform = (payload.primary_platform or "").strip()
+        follower_tier = (payload.follower_tier or "").strip()
+        profile_link = (payload.profile_link or "").strip()
+        primary_niche = (payload.primary_niche or "").strip()
+
+        if not all([phone, creator_handle, primary_platform, follower_tier, profile_link, primary_niche]):
+            raise HTTPException(
+                status_code=400,
+                detail="All creator profile fields (WhatsApp/phone, handle, platform, follower count, profile link, and primary niche) are required."
+            )
+        if not creator_handle.startswith("@"):
+            creator_handle = f"@{creator_handle}"
 
     hashed_pw = get_password_hash(payload.password)
 
@@ -1342,8 +1486,17 @@ async def register_user(request: Request, payload: RegisterRequest):
         else:
             influencer_id = str(uuid.uuid4())
             ins_inf = cursor.execute(
-                "INSERT INTO influencers (id, name, email, phone_number, password_hash) VALUES (%s, %s, %s, %s, %s)",
-                (influencer_id, full_name, email, phone, hashed_pw)
+                """
+                INSERT INTO influencers (
+                    id, name, email, phone_number, password_hash,
+                    creator_handle, primary_platform, follower_tier, profile_link, primary_niche
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    influencer_id, full_name, email, phone, hashed_pw,
+                    creator_handle, primary_platform, follower_tier, profile_link, primary_niche
+                )
             )
             if hasattr(ins_inf, "__await__"):
                 await ins_inf
