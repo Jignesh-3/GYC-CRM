@@ -259,10 +259,20 @@ window.loadBrandPortalData = async function() {
  * Fetch latest KPIs, Roster, Brands, Orders, and UGC for Admin Console
  */
 async function loadDashboardData() {
-  const sessionRole = localStorage.getItem('user_role');
+  const sessionRole = (
+    localStorage.getItem('gyc_role') ||
+    localStorage.getItem('user_role') ||
+    ''
+  ).toUpperCase();
+
+  // Redirect to login if no active session role exists
+  if (!sessionRole) {
+    window.location.href = '/login.html';
+    return;
+  }
 
   // Trigger the GYC Architectural Curtain Reveal once on initial portal entry
-  if (sessionRole && !window._gycCurtainPlayed && typeof window.triggerGycCurtainReveal === 'function') {
+  if (!window._gycCurtainPlayed && typeof window.triggerGycCurtainReveal === 'function') {
     window._gycCurtainPlayed = true;
     const roleLabel = sessionRole === 'CREATOR' 
       ? 'Get You Collab // Creator Studio' 
@@ -272,22 +282,32 @@ async function loadDashboardData() {
     window.triggerGycCurtainReveal(roleLabel);
   }
 
-  // Hard Guard 1: If user is a CREATOR, load only creator data
+  // Hard Guard 1: If user is a CREATOR, lock UI & load only creator data
   if (sessionRole === 'CREATOR') {
-    // Play the GYC architectural curtain reveal once on studio entry
-    if (!window._gycCurtainPlayed && typeof window.triggerGycCurtainReveal === 'function') {
-      window._gycCurtainPlayed = true;
-      window.triggerGycCurtainReveal();
-    }
+    const roleNavSwitcher = document.getElementById('roleNavSwitcher');
+    const creatorSelector = document.getElementById('creatorSelectorContainer');
+    if (roleNavSwitcher) roleNavSwitcher.classList.add('hidden');
+    if (creatorSelector) creatorSelector.classList.add('hidden');
 
+    if (typeof switchPortalMode === 'function') {
+      switchPortalMode('CREATOR');
+    }
     if (typeof window.loadCreatorPortalData === 'function') {
       await window.loadCreatorPortalData();
     }
     return;
   }
 
-  // Hard Guard 2: If user is a BRAND, load only brand data
+  // Hard Guard 2: If user is a BRAND, lock UI & load only brand data
   if (sessionRole === 'BRAND' || sessionRole === 'BRAND_ADMIN') {
+    const roleNavSwitcher = document.getElementById('roleNavSwitcher');
+    const creatorSelector = document.getElementById('creatorSelectorContainer');
+    if (roleNavSwitcher) roleNavSwitcher.classList.add('hidden');
+    if (creatorSelector) creatorSelector.classList.add('hidden');
+
+    if (typeof switchPortalMode === 'function') {
+      switchPortalMode('BRAND');
+    }
     if (typeof window.loadBrandPortalData === 'function') {
       await window.loadBrandPortalData();
     }
@@ -1859,14 +1879,27 @@ function populateCreatorDropdown() {
 }
 
 window.loadCreatorPortalData = async function loadCreatorPortalData() {
-  const sessionRole = localStorage.getItem('user_role');
-  let sessionInfluencerId = localStorage.getItem('influencer_id');
+  const sessionRole = (
+    localStorage.getItem('user_role') ||
+    localStorage.getItem('gyc_role') ||
+    ''
+  ).toUpperCase();
 
-  // Play the GYC Architectural Curtain Reveal once on initial Creator entry
-  if (!window._gycCurtainPlayed && typeof window.triggerGycCurtainReveal === 'function') {
-    window._gycCurtainPlayed = true;
-    window.triggerGycCurtainReveal('Get You Collab // Creator Studio');
+  const sessionInfluencerId =
+    localStorage.getItem('influencer_id') ||
+    localStorage.getItem('active_influencer_id') ||
+    '';
+
+  // Block Brand Admins from ever triggering Creator preview/hydration
+  if (sessionRole === 'BRAND_ADMIN' || sessionRole === 'BRAND') {
+    return;
   }
+
+  // // Play the GYC Architectural Curtain Reveal once on initial Creator entry
+  // if (!window._gycCurtainPlayed && typeof window.triggerGycCurtainReveal === 'function') {
+  //   window._gycCurtainPlayed = true;
+  //   window.triggerGycCurtainReveal('Get You Collab // Creator Studio');
+  // }
 
   // If stored as string "null" or "undefined", treat as empty
   if (sessionInfluencerId === 'null' || sessionInfluencerId === 'undefined') {
@@ -2556,63 +2589,99 @@ function renderTopCampaignsTable(campaigns = []) {
     .join('');
 }
 
-// ==========================================
+/// ==========================================
 // 3. ROLE SWITCHER & NAVIGATION
 // ==========================================
 
 window.switchPortalMode = function(mode) {
   // Read authenticated session from login
-  const sessionRole = localStorage.getItem('user_role');
+  const sessionRole = (
+    localStorage.getItem('user_role') ||
+    localStorage.getItem('gyc_role') ||
+    ''
+  ).toUpperCase();
   const sessionInfluencerId = localStorage.getItem('influencer_id');
 
-  // Hard barrier: Creators cannot switch to ADMIN mode
+  const adminView = document.getElementById('adminView');
+  const creatorView = document.getElementById('creatorView');
+  const brandView = document.getElementById('brandView');
+  const btnAdmin = document.getElementById('viewBtnAdmin');
+  const btnCreator = document.getElementById('viewBtnCreator');
+  const roleNavSwitcher = document.getElementById('roleNavSwitcher');
+  const subTitle = document.getElementById('headerSubTitle');
+  const selectorContainer = document.getElementById('creatorSelectorContainer');
+
+  // 1. HARD BARRIER FOR BRAND_ADMIN: Never switch to Creator Portal or show "View As"
+  if (sessionRole === 'BRAND_ADMIN' || sessionRole === 'BRAND') {
+    state.currentRole = 'BRAND_ADMIN';
+
+    roleNavSwitcher?.classList.add('hidden');
+    selectorContainer?.classList.add('hidden');
+    selectorContainer?.classList.remove('flex');
+    creatorView?.classList.add('hidden');
+
+    // Show whichever container your Brand Portal uses
+    if (brandView && !brandView.classList.contains('hidden')) {
+      adminView?.classList.add('hidden');
+    } else if (adminView) {
+      adminView.classList.remove('hidden');
+    }
+
+    if (subTitle) subTitle.textContent = 'Brand Partner Portal';
+
+    if (typeof window.loadBrandPortalData === 'function') {
+      window.loadBrandPortalData();
+    }
+    return;
+  }
+
+  // 2. HARD BARRIER FOR CREATOR: Lock to Creator Portal & hide switcher + "View As"
   if (sessionRole === 'CREATOR') {
     mode = 'CREATOR';
   }
 
   state.currentRole = mode;
 
-  const adminView = document.getElementById('adminView');
-  const creatorView = document.getElementById('creatorView');
-  const btnAdmin = document.getElementById('viewBtnAdmin');
-  const btnCreator = document.getElementById('viewBtnCreator');
-  const subTitle = document.getElementById('headerSubTitle');
-  const selectorContainer = document.getElementById('creatorSelectorContainer');
-
+  // 3. SUPER_ADMIN / ADMIN MODE
   if (mode === 'ADMIN') {
     adminView?.classList.remove('hidden');
     creatorView?.classList.add('hidden');
+    brandView?.classList.add('hidden');
+
+    // Only Super Admin sees the switcher pill; hide "View As" when in Admin Suite
+    roleNavSwitcher?.classList.remove('hidden');
     selectorContainer?.classList.add('hidden');
     selectorContainer?.classList.remove('flex');
 
-    if (btnAdmin) btnAdmin.className = 'px-3 py-1 bg-espresso text-alabaster rounded-sm transition';
-    if (btnCreator) btnCreator.className = 'px-3 py-1 text-taupe hover:text-espresso transition';
+    if (btnAdmin) btnAdmin.className = 'px-3.5 py-1.5 bg-[#008CFF] text-white rounded-lg shadow-sm transition cursor-pointer';
+    if (btnCreator) btnCreator.className = 'px-3.5 py-1.5 text-[#111A2A]/60 hover:text-[#111A2A] rounded-lg transition cursor-pointer';
     if (subTitle) subTitle.textContent = 'Executive Suite';
 
     loadDashboardData();
   } else {
+    // CREATOR MODE (Either actual CREATOR or SUPER_ADMIN previewing Creator Portal)
     adminView?.classList.add('hidden');
+    brandView?.classList.add('hidden');
     creatorView?.classList.remove('hidden');
 
-    // If logged in as a real CREATOR, bind their specific ID and hide selector controls
     if (sessionRole === 'CREATOR') {
       if (sessionInfluencerId && sessionInfluencerId !== 'null' && sessionInfluencerId !== 'undefined') {
         state.activeCreatorId = sessionInfluencerId;
       }
+      roleNavSwitcher?.classList.add('hidden');
       selectorContainer?.classList.add('hidden');
       selectorContainer?.classList.remove('flex');
-
-      // Hide toggle controls completely for creators
       btnAdmin?.classList.add('hidden');
       btnCreator?.classList.add('hidden');
-    } else {
-      // If an ADMIN is previewing creator portal, show the creator selector
+    } else if (sessionRole === 'SUPER_ADMIN' || sessionRole === 'ADMIN') {
+      // ONLY Super Admin gets the "View As: Creator" dropdown
+      roleNavSwitcher?.classList.remove('hidden');
       selectorContainer?.classList.remove('hidden');
       selectorContainer?.classList.add('flex');
     }
 
-    if (btnCreator) btnCreator.className = 'px-3 py-1 bg-espresso text-alabaster rounded-sm transition';
-    if (btnAdmin) btnAdmin.className = 'px-3 py-1 text-taupe hover:text-espresso transition';
+    if (btnCreator) btnCreator.className = 'px-3.5 py-1.5 bg-[#008CFF] text-white rounded-lg shadow-sm transition cursor-pointer';
+    if (btnAdmin) btnAdmin.className = 'px-3.5 py-1.5 text-[#111A2A]/60 hover:text-[#111A2A] rounded-lg transition cursor-pointer';
     if (subTitle) subTitle.textContent = 'Creator Portal';
 
     loadCreatorPortalData();
@@ -2620,9 +2689,14 @@ window.switchPortalMode = function(mode) {
 };
 
 window.changeActiveCreator = function(creatorId) {
-  const sessionRole = localStorage.getItem('user_role');
-  // Prevent creators from hijacking their view to another creator
-  if (sessionRole === 'CREATOR') return;
+  const sessionRole = (
+    localStorage.getItem('user_role') ||
+    localStorage.getItem('gyc_role') ||
+    ''
+  ).toUpperCase();
+
+  // Only SUPER_ADMIN / ADMIN can switch active creators
+  if (sessionRole !== 'SUPER_ADMIN' && sessionRole !== 'ADMIN') return;
 
   state.activeCreatorId = creatorId;
   loadCreatorPortalData();
@@ -2661,11 +2735,34 @@ function handleSearch() {
     renderAdminTable();
   }
 }
-
 // Helper to refresh whichever view is active without crossing role boundaries
 async function refreshCurrentView() {
-  const sessionRole = localStorage.getItem('user_role');
-  if (sessionRole === 'CREATOR' || state.currentRole === 'CREATOR') {
+  const sessionRole = (
+    localStorage.getItem('user_role') ||
+    localStorage.getItem('gyc_role') ||
+    ''
+  ).toUpperCase();
+
+  // 1. Brand Admin: strictly refresh Brand Portal data
+  if (sessionRole === 'BRAND_ADMIN' || sessionRole === 'BRAND') {
+    state.currentRole = 'BRAND_ADMIN';
+    if (typeof window.loadBrandPortalData === 'function') {
+      await window.loadBrandPortalData();
+    }
+    return;
+  }
+
+  // 2. Creator: strictly refresh Creator Portal data
+  if (sessionRole === 'CREATOR') {
+    state.currentRole = 'CREATOR';
+    if (typeof window.loadCreatorPortalData === 'function') {
+      await window.loadCreatorPortalData();
+    }
+    return;
+  }
+
+  // 3. Super Admin: refresh whichever mode they are currently viewing
+  if (state.currentRole === 'CREATOR') {
     if (typeof window.loadCreatorPortalData === 'function') {
       await window.loadCreatorPortalData();
     }

@@ -200,6 +200,7 @@ class GoogleLoginRequest(BaseModel):
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+    role: Optional[str] = "CREATOR"  # "CREATOR" or "BRAND_ADMIN"
 
 class ResetPasswordRequest(BaseModel):
     email: EmailStr

@@ -380,8 +380,8 @@
 
 <script>
   (function () {
-    const token = localStorage.getItem('access_token');
-    const role = localStorage.getItem('user_role');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('gyc_token');
+    const role = (localStorage.getItem('user_role') || localStorage.getItem('gyc_role') || '').toUpperCase();
     const influencerId = localStorage.getItem('influencer_id');
 
     // 1. Kick unauthenticated users back to login
@@ -821,7 +821,7 @@
                   </th>
                 </tr>
               </thead>
-              
+
               <tbody id="adminOrdersTableBody" class="divide-y divide-[#111A2A]/10 text-xs font-medium">
                 <tr>
                   <td colspan="7" class="py-6 text-center text-[#111A2A]/40">Loading fulfillment queue...</td>

@@ -1373,12 +1373,30 @@ async def register_user(request: Request, payload: RegisterRequest):
         return _build_login_response(user)
     
 # --- 2. Forgot Password / First-Time Password Setup (Send 6-Digit OTP) ---
+def _row_to_dict(raw_row, columns):
+    if not raw_row:
+        return None
+    if isinstance(raw_row, dict):
+        return raw_row
+    return dict(zip(columns, raw_row))
+
+
+def _row_to_dict(raw_row, columns):
+    if not raw_row:
+        return None
+    if isinstance(raw_row, dict):
+        return raw_row
+    return dict(zip(columns, raw_row))
+
+
 @app.post("/api/v1/auth/forgot-password")
 @limiter.limit("5/minute")
 async def forgot_password(request: Request, payload: ForgotPasswordRequest):
     email = payload.email.strip().lower()
+    target_role = (payload.role or "CREATOR").strip().upper()
 
     async with get_db_cursor() as cursor:
+        # Debug: confirm which DB is active
         db_res = cursor.execute("SELECT DATABASE()")
         if hasattr(db_res, "__await__"):
             await db_res
@@ -1386,8 +1404,9 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest):
         else:
             active_db = cursor.fetchone()
 
+        # 1. Look up user in `users` by email first, then validate role in Python
         res = cursor.execute(
-            "SELECT id, email, is_active FROM users WHERE LOWER(TRIM(email)) = %s",
+            "SELECT id, email, role, is_active FROM users WHERE LOWER(TRIM(email)) = %s LIMIT 1",
             (email,)
         )
         if hasattr(res, "__await__"):
@@ -1396,13 +1415,85 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest):
         else:
             raw_user = cursor.fetchone()
 
-        user = _extract_user_row(raw_user, ["id", "email", "is_active"])
-        print(f"[AUTH DEBUG] DB={active_db} | forgot_password('{email}') -> {user}")
+        user = _row_to_dict(raw_user, ["id", "email", "role", "is_active"])
 
-        if not user or not _is_user_active(user.get("is_active")):
+        if user:
+            db_role = str(user.get("role") or "").strip().upper()
+            if target_role == "BRAND_ADMIN" and db_role != "BRAND_ADMIN":
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No Brand account found for this email address."
+                )
+            if target_role != "BRAND_ADMIN" and db_role not in ("CREATOR", "SUPER_ADMIN", "ADMIN"):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No Creator account found for this email address."
+                )
+
+        # 2. Fallback: Only check the matching entity table if not in `users`
+        if not user:
+            if target_role == "BRAND_ADMIN":
+                b_res = cursor.execute(
+                    "SELECT id, email FROM brands WHERE LOWER(TRIM(email)) = %s LIMIT 1",
+                    (email,)
+                )
+                if hasattr(b_res, "__await__"):
+                    await b_res
+                    raw_brand = await cursor.fetchone()
+                else:
+                    raw_brand = cursor.fetchone()
+
+                brand_row = _row_to_dict(raw_brand, ["id", "email"])
+                if brand_row:
+                    new_user_id = str(uuid.uuid4())
+                    ins = cursor.execute(
+                        """
+                        INSERT INTO users (id, email, password_hash, role, brand_id, is_active)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        """,
+                        (new_user_id, email, "", "BRAND_ADMIN", brand_row["id"], 1)
+                    )
+                    if hasattr(ins, "__await__"):
+                        await ins
+                    user = {"id": new_user_id, "email": email, "role": "BRAND_ADMIN", "is_active": 1}
+            else:
+                c_res = cursor.execute(
+                    "SELECT id, name, phone_number, email FROM influencers WHERE LOWER(TRIM(email)) = %s LIMIT 1",
+                    (email,)
+                )
+                if hasattr(c_res, "__await__"):
+                    await c_res
+                    raw_creator = await cursor.fetchone()
+                else:
+                    raw_creator = cursor.fetchone()
+
+                creator_row = _row_to_dict(raw_creator, ["id", "name", "phone_number", "email"])
+                if creator_row:
+                    new_user_id = str(uuid.uuid4())
+                    ins = cursor.execute(
+                        """
+                        INSERT INTO users (id, email, password_hash, role, influencer_id, is_active)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        """,
+                        (new_user_id, email, "", "CREATOR", creator_row["id"], 1)
+                    )
+                    if hasattr(ins, "__await__"):
+                        await ins
+                    user = {"id": new_user_id, "email": email, "role": "CREATOR", "is_active": 1}
+
+        if not user:
+            portal_label = "Brand" if target_role == "BRAND_ADMIN" else "Creator"
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No active paid account found for this email."
+                detail=f"No {portal_label} account found for this email address."
+            )
+
+        # Handle '1', 1, True, or None as active
+        raw_active = user.get("is_active")
+        if raw_active is not None and str(raw_active).strip().lower() in ("0", "false", "no"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This account is currently inactive."
             )
 
         otp = f"{random.randint(100000, 999999)}"
@@ -1415,10 +1506,15 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest):
         if hasattr(upd, "__await__"):
             await upd
 
+        conn = getattr(cursor, "connection", None)
+        if conn and hasattr(conn, "commit"):
+            commit_res = conn.commit()
+            if hasattr(commit_res, "__await__"):
+                await commit_res
+
     _send_reset_otp_email(email, otp)
     return {"message": "A 6-digit verification code has been sent to your registered email."}
 
-# --- 3. Verify OTP & Set New Password (Auto-Logs In) ---
 @app.post("/api/v1/auth/reset-password", response_model=LoginResponse)
 @limiter.limit("5/minute")
 async def reset_password(request: Request, payload: ResetPasswordRequest):
@@ -1449,19 +1545,27 @@ async def reset_password(request: Request, payload: ResetPasswordRequest):
             ["id", "email", "role", "brand_id", "influencer_id", "is_active", "reset_otp", "reset_otp_expires_at"]
         )
 
-        if not user or not _is_user_active(user.get("is_active")):
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No account found for this email address."
+            )
+
+        if user.get("is_active") is not None and not _is_user_active(user.get("is_active")):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="No active paid account found for this email."
+                detail="This account is currently inactive."
             )
 
         if not user.get("reset_otp") or str(user["reset_otp"]).strip() != payload.otp.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid verification code."
+                detail="Invalid 6-digit verification code."
             )
 
         expires_at = user.get("reset_otp_expires_at")
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at)
         if not expires_at or datetime.utcnow() > expires_at:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -1479,6 +1583,13 @@ async def reset_password(request: Request, payload: ResetPasswordRequest):
         )
         if hasattr(upd, "__await__"):
             await upd
+
+        # Ensure updated password_hash commits immediately to the database
+        conn = getattr(cursor, "connection", None)
+        if conn and hasattr(conn, "commit"):
+            commit_res = conn.commit()
+            if hasattr(commit_res, "__await__"):
+                await commit_res
 
         return _build_login_response(user)
     

@@ -28,3 +28,8 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+
+.env
+*.sql
+venv/
+__pycache__/
