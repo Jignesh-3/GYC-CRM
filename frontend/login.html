@@ -482,6 +482,104 @@
           </div>
         </div>
       </form>
+      
+      <!-- 6-Digit OTP Forgot Password Modal -->
+  <div id="forgotPasswordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white text-slate-900 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 relative">
+      <button
+        type="button"
+        onclick="closeForgotModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer"
+      >
+        ✕
+      </button>
+
+      <p class="text-[11px] font-bold uppercase tracking-wider text-[#008CFF] mb-1">ACCOUNT RECOVERY</p>
+      <h3 id="forgotModalTitle" class="text-xl font-extrabold text-slate-900 mb-1.5">Reset Your Password</h3>
+      <p id="forgotModalDesc" class="text-xs text-slate-500 mb-4">
+        Enter your registered email address to receive a 6-digit verification OTP.
+      </p>
+
+      <div id="forgotAlert" class="hidden mb-3 p-3 rounded-xl text-xs font-medium"></div>
+
+      <!-- Step 1: Request 6-Digit OTP -->
+      <form id="forgotOtpRequestForm" onsubmit="handleSendOtp(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Registered Email</label>
+          <input
+            type="email"
+            id="forgotEmailInput"
+            required
+            placeholder="you@example.com"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]"
+          />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button
+            type="button"
+            onclick="closeForgotModal()"
+            class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            id="sendOtpBtn"
+            class="px-5 py-2.5 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white text-xs font-bold transition cursor-pointer"
+          >
+            Send 6-Digit OTP →
+          </button>
+        </div>
+      </form>
+
+      <!-- Step 2: Verify 6-Digit OTP & Set New Password -->
+      <form id="forgotOtpResetForm" onsubmit="handleVerifyOtpAndReset(event)" class="hidden space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">6-Digit OTP Code</label>
+          <input
+            type="text"
+            id="forgotOtpInput"
+            required
+            maxlength="6"
+            pattern="\d{6}"
+            inputmode="numeric"
+            placeholder="123456"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-center font-mono text-base tracking-[0.4em] font-bold focus:outline-none focus:border-[#008CFF]"
+          />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">New Password</label>
+          <input
+            type="password"
+            id="forgotNewPasswordInput"
+            required
+            minlength="6"
+            placeholder="••••••••"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]"
+          />
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onclick="resetForgotModalToStep1()"
+            class="text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
+          >
+            ← Change email / Resend
+          </button>
+          <button
+            type="submit"
+            id="verifyOtpResetBtn"
+            class="px-5 py-2.5 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white text-xs font-bold transition cursor-pointer"
+          >
+            Verify &amp; Update Password →
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
           <!-- Google OAuth Divider & Button -->
           <div class="pt-1 space-y-3.5">
@@ -789,8 +887,29 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Authentication failed.");
+        const rawText = await res.text();
+        let data = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          throw new Error("Something went wrong on our server. Please try again.");
+        }
+
+        if (!res.ok) {
+          let errorMessage = "Authentication failed.";
+          if (typeof data.detail === "string") {
+            errorMessage = data.detail;
+          } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+            errorMessage = data.detail
+              .map(item => {
+                const field = item.loc ? item.loc[item.loc.length - 1] : "Input";
+                return `${field}: ${item.msg}`;
+              })
+              .join(" • ");
+          }
+          throw new Error(errorMessage);
+        }
+
         completeLogin(data);
       } catch (err) {
         showAlert(err.message);
@@ -808,8 +927,29 @@
             role: activeRole
           })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Google Sign-In failed.");
+        const rawText = await res.text();
+        let data = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          throw new Error("Server error during Google Sign-In. Please try again.");
+        }
+
+        if (!res.ok) {
+          let errorMessage = "Google Sign-In failed.";
+          if (typeof data.detail === "string") {
+            errorMessage = data.detail;
+          } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+            errorMessage = data.detail
+              .map(item => {
+                const field = item.loc ? item.loc[item.loc.length - 1] : "Input";
+                return `${field}: ${item.msg}`;
+              })
+              .join(" • ");
+          }
+          throw new Error(errorMessage);
+        }
+
         completeLogin(data);
       } catch (err) {
         showAlert(err.message);
@@ -1104,7 +1244,7 @@
           ? (isRegister ? "Creator Sign Up" : "Creator Login")
           : (isRegister ? "Brand Sign Up" : "Brand Login");
       }
-      if (googleDiv) googleDiv.textContent = isCreator ? "OR CONTINUE AS CREATOR" : "OR CONTINUE AS BRAND";
+      if (googleDiv) googleDiv.textContent = isCreator ? "CONTINUE AS CREATOR" : "CONTINUE AS BRAND";
     }
 
     function switchPortal(role) {
