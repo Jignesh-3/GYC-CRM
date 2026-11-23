@@ -108,6 +108,23 @@ function formatCurrency(amount) {
 // 1. ADMIN & BRAND PORTAL OPERATIONS
 // ==========================================
 
+// =============AFFILIATE LINK======================
+
+function applyAffiliateButtonAccess(userRole) {
+  const btn = document.getElementById("affiliateLinksNavBtn");
+  if (!btn) return;
+
+  const role = String(userRole || "").trim().toUpperCase();
+  if (role === "SUPER_ADMIN") {
+    btn.classList.remove("hidden");
+    btn.classList.add("inline-flex");
+  } else {
+    btn.classList.add("hidden");
+    btn.classList.remove("inline-flex");
+  }
+}
+
+
 window.loadBrandPortalData = async function() {
   const activeBrandId =
     localStorage.getItem('active_brand_id') ||
@@ -3756,6 +3773,17 @@ if (document.readyState === 'loading') {
 } else {
   bootApp();
 }
+
+// Safe standalone toggle for Affiliate Links button (Super Admin only)
+document.addEventListener('DOMContentLoaded', function () {
+  const role = (localStorage.getItem('user_role') || '').trim().toUpperCase();
+  const btn = document.getElementById('affiliateLinksNavBtn');
+  if (btn && role === 'SUPER_ADMIN') {
+    btn.classList.remove('hidden');
+    btn.classList.add('inline-flex');
+  }
+});
+
 /* ==========================================================================
    1. LAUNCH CAMPAIGN MODAL (ID: campaignModal)
    ========================================================================== */

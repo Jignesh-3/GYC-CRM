@@ -671,6 +671,14 @@
       showToast("Data refreshed");
     }
 
+    // Redirect anyone other than SUPER_ADMIN back to index.html
+    (function enforceSuperAdminAccess() {
+      const role = (localStorage.getItem('user_role') || '').trim().toUpperCase();
+      if (role !== 'SUPER_ADMIN') {
+        window.location.replace('/index.html');
+      }
+    })();
+
     // Boot
     refreshAllData();
   </script>
