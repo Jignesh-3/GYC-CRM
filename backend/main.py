@@ -1,4 +1,6 @@
 import uuid
+import re
+import secrets
 import os
 import json
 import random
@@ -51,8 +53,12 @@ from backend.schemas import (
     ResetPasswordRequest,
     CreatorOnboardingRequest,
     BrandOnboardingRequest,
-    RegisterRequest
+    RegisterRequest,
+    GenerateAffiliateLinkRequest,
+    UpdateLinkStatusRequest
 )
+
+from urllib.parse import urlencode, urlparse, parse_qsl, urlunparse
 
 
 @asynccontextmanager
@@ -1961,6 +1967,259 @@ async def get_public_latest_campaigns(limit: int = 6):
         "campaigns": campaigns
     }
 
+# Affiliate Links
+def _sanitize_slug(raw: str) -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9_-]+", "-", raw.strip().lower()).strip("-")
+    return cleaned[:60] if cleaned else f"gyc-{secrets.token_hex(3)}"
+
+
+def _build_tracked_url(
+    base_url: str,
+    slug: str,
+    deal_id: str,
+    coupon_code: Optional[str] = None,
+    auto_apply_shopify: bool = True,
+) -> str:
+    if not base_url.startswith(("http://", "https://")):
+        base_url = "https://" + base_url.lstrip("/")
+
+    parsed = urlparse(base_url)
+    query_params = dict(parse_qsl(parsed.query))
+    query_params.update({
+        "utm_source": "gyc",
+        "utm_medium": "creator",
+        "utm_campaign": deal_id[:8],
+        "ref": slug,
+    })
+
+    # If a coupon code is paired and Shopify auto-apply is enabled:
+    # Converts https://store.com/products/item -> https://store.com/discount/CODE?redirect=/products/item&...
+    if coupon_code and auto_apply_shopify:
+        target_path = parsed.path if parsed.path and parsed.path != "/" else "/"
+        query_params["redirect"] = target_path
+        new_path = f"/discount/{coupon_code.strip().upper()}"
+        return urlunparse(parsed._replace(path=new_path, query=urlencode(query_params)))
+
+    return urlunparse(parsed._replace(query=urlencode(query_params)))
+
+# 1. Hydrate Dropdowns (All Brands, Brand Deals, Influencers)
+@app.get("/api/v1/affiliate-links/context")
+async def get_affiliate_context():
+    async with get_db_cursor() as cursor:
+        await cursor.execute("SELECT id, name, website_url, logo_url FROM brands ORDER BY name ASC")
+        brands = await cursor.fetchall()
+
+        await cursor.execute("""
+            SELECT id, brand_id, title, commission_percentage, deal_status
+            FROM brand_deals
+            ORDER BY created_at DESC
+        """)
+        deals = await cursor.fetchall()
+
+        await cursor.execute("""
+            SELECT id, name, email, creator_handle, primary_platform, follower_tier
+            FROM influencers
+            WHERE is_blacklisted = 0 OR is_blacklisted IS NULL
+            ORDER BY name ASC
+        """)
+        influencers = await cursor.fetchall()
+
+    return {
+        "brands": brands,
+        "deals": deals,
+        "influencers": influencers,
+    }
+
+
+# 2. List All Generated Affiliate Links (Joined with Brand, Deal & Creator)
+@app.get("/api/v1/affiliate-links")
+async def list_affiliate_links(
+    request: Request,
+    brand_id: Optional[str] = None,
+    deal_id: Optional[str] = None,
+    influencer_id: Optional[str] = None,
+    status_filter: Optional[str] = Query(None, alias="status"),
+):
+    conditions = ["1=1"]
+    params = []
+
+    if brand_id:
+        conditions.append("al.brand_id = %s")
+        params.append(brand_id)
+    if deal_id:
+        conditions.append("al.deal_id = %s")
+        params.append(deal_id)
+    if influencer_id:
+        conditions.append("al.influencer_id = %s")
+        params.append(influencer_id)
+    if status_filter:
+        conditions.append("al.status = %s")
+        params.append(status_filter)
+
+    where_clause = " AND ".join(conditions)
+
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            f"""
+            SELECT
+                al.id,
+                al.slug,
+                al.brand_id,
+                al.deal_id,
+                al.influencer_id,
+                al.destination_url,
+                al.coupon_code,
+                al.status,
+                al.created_at,
+                b.name AS brand_name,
+                b.logo_url AS brand_logo,
+                bd.title AS deal_title,
+                bd.commission_percentage,
+                inf.name AS influencer_name,
+                inf.creator_handle,
+                inf.primary_platform
+            FROM affiliate_links al
+            JOIN brands b ON al.brand_id = b.id
+            JOIN brand_deals bd ON al.deal_id = bd.id
+            JOIN influencers inf ON al.influencer_id = inf.id
+            WHERE {where_clause}
+            ORDER BY al.created_at DESC
+            """,
+            tuple(params),
+        )
+        rows = await cursor.fetchall()
+
+    base_host = str(request.base_url).rstrip("/")
+    for item in rows:
+        item["short_url"] = f"{base_host}/r/{item['slug']}"
+
+    return {"links": rows}
+
+
+# 3. Generate a New Creator Tracking Link
+@app.post("/api/v1/affiliate-links/generate")
+async def generate_affiliate_link(payload: GenerateAffiliateLinkRequest, request: Request):
+    async with get_db_cursor() as cursor:
+        await cursor.execute("SELECT id, name, website_url FROM brands WHERE id = %s", (payload.brand_id,))
+        brand = await cursor.fetchone()
+        if not brand:
+            raise HTTPException(status_code=404, detail="Selected brand not found.")
+
+        await cursor.execute("SELECT id, brand_id, title FROM brand_deals WHERE id = %s", (payload.deal_id,))
+        deal = await cursor.fetchone()
+        if not deal or deal["brand_id"] != payload.brand_id:
+            raise HTTPException(status_code=400, detail="Selected campaign does not belong to this brand.")
+
+        await cursor.execute("SELECT id, name, creator_handle FROM influencers WHERE id = %s", (payload.influencer_id,))
+        influencer = await cursor.fetchone()
+        if not influencer:
+            raise HTTPException(status_code=404, detail="Selected creator not found.")
+
+        dest_url = (payload.destination_url or "").strip() or (brand.get("website_url") or "").strip()
+        if not dest_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Destination URL is required because this brand has no default website URL saved.",
+            )
+
+        if payload.slug and payload.slug.strip():
+            slug = _sanitize_slug(payload.slug)
+        else:
+            handle_base = (influencer.get("creator_handle") or influencer.get("name") or "creator").lstrip("@")
+            slug = _sanitize_slug(f"{handle_base}-{secrets.token_hex(2)}")
+
+        await cursor.execute("SELECT id FROM affiliate_links WHERE slug = %s", (slug,))
+        if await cursor.fetchone():
+            raise HTTPException(
+                status_code=400,
+                detail=f"The slug '/r/{slug}' is already taken. Choose a different custom slug.",
+            )
+
+        coupon = payload.coupon_code.strip().upper() if payload.coupon_code and payload.coupon_code.strip() else None
+        if coupon:
+            await cursor.execute(
+                "SELECT id FROM affiliate_links WHERE brand_id = %s AND coupon_code = %s",
+                (payload.brand_id, coupon),
+            )
+            if await cursor.fetchone():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Coupon code '{coupon}' is already assigned to another link for this brand.",
+                )
+
+        link_id = str(uuid.uuid4())
+        await cursor.execute(
+            """
+            INSERT INTO affiliate_links
+                (id, slug, brand_id, deal_id, influencer_id, destination_url, coupon_code, status)
+            VALUES
+                (%s, %s, %s, %s, %s, %s, %s, 'ACTIVE')
+            """,
+            (link_id, slug, payload.brand_id, payload.deal_id, payload.influencer_id, dest_url, coupon),
+        )
+
+    base_host = str(request.base_url).rstrip("/")
+    return {
+        "id": link_id,
+        "slug": slug,
+        "short_url": f"{base_host}/r/{slug}",
+        "tracked_destination_url": _build_tracked_url(dest_url, slug, payload.deal_id),
+        "coupon_code": coupon,
+        "status": "ACTIVE",
+    }
+
+
+# 4. Toggle Link Status (ACTIVE / PAUSED)
+@app.patch("/api/v1/affiliate-links/{link_id}/status")
+async def update_affiliate_link_status(link_id: str, payload: UpdateLinkStatusRequest):
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            "UPDATE affiliate_links SET status = %s WHERE id = %s",
+            (payload.status, link_id),
+        )
+        if  cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Affiliate link not found.")
+
+    return {"id": link_id, "status": payload.status}
+
+
+# 5. Public Zero-Write Redirect Engine (/r/{slug})
+@app.get("/r/{slug}")
+async def redirect_affiliate_link(slug: str):
+    clean_slug = slug.strip().lower()
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            """
+            SELECT
+                al.destination_url,
+                al.deal_id,
+                al.coupon_code,
+                al.status,
+                b.supports_auto_discount
+            FROM affiliate_links al
+            JOIN brands b ON al.brand_id = b.id
+            WHERE al.slug = %s
+            LIMIT 1
+            """,
+            (clean_slug,),
+        )
+        row = await cursor.fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Tracking link not found.")
+
+    if row["status"] != "ACTIVE":
+        raise HTTPException(status_code=410, detail="This campaign link has been paused or expired.")
+
+    target_url = _build_tracked_url(
+        row["destination_url"],
+        clean_slug,
+        row["deal_id"],
+        coupon_code=row.get("coupon_code"),
+        auto_apply_shopify=bool(row.get("supports_auto_discount", 1)),
+    )
+    return RedirectResponse(url=target_url, status_code=302)
+
 
 from fastapi.responses import RedirectResponse
 
@@ -1991,6 +2250,10 @@ if FRONTEND_DIR.exists():
     @app.get("/index.html")
     async def serve_index():
         return FileResponse(FRONTEND_DIR / "index.html")
+
+    @app.get("/affiliate_links.html")
+    async def serve_affiliate_links_page():
+        return FileResponse(FRONTEND_DIR /"affiliate_links.html")
 
     # 2. Mount static folder for CSS, JS, and other assets
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="static")

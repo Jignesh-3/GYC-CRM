@@ -242,3 +242,19 @@ class BrandOnboardingRequest(BaseModel):
     brand_niche: str
     campaign_objectives: str
     estimated_campaign_budget: str
+
+# =========================================================
+# AFFILIATE LINKS & ATTRIBUTION ENGINE (/r/{slug})
+# =========================================================
+
+class GenerateAffiliateLinkRequest(BaseModel):
+    brand_id: str = Field(..., min_length=1)
+    deal_id: str = Field(..., min_length=1)
+    influencer_id: str = Field(..., min_length=1)
+    destination_url: Optional[str] = None
+    slug: Optional[str] = None
+    coupon_code: Optional[str] = None
+
+
+class UpdateLinkStatusRequest(BaseModel):
+    status: str = Field(..., pattern="^(ACTIVE|PAUSED)$")

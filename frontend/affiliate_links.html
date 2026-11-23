@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Affiliate Links & Affiliate Attribution - GYC</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #0F172A; }
+    .royal-btn { background-color: #1749E8; transition: all 0.15s ease; }
+    .royal-btn:hover { background-color: #1239B8; }
+    .royal-focus:focus { outline: none; border-color: #1749E8; box-shadow: 0 0 0 3px rgba(23, 73, 232, 0.14); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/index.html" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#1749E8] transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to CRM
+        </a>
+        <span class="h-5 w-px bg-slate-200"></span>
+        <div class="flex items-center gap-2.5">
+          <img src="logo.png"
+               onerror="this.onerror=null; this.src='/frontend/logo.png';"
+               alt="GYC Logo"
+               class="w-9 h-9 rounded-lg object-contain bg-white border border-slate-200 p-0.5 shadow-2xs" />
+          <div>
+            <h1 class="text-base font-bold text-slate-900 leading-tight">Affiliate Links & Attribution Hub</h1>
+            <p class="text-xs text-slate-500">Zero-overhead <code class="text-[#1749E8] font-medium">/r/{slug}</code> short links & coupon mapping</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="refreshAllData()" class="px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition inline-flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
+        <button onclick="openGeneratorModal()" class="royal-btn text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm inline-flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Generate Creator Link
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-6">
+
+    <!-- KPI Strip -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Generated Links</p>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalLinks" class="text-2xl font-bold text-slate-900">0</span>
+          <span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span id="kpiActiveLinks">0</span> Active
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Registered Brands</p>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalBrands" class="text-2xl font-bold text-slate-900">0</span>
+          <span class="text-xs text-slate-500">Partner Stores</span>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Brand Campaigns</p>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalDeals" class="text-2xl font-bold text-slate-900">0</span>
+          <span class="text-xs text-slate-500">Active & Draft Deals</span>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Eligible Creators</p>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalCreators" class="text-2xl font-bold text-slate-900">0</span>
+          <span class="text-xs text-slate-500">Non-blacklisted</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sub-Navigation View Switcher (Links Directory vs Brands/Campaigns/Creators Overview) -->
+    <div class="border-b border-slate-200 flex items-center justify-between flex-wrap gap-3">
+      <nav class="flex gap-6" aria-label="Tabs">
+        <button id="tabBtnLinks" onclick="switchSubTab('links')" class="py-3 border-b-2 border-[#1749E8] text-sm font-semibold text-[#1749E8]">
+          Generated Tracking Links
+        </button>
+        <button id="tabBtnDirectory" onclick="switchSubTab('directory')" class="py-3 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800">
+          Brands, Campaigns & Creators Directory
+        </button>
+      </nav>
+    </div>
+
+    <!-- TAB 1: GENERATED AFFILIATE LINKS -->
+    <div id="viewLinks" class="space-y-4">
+      <!-- Filter Bar -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap items-center gap-3">
+        <div class="flex-1 min-w-[200px]">
+          <input id="searchInput" type="text" oninput="renderLinksTable()" placeholder="Search slug, coupon code, creator, or brand..."
+            class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg royal-focus" />
+        </div>
+
+        <select id="filterBrand" onchange="onFilterBrandChange()" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white royal-focus">
+          <option value="">All Brands</option>
+        </select>
+
+        <select id="filterDeal" onchange="fetchAffiliateLinks()" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white royal-focus">
+          <option value="">All Campaigns</option>
+        </select>
+
+        <select id="filterCreator" onchange="fetchAffiliateLinks()" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white royal-focus">
+          <option value="">All Creators</option>
+        </select>
+
+        <select id="filterStatus" onchange="fetchAffiliateLinks()" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white royal-focus">
+          <option value="">All Statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="PAUSED">Paused</option>
+        </select>
+
+        <button onclick="resetFilters()" class="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900">
+          Reset
+        </button>
+      </div>
+
+      <!-- Links Table -->
+      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <th class="py-3.5 px-4">Creator</th>
+                <th class="py-3.5 px-4">Brand & Campaign</th>
+                <th class="py-3.5 px-4">Short Tracking Link</th>
+                <th class="py-3.5 px-4">Coupon Code</th>
+                <th class="py-3.5 px-4">Commission</th>
+                <th class="py-3.5 px-4">Status</th>
+                <th class="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="linksTableBody" class="divide-y divide-slate-100 text-sm">
+              <tr>
+                <td colspan="7" class="py-10 text-center text-slate-400">Loading affiliate links...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: BRANDS, CAMPAIGNS & CREATORS DIRECTORY -->
+    <div id="viewDirectory" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Brands Card -->
+      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-900">Brands (<span id="dirBrandsCount">0</span>)</h2>
+        </div>
+        <div id="dirBrandsList" class="divide-y divide-slate-100 max-h-[540px] overflow-y-auto"></div>
+      </div>
+
+      <!-- Campaigns (brand_deals) Card -->
+      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-900">Campaigns / Deals (<span id="dirDealsCount">0</span>)</h2>
+        </div>
+        <div id="dirDealsList" class="divide-y divide-slate-100 max-h-[540px] overflow-y-auto"></div>
+      </div>
+
+      <!-- Creators (influencers) Card -->
+      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-900">Creators (<span id="dirCreatorsCount">0</span>)</h2>
+        </div>
+        <div id="dirCreatorsList" class="divide-y divide-slate-100 max-h-[540px] overflow-y-auto"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- GENERATE AFFILIATE LINK MODAL -->
+  <div id="generatorModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Generate Creator Tracking Link</h3>
+          <p class="text-xs text-slate-500">Creates a zero-write <code class="text-[#1749E8]">/r/{slug}</code> redirect mapped to your commission ledger</p>
+        </div>
+        <button onclick="closeGeneratorModal()" class="text-slate-400 hover:text-slate-700 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="generateLinkForm" onsubmit="submitGenerateLink(event)" class="p-6 space-y-4">
+        <div id="modalErrorBox" class="hidden p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium"></div>
+
+        <!-- Step 1: Brand -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">1. Select Brand *</label>
+          <select id="modalBrandSelect" required onchange="onModalBrandChange()" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg bg-white royal-focus">
+            <option value="">Choose a brand...</option>
+          </select>
+        </div>
+
+        <!-- Step 2: Campaign (brand_deals) -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">2. Select Campaign (Deal) *</label>
+          <select id="modalDealSelect" required onchange="onModalDealChange()" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg bg-white royal-focus">
+            <option value="">Select a brand first...</option>
+          </select>
+          <p id="modalCommissionHint" class="mt-1 text-xs text-[#1749E8] font-medium hidden"></p>
+        </div>
+
+        <!-- Step 3: Creator -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">3. Select Creator *</label>
+          <select id="modalCreatorSelect" required onchange="updateSlugPreview()" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg bg-white royal-focus">
+            <option value="">Choose a creator...</option>
+          </select>
+        </div>
+
+        <!-- Step 4: Destination URL -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">4. Destination Landing URL *</label>
+          <input id="modalDestinationUrl" type="url" required placeholder="https://brandstore.com/products/featured"
+            class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg royal-focus" />
+          <p class="mt-1 text-[11px] text-slate-500">Auto-filled from brand's website URL. You can override with a specific product page.</p>
+        </div>
+
+        <!-- Step 5: Custom Slug & Coupon Code -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Custom Short Slug <span class="text-slate-400 font-normal">(Optional)</span></label>
+            <input id="modalSlugInput" type="text" oninput="updateSlugPreview()" placeholder="e.g. rohan-glow10"
+              class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg royal-focus" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Paired Coupon Code <span class="text-slate-400 font-normal">(Optional)</span></label>
+            <input id="modalCouponInput" type="text" placeholder="e.g. ROHAN10"
+              class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg uppercase royal-focus" />
+          </div>
+        </div>
+
+        <!-- Live Short Link Preview -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Live Short Link Preview</p>
+          <p id="slugPreviewText" class="mt-0.5 text-xs font-mono text-[#1749E8] break-all"></p>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeGeneratorModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">
+            Cancel
+          </button>
+          <button id="modalSubmitBtn" type="submit" class="royal-btn text-white text-sm font-semibold px-5 py-2 rounded-lg shadow-xs">
+            Generate & Copy Link
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-xl shadow-lg"></div>
+
+  <script>
+    let contextData = { brands: [], deals: [], influencers: [] };
+    let allLinks = [];
+
+    // Safe text-first API parser to avoid JSON parse crashes on text/validation errors
+    async function safeFetchJson(url, options = {}) {
+      const res = await fetch(url, options);
+      const rawText = await res.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (e) {
+        data = { detail: rawText || `HTTP ${res.status}` };
+      }
+      if (!res.ok) {
+        const msg = Array.isArray(data.detail)
+          ? data.detail.map(err => err.msg || JSON.stringify(err)).join(", ")
+          : (data.detail || `Request failed (${res.status})`);
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.remove("hidden");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => toast.classList.add("hidden"), 3000);
+    }
+
+    function switchSubTab(tab) {
+      const isLinks = tab === "links";
+      document.getElementById("viewLinks").classList.toggle("hidden", !isLinks);
+      document.getElementById("viewDirectory").classList.toggle("hidden", isLinks);
+
+      document.getElementById("tabBtnLinks").className = isLinks
+        ? "py-3 border-b-2 border-[#1749E8] text-sm font-semibold text-[#1749E8]"
+        : "py-3 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800";
+
+      document.getElementById("tabBtnDirectory").className = !isLinks
+        ? "py-3 border-b-2 border-[#1749E8] text-sm font-semibold text-[#1749E8]"
+        : "py-3 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800";
+    }
+
+    async function loadContext() {
+      try {
+        contextData = await safeFetchJson("/api/v1/affiliate-links/context");
+
+        document.getElementById("kpiTotalBrands").textContent = contextData.brands.length;
+        document.getElementById("kpiTotalDeals").textContent = contextData.deals.length;
+        document.getElementById("kpiTotalCreators").textContent = contextData.influencers.length;
+
+        populateDropdowns();
+        renderDirectoryTab();
+      } catch (err) {
+        showToast("Error loading context: " + err.message);
+      }
+    }
+
+    function populateDropdowns() {
+      const filterBrand = document.getElementById("filterBrand");
+      const filterDeal = document.getElementById("filterDeal");
+      const filterCreator = document.getElementById("filterCreator");
+      const modalBrand = document.getElementById("modalBrandSelect");
+      const modalCreator = document.getElementById("modalCreatorSelect");
+
+      filterBrand.innerHTML = `<option value="">All Brands</option>` +
+        contextData.brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+
+      filterDeal.innerHTML = `<option value="">All Campaigns</option>` +
+        contextData.deals.map(d => `<option value="${d.id}">${escapeHtml(d.title)}</option>`).join("");
+
+      filterCreator.innerHTML = `<option value="">All Creators</option>` +
+        contextData.influencers.map(i => `<option value="${i.id}">${escapeHtml(i.name)} ${i.creator_handle ? `(${escapeHtml(i.creator_handle)})` : ""}</option>`).join("");
+
+      modalBrand.innerHTML = `<option value="">Choose a brand...</option>` +
+        contextData.brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+
+      modalCreator.innerHTML = `<option value="">Choose a creator...</option>` +
+        contextData.influencers.map(i => `<option value="${i.id}">${escapeHtml(i.name)} ${i.creator_handle ? `(@${escapeHtml(i.creator_handle.replace(/^@/, ""))})` : ""}</option>`).join("");
+    }
+
+    function onFilterBrandChange() {
+      const brandId = document.getElementById("filterBrand").value;
+      const filterDeal = document.getElementById("filterDeal");
+      const filteredDeals = brandId
+        ? contextData.deals.filter(d => d.brand_id === brandId)
+        : contextData.deals;
+
+      filterDeal.innerHTML = `<option value="">All Campaigns</option>` +
+        filteredDeals.map(d => `<option value="${d.id}">${escapeHtml(d.title)}</option>`).join("");
+
+      fetchAffiliateLinks();
+    }
+
+    async function fetchAffiliateLinks() {
+      const params = new URLSearchParams();
+      const brandId = document.getElementById("filterBrand").value;
+      const dealId = document.getElementById("filterDeal").value;
+      const creatorId = document.getElementById("filterCreator").value;
+      const status = document.getElementById("filterStatus").value;
+
+      if (brandId) params.set("brand_id", brandId);
+      if (dealId) params.set("deal_id", dealId);
+      if (creatorId) params.set("influencer_id", creatorId);
+      if (status) params.set("status", status);
+
+      try {
+        const res = await safeFetchJson(`/api/v1/affiliate-links?${params.toString()}`);
+        allLinks = res.links || [];
+        document.getElementById("kpiTotalLinks").textContent = allLinks.length;
+        document.getElementById("kpiActiveLinks").textContent = allLinks.filter(l => l.status === "ACTIVE").length;
+        renderLinksTable();
+      } catch (err) {
+        document.getElementById("linksTableBody").innerHTML =
+          `<tr><td colspan="7" class="py-8 text-center text-red-500">${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    function renderLinksTable() {
+      const tbody = document.getElementById("linksTableBody");
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      const filtered = allLinks.filter(item => {
+        if (!query) return true;
+        return (
+          (item.slug || "").toLowerCase().includes(query) ||
+          (item.coupon_code || "").toLowerCase().includes(query) ||
+          (item.brand_name || "").toLowerCase().includes(query) ||
+          (item.deal_title || "").toLowerCase().includes(query) ||
+          (item.influencer_name || "").toLowerCase().includes(query) ||
+          (item.creator_handle || "").toLowerCase().includes(query)
+        );
+      });
+
+      if (!filtered.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-12 text-center text-slate-400">
+              No tracking links found. Click <strong class="text-slate-700">+ Generate Creator Link</strong> to create one.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(link => {
+        const isActive = link.status === "ACTIVE";
+        const handle = link.creator_handle ? `@${link.creator_handle.replace(/^@/, "")}` : (link.primary_platform || "Creator");
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-3.5 px-4">
+              <div class="font-semibold text-slate-900">${escapeHtml(link.influencer_name)}</div>
+              <div class="text-xs text-slate-500">${escapeHtml(handle)}</div>
+            </td>
+            <td class="py-3.5 px-4">
+              <div class="font-medium text-slate-900">${escapeHtml(link.brand_name)}</div>
+              <div class="text-xs text-slate-500">${escapeHtml(link.deal_title)}</div>
+            </td>
+            <td class="py-3.5 px-4">
+              <div class="flex items-center gap-2">
+                <a href="${escapeHtml(link.short_url)}" target="_blank" class="font-mono text-xs text-[#1749E8] hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
+                  /r/${escapeHtml(link.slug)}
+                </a>
+                <button onclick="copyText('${escapeHtml(link.short_url)}')" title="Copy Short Link"
+                  class="p-1.5 text-slate-500 hover:text-[#1749E8] hover:bg-slate-100 rounded-md transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
+              <div class="text-[11px] text-slate-400 truncate max-w-[230px] mt-1" title="${escapeHtml(link.destination_url)}">
+                → ${escapeHtml(link.destination_url)}
+              </div>
+            </td>
+            <td class="py-3.5 px-4">
+              ${link.coupon_code
+                ? `<span onclick="copyText('${escapeHtml(link.coupon_code)}')" class="cursor-pointer inline-flex items-center gap-1 font-mono text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200" title="Click to copy coupon">${escapeHtml(link.coupon_code)}</span>`
+                : `<span class="text-xs text-slate-400">—</span>`}
+            </td>
+            <td class="py-3.5 px-4 font-semibold text-slate-800">
+              ${Number(link.commission_percentage || 0).toFixed(1)}%
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}">
+                ${isActive ? "Active" : "Paused"}
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-right">
+              <button onclick="toggleLinkStatus('${link.id}', '${isActive ? "PAUSED" : "ACTIVE"}')"
+                class="text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${isActive ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-[#1749E8] text-[#1749E8] hover:bg-blue-50"}">
+                ${isActive ? "Pause" : "Activate"}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderDirectoryTab() {
+      const brandMap = Object.fromEntries(contextData.brands.map(b => [b.id, b.name]));
+
+      document.getElementById("dirBrandsCount").textContent = contextData.brands.length;
+      document.getElementById("dirBrandsList").innerHTML = contextData.brands.map(b => `
+        <div class="p-4 hover:bg-slate-50 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-slate-900 truncate">${escapeHtml(b.name)}</p>
+            <p class="text-xs text-slate-500 truncate">${escapeHtml(b.website_url || "No website URL")}</p>
+          </div>
+          <button onclick="openGeneratorWithPreset({ brandId: '${b.id}' })" class="shrink-0 text-xs font-semibold text-[#1749E8] hover:underline">
+            + Link
+          </button>
+        </div>
+      `).join("") || `<p class="p-6 text-xs text-slate-400 text-center">No brands found.</p>`;
+
+      document.getElementById("dirDealsCount").textContent = contextData.deals.length;
+      document.getElementById("dirDealsList").innerHTML = contextData.deals.map(d => `
+        <div class="p-4 hover:bg-slate-50 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-slate-900 truncate">${escapeHtml(d.title)}</p>
+            <p class="text-xs text-slate-500">${escapeHtml(brandMap[d.brand_id] || "Brand")} • <span class="font-semibold text-emerald-700">${Number(d.commission_percentage || 0).toFixed(1)}% comm.</span></p>
+          </div>
+          <button onclick="openGeneratorWithPreset({ brandId: '${d.brand_id}', dealId: '${d.id}' })" class="shrink-0 text-xs font-semibold text-[#1749E8] hover:underline">
+            + Link
+          </button>
+        </div>
+      `).join("") || `<p class="p-6 text-xs text-slate-400 text-center">No campaigns found.</p>`;
+
+      document.getElementById("dirCreatorsCount").textContent = contextData.influencers.length;
+      document.getElementById("dirCreatorsList").innerHTML = contextData.influencers.map(c => `
+        <div class="p-4 hover:bg-slate-50 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-slate-900 truncate">${escapeHtml(c.name)}</p>
+            <p class="text-xs text-slate-500 truncate">${c.creator_handle ? `@${escapeHtml(c.creator_handle.replace(/^@/, ""))}` : ""} • ${escapeHtml(c.primary_platform || "Creator")} ${c.follower_tier ? `(${escapeHtml(c.follower_tier)})` : ""}</p>
+          </div>
+          <button onclick="openGeneratorWithPreset({ creatorId: '${c.id}' })" class="shrink-0 text-xs font-semibold text-[#1749E8] hover:underline">
+            + Link
+          </button>
+        </div>
+      `).join("") || `<p class="p-6 text-xs text-slate-400 text-center">No creators found.</p>`;
+    }
+
+    // Modal Controls
+    function openGeneratorModal() {
+      document.getElementById("generateLinkForm").reset();
+      document.getElementById("modalErrorBox").classList.add("hidden");
+      document.getElementById("modalCommissionHint").classList.add("hidden");
+      document.getElementById("modalDealSelect").innerHTML = `<option value="">Select a brand first...</option>`;
+      updateSlugPreview();
+      document.getElementById("generatorModal").classList.remove("hidden");
+    }
+
+    function openGeneratorWithPreset({ brandId = "", dealId = "", creatorId = "" }) {
+      openGeneratorModal();
+      if (brandId) {
+        document.getElementById("modalBrandSelect").value = brandId;
+        onModalBrandChange();
+      }
+      if (dealId) {
+        document.getElementById("modalDealSelect").value = dealId;
+        onModalDealChange();
+      }
+      if (creatorId) {
+        document.getElementById("modalCreatorSelect").value = creatorId;
+        updateSlugPreview();
+      }
+    }
+
+    function closeGeneratorModal() {
+      document.getElementById("generatorModal").classList.add("hidden");
+    }
+
+    function onModalBrandChange() {
+      const brandId = document.getElementById("modalBrandSelect").value;
+      const brand = contextData.brands.find(b => b.id === brandId);
+      const dealSelect = document.getElementById("modalDealSelect");
+
+      if (brand && brand.website_url) {
+        document.getElementById("modalDestinationUrl").value = brand.website_url;
+      }
+
+      const brandDeals = contextData.deals.filter(d => d.brand_id === brandId);
+      dealSelect.innerHTML = brandDeals.length
+        ? `<option value="">Choose a campaign...</option>` + brandDeals.map(d => `<option value="${d.id}">${escapeHtml(d.title)} (${d.deal_status})</option>`).join("")
+        : `<option value="">No campaigns found for this brand</option>`;
+
+      document.getElementById("modalCommissionHint").classList.add("hidden");
+    }
+
+    function onModalDealChange() {
+      const dealId = document.getElementById("modalDealSelect").value;
+      const deal = contextData.deals.find(d => d.id === dealId);
+      const hint = document.getElementById("modalCommissionHint");
+      if (deal) {
+        hint.textContent = `Campaign Payout Rate: ${Number(deal.commission_percentage || 0).toFixed(2)}% net order commission`;
+        hint.classList.remove("hidden");
+      } else {
+        hint.classList.add("hidden");
+      }
+    }
+
+    function updateSlugPreview() {
+      const customSlug = document.getElementById("modalSlugInput").value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+      const creatorId = document.getElementById("modalCreatorSelect").value;
+      const creator = contextData.influencers.find(i => i.id === creatorId);
+      const fallback = creator
+        ? `${(creator.creator_handle || creator.name || "creator").replace(/^@/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-auto`
+        : "creator-slug";
+      document.getElementById("slugPreviewText").textContent = `${window.location.origin}/r/${customSlug || fallback}`;
+    }
+
+    async function submitGenerateLink(event) {
+      event.preventDefault();
+      const errBox = document.getElementById("modalErrorBox");
+      const submitBtn = document.getElementById("modalSubmitBtn");
+      errBox.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Generating...";
+
+      const payload = {
+        brand_id: document.getElementById("modalBrandSelect").value,
+        deal_id: document.getElementById("modalDealSelect").value,
+        influencer_id: document.getElementById("modalCreatorSelect").value,
+        destination_url: document.getElementById("modalDestinationUrl").value.trim(),
+        slug: document.getElementById("modalSlugInput").value.trim() || null,
+        coupon_code: document.getElementById("modalCouponInput").value.trim().toUpperCase() || null,
+      };
+
+      try {
+        const created = await safeFetchJson("/api/v1/affiliate-links/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        await navigator.clipboard?.writeText(created.short_url).catch(() => {});
+        closeGeneratorModal();
+        showToast(`Link generated & copied: ${created.short_url}`);
+        await fetchAffiliateLinks();
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.classList.remove("hidden");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Generate & Copy Link";
+      }
+    }
+
+    async function toggleLinkStatus(linkId, nextStatus) {
+      try {
+        await safeFetchJson(`/api/v1/affiliate-links/${linkId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: nextStatus }),
+        });
+        showToast(`Link marked as ${nextStatus}`);
+        await fetchAffiliateLinks();
+      } catch (err) {
+        showToast("Failed to update status: " + err.message);
+      }
+    }
+
+    function resetFilters() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("filterBrand").value = "";
+      document.getElementById("filterDeal").value = "";
+      document.getElementById("filterCreator").value = "";
+      document.getElementById("filterStatus").value = "";
+      onFilterBrandChange();
+    }
+
+    function copyText(text) {
+      navigator.clipboard?.writeText(text);
+      showToast(`Copied: ${text}`);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function refreshAllData() {
+      await Promise.all([loadContext(), fetchAffiliateLinks()]);
+      showToast("Data refreshed");
+    }
+
+    // Boot
+    refreshAllData();
+  </script>
+</body>
+</html>
