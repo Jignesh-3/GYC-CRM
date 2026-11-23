@@ -6,83 +6,221 @@
   <title>Get You Collab — Workspace Access</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-</head>
-<body class="min-h-screen bg-[#111A2A] text-white flex items-center justify-center p-4">
 
-  <div class="w-full max-w-5xl grid md:grid-cols-2 bg-white text-slate-900 rounded-2xl shadow-2xl overflow-hidden">
-    
-    <!-- Left Branding Panel -->
-    <div class="bg-[#111A2A] text-white p-8 md:p-10 flex flex-col justify-between border-r border-slate-800">
-      <div>
-        <div class="flex items-center gap-3 mb-8">
-          <div class="w-10 h-10 rounded-xl bg-[#008CFF] flex items-center justify-center font-extrabold text-sm tracking-wider">GYC</div>
-          <div>
-            <div class="font-bold text-lg leading-tight">Get You Collab</div>
-            <div class="text-xs text-[#01B7F9]">Creator Commerce Suite</div>
+  <style>
+  /* Custom dropdown item hover & active blue highlight */
+  #brandNicheList li,
+  #creatorNicheList li {
+    padding: 0.55rem 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  #brandNicheList li:hover,
+  #creatorNicheList li:hover,
+  #brandObjMenu label:hover {
+    background-color: #1749E8 !important;
+    color: #ffffff !important;
+  }
+
+  #brandNicheList li.selected,
+  #creatorNicheList li.selected {
+    background-color: #DCE8FF !important;
+    color: #1749E8 !important;
+    font-weight: 700;
+  }
+
+  /* Custom blue scrollbar inside dropdown lists */
+  #brandNicheList::-webkit-scrollbar,
+  #creatorNicheList::-webkit-scrollbar {
+    width: 6px;
+  }
+  #brandNicheList::-webkit-scrollbar-thumb,
+  #creatorNicheList::-webkit-scrollbar-thumb {
+    background-color: #93B4FF;
+    border-radius: 9999px;
+  }
+
+  /* Royal Blue highlight for all custom & auto-upgraded dropdowns */
+  .gyc-dd-item:hover,
+  #brandNicheList li:hover,
+  #creatorNicheList li:hover,
+  #brandObjMenu label:hover {
+    background-color: #1749E8 !important;
+    color: #ffffff !important;
+  }
+
+  .gyc-dd-item.is-selected,
+  #brandNicheList li.selected,
+  #creatorNicheList li.selected {
+    background-color: #DCE8FF !important;
+    color: #1749E8 !important;
+    font-weight: 700;
+  }
+
+  .gyc-dd-list::-webkit-scrollbar,
+  #brandNicheList::-webkit-scrollbar,
+  #creatorNicheList::-webkit-scrollbar {
+    width: 6px;
+  }
+  .gyc-dd-list::-webkit-scrollbar-thumb,
+  #brandNicheList::-webkit-scrollbar-thumb,
+  #creatorNicheList::-webkit-scrollbar-thumb {
+    background-color: #93B4FF;
+    border-radius: 9999px;
+  }
+
+</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-[#F4F8FF] via-white to-[#EEF4FF] text-[#111A2A] antialiased relative overflow-x-hidden flex flex-col justify-between selection:bg-[#1749E8] selection:text-white">
+
+  <!-- Decorative Top-Right Wave Accent -->
+  <div class="pointer-events-none fixed top-0 right-0 w-[340px] h-[260px] overflow-hidden z-0">
+    <svg viewBox="0 0 400 320" fill="none" class="w-full h-full">
+      <path d="M90 0 C160 130, 290 150, 400 220 L400 0 Z" fill="url(#gycTopWave)" opacity="0.22"/>
+      <path d="M210 0 C260 95, 330 120, 400 165 L400 0 Z" fill="url(#gycTopWave)"/>
+      <defs>
+        <linearGradient id="gycTopWave" x1="120" y1="0" x2="400" y2="200" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#0A36C7"/>
+          <stop offset="1" stop-color="#1992FF"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- Decorative Bottom-Left GYC Emblem -->
+  <div class="pointer-events-none fixed bottom-0 left-0 w-36 h-36 z-0">
+    <svg viewBox="0 0 160 160" fill="none" class="w-full h-full">
+      <circle cx="58" cy="74" r="15" fill="url(#gycCornerGrad)"/>
+      <path d="M12 104 C26 94, 44 102, 58 118 C72 102, 90 94, 104 104 C112 110, 106 126, 74 146 L74 160 L42 160 L42 146 C10 126, 4 110, 12 104 Z" fill="url(#gycCornerGrad)"/>
+      <defs>
+        <linearGradient id="gycCornerGrad" x1="15" y1="60" x2="100" y2="160" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#22B8FF"/>
+          <stop offset="1" stop-color="#1749E8"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- MAIN TWO-COLUMN CONTAINER -->
+  <main class="relative z-10 max-w-6xl w-full mx-auto px-6 md:px-12 pt-10 md:pt-14 pb-8 flex-1 flex items-center">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+
+      <!-- LEFT COLUMN: Brand Logo, Hero Headline & 3 Value Pillars -->
+      <div class="lg:col-span-6 space-y-7">
+        <!-- GYC Logo Header -->
+        <a href="index.html" class="inline-flex items-center gap-3.5 group">
+          <div class="flex items-center font-black text-3xl tracking-tight text-[#111A2A]">
+            <span>G</span>
+            <span class="relative inline-flex flex-col items-center mx-0.5 text-[#1749E8]">
+              <span class="w-2 h-2 rounded-full bg-[#1992FF] -mb-1"></span>
+              <span>Y</span>
+            </span>
+            <span>C</span>
+          </div>
+          <span class="h-6 w-px bg-slate-300"></span>
+          <span class="text-lg font-extrabold tracking-tight text-[#111A2A]">
+            Get <span class="text-[#1749E8]">You</span> Collab
+          </span>
+        </a>
+
+        <!-- Dynamic Hero Headline & Subtext -->
+        <div class="space-y-3.5">
+          <h1 class="text-4xl sm:text-[44px] font-extrabold leading-[1.12] tracking-tight text-[#111A2A]">
+            Create. Collaborate.<br/>
+            <span id="heroHighlightText" class="text-[#1749E8]">Earn Together.</span>
+          </h1>
+          <p id="heroSubtext" class="text-slate-600 text-base sm:text-[17px] leading-relaxed max-w-md">
+            Track your performance, collaborate with brands, and get paid for your content.
+          </p>
+        </div>
+
+        <!-- 3-Column Feature Strip -->
+        <div class="grid grid-cols-3 pt-2 max-w-lg divide-x divide-slate-200/90">
+          <!-- Pillar 1 -->
+          <div class="pr-4 flex flex-col items-center text-center gap-2.5">
+            <div class="w-11 h-11 rounded-xl bg-[#EAF1FF] text-[#1749E8] flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M7 16v-4m5 4V8m5 8V5"/>
+              </svg>
+            </div>
+            <span id="pillar1Text" class="text-xs sm:text-[13px] font-bold text-[#111A2A] leading-snug">
+              Track<br/>Your Performance
+            </span>
+          </div>
+
+          <!-- Pillar 2 -->
+          <div class="px-4 flex flex-col items-center text-center gap-2.5">
+            <div class="w-11 h-11 rounded-xl bg-[#EAF1FF] text-[#1749E8] flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c1.66 0 3-1.34 3-3S13.66 5 12 5s-3 1.34-3 3 1.34 3 3 3zm-7 8v-1a4 4 0 014-4h6a4 4 0 014 4v1"/>
+              </svg>
+            </div>
+            <span id="pillar2Text" class="text-xs sm:text-[13px] font-bold text-[#111A2A] leading-snug">
+              Collaborate<br/>with Brands
+            </span>
+          </div>
+
+          <!-- Pillar 3 -->
+          <div class="pl-4 flex flex-col items-center text-center gap-2.5">
+            <div class="w-11 h-11 rounded-xl bg-[#EAF1FF] text-[#1749E8] flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>
+              </svg>
+            </div>
+            <span id="pillar3Text" class="text-xs sm:text-[13px] font-bold text-[#111A2A] leading-snug">
+              Earn<br/>Commissions
+            </span>
           </div>
         </div>
-
-        <span class="inline-block text-[11px] font-bold tracking-widest uppercase px-3 py-1 rounded-full bg-slate-800/80 text-[#01B7F9] border border-slate-700 mb-5">
-          MULTI-TENANT ATTRIBUTION
-        </span>
-        <h1 class="text-3xl font-extrabold leading-tight mb-4">
-          Precision creator attribution &amp; <span class="text-[#01B7F9]">instant settlements.</span>
-        </h1>
-        <p class="text-sm text-slate-400 leading-relaxed">
-          Select your workspace portal on the right to sign in or create your account via Google or email.
-        </p>
       </div>
 
-      <div class="mt-8 pt-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-        <span>Get You Collab CRM © 2026</span>
-        <span class="text-[#01B7F9] font-semibold">● Live Sync</span>
-      </div>
-    </div>
+      <!-- RIGHT COLUMN: Floating White Auth Card -->
+      <div class="lg:col-span-6 flex justify-center lg:justify-end">
+        <div class="w-full max-w-[460px] bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/80 shadow-[0_20px_60px_-15px_rgba(23,73,232,0.12)] p-6 sm:p-8 space-y-5">
 
-    <!-- Right Dual-Portal Auth Card -->
-    <div class="p-8 md:p-10 bg-white">
-      
-      <!-- Step 1: Role Portal Switcher -->
-      <div class="grid grid-cols-2 gap-2 p-1.5 rounded-xl bg-slate-100 border border-slate-200 mb-6">
-        <button
-          type="button"
-          id="tabCreatorPortal"
-          onclick="switchPortal('CREATOR')"
-          class="py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#111A2A] text-white shadow"
-        >
-          I'm a Creator
-        </button>
-        <button
-          type="button"
-          id="tabBrandPortal"
-          onclick="switchPortal('BRAND_ADMIN')"
-          class="py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900"
-        >
-          I'm a Brand
-        </button>
-      </div>
+          <!-- Top Portal Switcher Pill -->
+          <div class="grid grid-cols-2 p-1.5 rounded-2xl bg-[#F3F6FB] border border-slate-200/60">
+            <button type="button" id="tabCreator" onclick="switchPortal('CREATOR')"
+              class="py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all bg-[#DCE8FF] text-[#111A2A] border border-[#B9D1FF] shadow-2xs">
+              I'm a Creator
+            </button>
+            <button type="button" id="tabBrand" onclick="switchPortal('BRAND_ADMIN')"
+              class="py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-[#111A2A]">
+              I'm a Brand
+            </button>
+          </div>
 
-      <!-- Portal Header + Sign In / Sign Up Mode Toggle -->
-      <div class="flex items-center justify-between mb-5">
-        <div>
-          <p id="portalBadge" class="text-[11px] font-bold uppercase tracking-wider text-[#008CFF]">CREATOR WORKSPACE</p>
-          <h2 id="portalTitle" class="text-2xl font-extrabold text-slate-900">Creator Studio Access</h2>
-        </div>
-        <div class="flex rounded-lg bg-slate-100 p-0.5 text-xs font-semibold">
-          <button type="button" id="modeLoginBtn" onclick="switchAuthMode('login')" class="px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm">
-            Sign In
-          </button>
-          <button type="button" id="modeRegisterBtn" onclick="switchAuthMode('register')" class="px-3 py-1.5 rounded-md text-slate-600">
-            Sign Up
-          </button>
-        </div>
-      </div>
+          <!-- Portal Header & Sign In / Sign Up Toggle -->
+          <div class="flex items-start justify-between gap-3 pt-1">
+            <div>
+              <p id="portalKicker" class="text-[11px] font-extrabold uppercase tracking-wider text-[#1749E8]">
+                CREATOR PORTAL
+              </p>
+              <h2 id="portalHeading" class="text-2xl font-extrabold text-[#111A2A] tracking-tight mt-0.5">
+                Creator Login
+              </h2>
+            </div>
 
-      <!-- Error / Success Alert -->
-      <div id="authAlert" class="hidden mb-4 p-3 rounded-xl text-xs font-medium bg-red-50 text-red-700 border border-red-200"></div>
+            <div class="inline-flex p-1 rounded-xl bg-[#F3F6FB] border border-slate-200/70">
+              <button type="button" id="btnModeLogin" onclick="switchAuthMode('login')"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-[#DCE8FF] text-[#1749E8]">
+                Sign In
+              </button>
+              <button type="button" id="btnModeRegister" onclick="switchAuthMode('register')"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-[#111A2A]">
+                Sign Up
+              </button>
+            </div>
+          </div>
 
-      <!-- CREATOR FORM -->
-<form id="creatorForm" onsubmit="handleEmailAuth(event, 'CREATOR')" class="space-y-3.5">
+          <!-- Alert Banner -->
+          <div id="authAlert" class="hidden px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium"></div>
+
+          <!-- YOUR EXISTING #creatorForm AND #brandForm GO RIGHT HERE -->
+          <!-- (Use gradient button styling on submit buttons: bg-gradient-to-r from-[#0B35C2] via-[#1749E8] to-[#1982FF] hover:opacity-95 text-white shadow-md shadow-blue-600/20) -->
+          <!-- CREATOR FORM -->
+<form id="creatorForm" onsubmit="handleEmailAuth(event, 'CREATOR')" novalidate class="space-y-3.5">
 
   <!-- STEP PROGRESS INDICATOR (Only visible in Sign Up mode) -->
   <div id="creatorStepIndicator" class="hidden items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
@@ -207,8 +345,8 @@
 
 </form>
 
-      <!-- BRAND FORM (Hidden until "I'm a Brand" is clicked) -->
-      <form id="brandForm" onsubmit="handleEmailAuth(event, 'BRAND_ADMIN')" class="hidden space-y-3.5">
+     <!-- BRAND FORM (Hidden until "I'm a Brand" is clicked) -->
+      <form id="brandForm" onsubmit="handleEmailAuth(event, 'BRAND_ADMIN')" novalidate class="hidden space-y-3.5">
         <!-- SIGN-UP PROGRESS BAR (Only visible in Sign Up mode) -->
         <div id="brandWizardHeader" class="hidden flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 pb-1">
           <span id="brandStepLabel">Step 1 of 3 • Account Basics</span>
@@ -219,7 +357,7 @@
           </div>
         </div>
 
-        <!-- STEP 1: Account Basics (Name fields hidden in Sign In mode) -->
+        <!-- STEP 1: Account Basics (3 fields in Sign Up; Work Email only in Sign In) -->
         <div id="brandStep1" class="space-y-3.5">
           <div id="brandSignupFields" class="hidden space-y-3.5">
             <div>
@@ -237,21 +375,13 @@
             <input type="email" id="brandEmail" required placeholder="founder@brand.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
           </div>
 
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password <span class="text-rose-500">*</span></label>
-              <a href="#forgot" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#1749E8] hover:underline">Forgot password?</a>
-            </div>
-            <input type="password" id="brandPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
-          </div>
-
           <!-- Sign-Up Step 1 Next Button -->
           <button type="button" id="brandStep1NextBtn" onclick="nextBrandStep(2)" class="hidden w-full py-3 rounded-xl bg-[#1749E8] hover:bg-[#111A2A] text-white font-bold text-sm transition">
-            Next: Brand Links →
+            Next: Brand Profile →
           </button>
         </div>
 
-        <!-- STEP 2: Brand Links (Sign Up only) -->
+        <!-- STEP 2: Brand Links & Niche (3 fields in Sign Up) -->
         <div id="brandStep2" class="hidden space-y-3.5">
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Website Link <span class="text-rose-500">*</span></label>
@@ -261,6 +391,21 @@
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Social Media Link <span class="text-rose-500">*</span></label>
             <input type="url" id="brandSocialLink" placeholder="https://instagram.com/yourbrand" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
+          </div>
+
+          <div id="brandNicheWrap" class="relative">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Niche <span class="text-rose-500">*</span></label>
+            <input type="hidden" id="brandNiche" value="" />
+            <button type="button" onclick="toggleBrandNicheMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
+              <span id="brandNicheLabel" class="text-slate-400 truncate">Select your brand niche...</span>
+              <span class="text-slate-400 text-xs">▼</span>
+            </button>
+            <div id="brandNicheMenu" class="hidden absolute z-50 left-0 right-0 bottom-full mb-1.5 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+              <div class="p-2 border-b border-slate-100 bg-slate-50">
+                <input type="text" id="brandNicheSearch" oninput="renderBrandNiches(this.value)" placeholder="Search 30+ niches..." class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#1749E8]" />
+              </div>
+              <ul id="brandNicheList" class="max-h-44 overflow-y-auto divide-y divide-slate-50 text-sm text-slate-700"></ul>
+            </div>
           </div>
 
           <div class="flex gap-2">
@@ -273,191 +418,99 @@
           </div>
         </div>
 
-        <!-- STEP 3: Campaign Profile & Submit (Sign Up only) -->
-        <div id="brandStep3" class="hidden space-y-3.5">
-          <div id="brandNicheWrap" class="relative">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Brand Niche <span class="text-rose-500">*</span></label>
-            <input type="hidden" id="brandNiche" value="" />
-            <button type="button" onclick="toggleBrandNicheMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
-              <span id="brandNicheLabel" class="text-slate-400 truncate">Select your brand niche...</span>
-              <span class="text-slate-400 text-xs">▼</span>
-            </button>
-            <div id="brandNicheMenu" class="hidden absolute z-50 left-0 right-0 top-full mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
-              <div class="p-2 border-b border-slate-100 bg-slate-50">
-                <input type="text" id="brandNicheSearch" oninput="renderBrandNiches(this.value)" placeholder="Search 30+ niches..." class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#1749E8]" />
+        <!-- STEP 3: Campaign Objectives, Budget & Password (3 fields in Sign Up; Password also shown in Sign In) -->
+        <div id="brandStep3" class="space-y-3.5">
+          <div id="brandStep3SignupFields" class="hidden space-y-3.5">
+            <div id="brandObjWrap" class="relative">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Campaign Objectives <span class="text-rose-500">*</span></label>
+              <input type="hidden" id="brandCampaignObjective" value="" />
+              <button type="button" onclick="toggleBrandObjMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
+                <span id="brandObjLabel" class="text-slate-400 truncate">Select one or more objectives...</span>
+                <span class="text-slate-400 text-xs">▼</span>
+              </button>
+              <div id="brandObjMenu" class="hidden absolute z-50 left-0 right-0 top-full mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl py-1.5 divide-y divide-slate-50">
+                <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                  <input type="checkbox" value="Brand Awareness" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                  <span>Brand Awareness</span>
+                </label>
+                <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                  <input type="checkbox" value="Lead Generation / Sales" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                  <span>Lead Generation / Sales</span>
+                </label>
+                <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                  <input type="checkbox" value="App Installs" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                  <span>App Installs</span>
+                </label>
+                <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                  <input type="checkbox" value="Content Creation & UGC" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                  <span>Content Creation & UGC</span>
+                </label>
+                <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
+                  <input type="checkbox" value="Event Promotion" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
+                  <span>Event Promotion</span>
+                </label>
               </div>
-              <ul id="brandNicheList" class="max-h-44 overflow-y-auto divide-y divide-slate-50 text-sm text-slate-700"></ul>
             </div>
-          </div>
 
-          <div id="brandObjWrap" class="relative">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Campaign Objectives <span class="text-rose-500">*</span></label>
-            <input type="hidden" id="brandCampaignObjective" value="" />
-            <button type="button" onclick="toggleBrandObjMenu()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8]">
-              <span id="brandObjLabel" class="text-slate-400 truncate">Select one or more objectives...</span>
-              <span class="text-slate-400 text-xs">▼</span>
-            </button>
-            <div id="brandObjMenu" class="hidden absolute z-50 left-0 right-0 top-full mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl py-1.5 divide-y divide-slate-50">
-              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
-                <input type="checkbox" value="Brand Awareness" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
-                <span>Brand Awareness</span>
-              </label>
-              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
-                <input type="checkbox" value="Lead Generation / Sales" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
-                <span>Lead Generation / Sales</span>
-              </label>
-              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
-                <input type="checkbox" value="App Installs" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
-                <span>App Installs</span>
-              </label>
-              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
-                <input type="checkbox" value="Content Creation & UGC" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
-                <span>Content Creation & UGC</span>
-              </label>
-              <label class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-[#1749E8]/5 cursor-pointer">
-                <input type="checkbox" value="Event Promotion" onchange="syncBrandObjectives()" class="brand-obj-cb rounded text-[#1749E8] focus:ring-0" />
-                <span>Event Promotion</span>
-              </label>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Estimated Campaign Budget <span class="text-rose-500">*</span></label>
+              <select id="brandEstimatedBudget" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:outline-none focus:border-[#1749E8]">
+                <option value="" disabled selected>Select estimated budget...</option>
+                <option value="Under ₹50,000">Under ₹50,000</option>
+                <option value="₹50,000 - ₹2,00,000">₹50,000 - ₹2,00,000</option>
+                <option value="₹2,00,000 - ₹5,00,000">₹2,00,000 - ₹5,00,000</option>
+                <option value="₹5,00,000+">₹5,00,000+</option>
+              </select>
             </div>
           </div>
 
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Estimated Campaign Budget <span class="text-rose-500">*</span></label>
-            <select id="brandEstimatedBudget" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:outline-none focus:border-[#1749E8]">
-              <option value="" disabled selected>Select estimated budget...</option>
-              <option value="Under ₹50,000">Under ₹50,000</option>
-              <option value="₹50,000 - ₹2,00,000">₹50,000 - ₹2,00,000</option>
-              <option value="₹2,00,000 - ₹5,00,000">₹2,00,000 - ₹5,00,000</option>
-              <option value="₹5,00,000+">₹5,00,000+</option>
-            </select>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Password <span class="text-rose-500">*</span></label>
+              <a href="#forgot" id="brandForgotLink" onclick="openForgotModal(event)" class="text-[11px] font-semibold text-[#1749E8] hover:underline">Forgot password?</a>
+            </div>
+            <input type="password" id="brandPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1749E8]" />
           </div>
 
-          <div class="flex gap-2">
-            <button type="button" onclick="goBrandStep(2)" class="w-1/3 py-3 rounded-xl border border-slate-300 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">
+          <div class="flex gap-2 pt-1">
+            <button type="button" id="brandStep3BackBtn" onclick="goBrandStep(2)" class="hidden w-1/3 py-3 rounded-xl border border-slate-300 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">
               ← Back
             </button>
-            <button type="submit" id="brandWizardSubmitBtn" class="w-2/3 py-3 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white font-bold text-sm transition">
-              Create Brand Account →
+            <button type="submit" id="brandSubmitBtn" class="w-full py-3 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white font-bold text-sm transition">
+              Sign In as Brand →
             </button>
           </div>
         </div>
-
-        <!-- Sign-In Submit Button (Hidden during Sign Up wizard) -->
-        <button type="submit" id="brandSubmitBtn" class="w-full py-3 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white font-bold text-sm transition">
-          Sign In as Brand →
-        </button>
       </form>
 
-      <!-- Divider + Shared Google Sign-In -->
-      <div class="my-5 flex items-center gap-3">
-        <div class="h-px bg-slate-200 flex-1"></div>
-        <span id="googleDividerLabel" class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Or continue as Creator</span>
-        <div class="h-px bg-slate-200 flex-1"></div>
+          <!-- Google OAuth Divider & Button -->
+          <div class="pt-1 space-y-3.5">
+            <div class="relative flex items-center justify-center">
+              <div class="border-t border-slate-200 w-full"></div>
+              <span id="googleDividerText" class="bg-white px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+                OR CONTINUE AS CREATOR
+              </span>
+              <div class="border-t border-slate-200 w-full"></div>
+            </div>
+
+            <div id="googleBtnContainer" class="w-full flex justify-center"></div>
+          </div>
+
+        </div>
       </div>
 
-      <div id="googleBtnContainer" class="flex justify-center"></div>
-      <p id="googleConfigMsg" class="hidden text-center text-xs text-amber-600 mt-2"></p>
-
     </div>
-  </div>
+  </main>
 
-  <!-- 6-Digit OTP Forgot Password Modal -->
-  <div id="forgotPasswordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="bg-white text-slate-900 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 relative">
-      <button
-        type="button"
-        onclick="closeForgotModal()"
-        class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer"
-      >
-        ✕
-      </button>
-
-      <p class="text-[11px] font-bold uppercase tracking-wider text-[#008CFF] mb-1">ACCOUNT RECOVERY</p>
-      <h3 id="forgotModalTitle" class="text-xl font-extrabold text-slate-900 mb-1.5">Reset Your Password</h3>
-      <p id="forgotModalDesc" class="text-xs text-slate-500 mb-4">
-        Enter your registered email address to receive a 6-digit verification OTP.
-      </p>
-
-      <div id="forgotAlert" class="hidden mb-3 p-3 rounded-xl text-xs font-medium"></div>
-
-      <!-- Step 1: Request 6-Digit OTP -->
-      <form id="forgotOtpRequestForm" onsubmit="handleSendOtp(event)" class="space-y-3.5">
-        <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Registered Email</label>
-          <input
-            type="email"
-            id="forgotEmailInput"
-            required
-            placeholder="you@example.com"
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]"
-          />
-        </div>
-
-        <div class="flex items-center justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onclick="closeForgotModal()"
-            class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            id="sendOtpBtn"
-            class="px-5 py-2.5 rounded-xl bg-[#008CFF] hover:bg-[#1749E8] text-white text-xs font-bold transition cursor-pointer"
-          >
-            Send 6-Digit OTP →
-          </button>
-        </div>
-      </form>
-
-      <!-- Step 2: Verify 6-Digit OTP & Set New Password -->
-      <form id="forgotOtpResetForm" onsubmit="handleVerifyOtpAndReset(event)" class="hidden space-y-3.5">
-        <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">6-Digit OTP Code</label>
-          <input
-            type="text"
-            id="forgotOtpInput"
-            required
-            maxlength="6"
-            pattern="\d{6}"
-            inputmode="numeric"
-            placeholder="123456"
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-center font-mono text-base tracking-[0.4em] font-bold focus:outline-none focus:border-[#008CFF]"
-          />
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">New Password</label>
-          <input
-            type="password"
-            id="forgotNewPasswordInput"
-            required
-            minlength="6"
-            placeholder="••••••••"
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#008CFF]"
-          />
-        </div>
-
-        <div class="flex items-center justify-between pt-1">
-          <button
-            type="button"
-            onclick="resetForgotModalToStep1()"
-            class="text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
-          >
-            ← Change email / Resend
-          </button>
-          <button
-            type="submit"
-            id="verifyOtpResetBtn"
-            class="px-5 py-2.5 rounded-xl bg-[#111A2A] hover:bg-[#1749E8] text-white text-xs font-bold transition cursor-pointer"
-          >
-            Verify &amp; Update Password →
-          </button>
-        </div>
-      </form>
+  <!-- Bottom Footer Bar -->
+  <footer class="relative z-10 max-w-6xl w-full mx-auto px-6 md:px-12 pb-6 flex items-center justify-between text-xs text-slate-500">
+    <p class="pl-24 sm:pl-28 font-medium">Get You Collab © 2026</p>
+    <div class="inline-flex items-center gap-2 font-bold text-[#1749E8]">
+      <span class="w-2 h-2 rounded-full bg-[#1749E8] animate-pulse"></span>
+      <span>Live Sync</span>
     </div>
-  </div>
+  </footer>
+
 
   <script>
    let activeRole = "CREATOR";   // "CREATOR" or "BRAND_ADMIN"
@@ -544,55 +597,70 @@
       document.getElementById("creatorStepLabel").textContent = ["", "Step 1 of 3 — Basic Info", "Step 2 of 3 — Creator Profile", "Step 3 of 3 — Niche & Password"][step];
     }
 
-    function switchPortal(role) {
-      activeRole = role;
-      const isCreator = role === "CREATOR";
+    // function switchPortal(role) {
+    //   activeRole = role;
+    //   const isCreator = role === "CREATOR";
 
-      document.getElementById("tabCreatorPortal").className = isCreator
-        ? "py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#111A2A] text-white shadow"
-        : "py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+    //   document.getElementById("tabCreatorPortal").className = isCreator
+    //     ? "py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#111A2A] text-white shadow"
+    //     : "py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
 
-      document.getElementById("tabBrandPortal").className = !isCreator
-        ? "py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#1749E8] text-white shadow"
-        : "py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+    //   document.getElementById("tabBrandPortal").className = !isCreator
+    //     ? "py-2.5 px-4 rounded-lg text-xs font-bold transition-all bg-[#1749E8] text-white shadow"
+    //     : "py-2.5 px-4 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
 
-      document.getElementById("creatorForm").classList.toggle("hidden", !isCreator);
-      document.getElementById("brandForm").classList.toggle("hidden", isCreator);
+    //   document.getElementById("creatorForm").classList.toggle("hidden", !isCreator);
+    //   document.getElementById("brandForm").classList.toggle("hidden", isCreator);
 
-      document.getElementById("portalBadge").textContent = isCreator ? "CREATOR WORKSPACE" : "BRAND PARTNER WORKSPACE";
-      document.getElementById("portalTitle").textContent = isCreator ? "Creator Studio Access" : "Brand Campaign Portal";
-      document.getElementById("googleDividerLabel").textContent = isCreator ? "Or continue as Creator" : "Or continue as Brand";
+    //   document.getElementById("portalBadge").textContent = isCreator ? "CREATOR WORKSPACE" : "BRAND PARTNER WORKSPACE";
+    //   document.getElementById("portalTitle").textContent = isCreator ? "Creator Studio Access" : "Brand Campaign Portal";
+    //   document.getElementById("googleDividerLabel").textContent = isCreator ? "Or continue as Creator" : "Or continue as Brand";
 
-      updateSubmitLabels();
-      hideAlert();
-    }
+    //   updateSubmitLabels();
+    //   hideAlert();
+    // }
 
     function syncBrandFormMode(isRegister) {
-      document.getElementById("brandWizardHeader")?.classList.toggle("hidden", !isRegister);
-      document.getElementById("brandSignupFields")?.classList.toggle("hidden", !isRegister);
-      document.getElementById("brandStep1NextBtn")?.classList.toggle("hidden", !isRegister);
-      document.getElementById("brandSubmitBtn")?.classList.toggle("hidden", isRegister);
+    document.getElementById("brandWizardHeader").classList.toggle("hidden", !isRegister);
+    document.getElementById("brandSignupFields").classList.toggle("hidden", !isRegister);
+    document.getElementById("brandStep1NextBtn").classList.toggle("hidden", !isRegister);
+    document.getElementById("brandStep3SignupFields").classList.toggle("hidden", !isRegister);
+    document.getElementById("brandStep3BackBtn").classList.toggle("hidden", !isRegister);
+    document.getElementById("brandForgotLink")?.classList.toggle("hidden", isRegister);
+
+    const submitBtn = document.getElementById("brandSubmitBtn");
+    if (isRegister) {
+      submitBtn.textContent = "Create Brand Account →";
+      submitBtn.classList.remove("w-full");
+      submitBtn.classList.add("w-2/3");
       goBrandStep(1);
+    } else {
+      submitBtn.textContent = "Sign In as Brand →";
+      submitBtn.classList.remove("w-2/3");
+      submitBtn.classList.add("w-full");
+      document.getElementById("brandStep1").classList.remove("hidden");
+      document.getElementById("brandStep2").classList.add("hidden");
+      document.getElementById("brandStep3").classList.remove("hidden");
     }
+  }
+    // function switchAuthMode(mode) {
+    //   authMode = mode;
+    //   const isRegister = mode === "register";
 
-    function switchAuthMode(mode) {
-      authMode = mode;
-      const isRegister = mode === "register";
+    //   document.getElementById("modeLoginBtn").className = !isRegister
+    //     ? "px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm"
+    //     : "px-3 py-1.5 rounded-md text-slate-600";
 
-      document.getElementById("modeLoginBtn").className = !isRegister
-        ? "px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm"
-        : "px-3 py-1.5 rounded-md text-slate-600";
+    //   document.getElementById("modeRegisterBtn").className = isRegister
+    //     ? "px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm"
+    //     : "px-3 py-1.5 rounded-md text-slate-600";
 
-      document.getElementById("modeRegisterBtn").className = isRegister
-        ? "px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm"
-        : "px-3 py-1.5 rounded-md text-slate-600";
+    //   syncCreatorFormMode(isRegister);
+    //   syncBrandFormMode(isRegister);
 
-      syncCreatorFormMode(isRegister);
-      syncBrandFormMode(isRegister);
-
-      updateSubmitLabels();
-      hideAlert();
-    }
+    //   updateSubmitLabels();
+    //   hideAlert();
+    // }
 
     function updateSubmitLabels() {
       const isRegister = authMode === "register";
@@ -894,21 +962,18 @@
       const company = document.getElementById("brandCompanyName").value.trim();
       const name = document.getElementById("brandContactName").value.trim();
       const email = document.getElementById("brandEmail").value.trim();
-      const pw = document.getElementById("brandPassword").value;
-      if (!company || !name || !email || !pw) {
-        return showAlert("Please fill in Brand Name, Your Full Name, Work Email, and Password.");
+      if (!company || !name || !email) {
+        return showAlert("Please fill in Brand Name, Your Full Name, and Work Email.");
       }
-      if (pw.length < 6) {
-        return showAlert("Password must be at least 6 characters.");
-      }
+      renderBrandNiches();
     }
     if (targetStep === 3) {
       const website = document.getElementById("brandWebsiteUrl").value.trim();
       const social = document.getElementById("brandSocialLink").value.trim();
-      if (!website || !social) {
-        return showAlert("Please enter both your Brand Website Link and Brand Social Media Link.");
+      const niche = document.getElementById("brandNiche").value.trim();
+      if (!website || !social || !niche) {
+        return showAlert("Please enter your Brand Website Link, Brand Social Media Link, and Brand Niche.");
       }
-      renderBrandNiches();
     }
     goBrandStep(targetStep);
   }
@@ -985,30 +1050,197 @@
     }
   });
 
-  function applyUrlPortalAndMode() {
-    const params = new URLSearchParams(window.location.search);
-    const portalParam = (params.get("portal") || params.get("role") || "").trim().toLowerCase();
-    const modeParam = (params.get("mode") || "").trim().toLowerCase();
 
-    if (portalParam === "brand" || portalParam === "brand_admin") {
-      switchPortal("BRAND_ADMIN");
-    } else if (portalParam === "creator") {
-      switchPortal("CREATOR");
+  function syncPortalVisuals() {
+      const isCreator = activeRole === "CREATOR";
+      const isRegister = authMode === "register";
+
+      // Top portal pill active state
+      const activePill = "py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all bg-[#DCE8FF] text-[#111A2A] border border-[#B9D1FF] shadow-2xs";
+      const inactivePill = "py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-[#111A2A] border border-transparent";
+      const tabCreator = document.getElementById("tabCreator");
+      const tabBrand = document.getElementById("tabBrand");
+      if (tabCreator && tabBrand) {
+        tabCreator.className = isCreator ? activePill : inactivePill;
+        tabBrand.className = !isCreator ? activePill : inactivePill;
+      }
+
+      // Sign In / Sign Up pill active state
+      const btnLogin = document.getElementById("btnModeLogin");
+      const btnReg = document.getElementById("btnModeRegister");
+      if (btnLogin && btnReg) {
+        btnLogin.className = !isRegister
+          ? "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-[#DCE8FF] text-[#1749E8]"
+          : "px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-[#111A2A]";
+        btnReg.className = isRegister
+          ? "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-[#DCE8FF] text-[#1749E8]"
+          : "px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-[#111A2A]";
+      }
+
+      // Left hero copy & 3 value pillars
+      const heroHighlight = document.getElementById("heroHighlightText");
+      const heroSub = document.getElementById("heroSubtext");
+      if (heroHighlight) heroHighlight.textContent = isCreator ? "Earn Together." : "Grow Together.";
+      if (heroSub) {
+        heroSub.textContent = isCreator
+          ? "Track your performance, collaborate with brands, and get paid for your content."
+          : "Manage campaigns, work with creators, track sales, and grow your brand.";
+      }
+
+      const p1 = document.getElementById("pillar1Text");
+      const p2 = document.getElementById("pillar2Text");
+      const p3 = document.getElementById("pillar3Text");
+      if (p1) p1.innerHTML = isCreator ? "Track<br/>Your Performance" : "Run<br/>Campaigns";
+      if (p2) p2.innerHTML = isCreator ? "Collaborate<br/>with Brands" : "Work with<br/>Creators";
+      if (p3) p3.innerHTML = isCreator ? "Earn<br/>Commissions" : "Track<br/>Sales & ROI";
+
+      // Right card header & Google divider
+      const kicker = document.getElementById("portalKicker");
+      const heading = document.getElementById("portalHeading");
+      const googleDiv = document.getElementById("googleDividerText");
+      if (kicker) kicker.textContent = isCreator ? "CREATOR PORTAL" : "BRAND PARTNER WORKSPACE";
+      if (heading) {
+        heading.textContent = isCreator
+          ? (isRegister ? "Creator Sign Up" : "Creator Login")
+          : (isRegister ? "Brand Sign Up" : "Brand Login");
+      }
+      if (googleDiv) googleDiv.textContent = isCreator ? "OR CONTINUE AS CREATOR" : "OR CONTINUE AS BRAND";
     }
 
-    if (modeParam === "register" || modeParam === "signup") {
-      switchAuthMode("register");
-    } else if (modeParam === "login" || modeParam === "signin") {
-      switchAuthMode("login");
+    function switchPortal(role) {
+      activeRole = role;
+      const isCreator = role === "CREATOR";
+
+      document.getElementById("creatorForm")?.classList.toggle("hidden", !isCreator);
+      document.getElementById("brandForm")?.classList.toggle("hidden", isCreator);
+
+      syncPortalVisuals();
+      updateSubmitLabels();
+      hideAlert();
     }
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", applyUrlPortalAndMode);
-  } else {
-    applyUrlPortalAndMode();
-  }
+    function switchAuthMode(mode) {
+      authMode = mode;
+      const isRegister = mode === "register";
 
-  </script>
+      syncCreatorFormMode(isRegister);
+      syncBrandFormMode(isRegister);
+      syncPortalVisuals();
+
+      updateSubmitLabels();
+      hideAlert();
+    }
+
+    
+      // --- Enter taking to next line---
+
+    ["creatorForm", "brandForm"].forEach(formId => {
+    document.getElementById(formId)?.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const tag = e.target.tagName;
+      if (tag !== "INPUT" && tag !== "SELECT") return;
+
+      // Get all visible inputs/selects inside this form
+      const fields = Array.from(e.currentTarget.querySelectorAll("input, select"))
+        .filter(el => el.type !== "hidden" && el.offsetParent !== null);
+
+      const idx = fields.indexOf(e.target);
+      if (idx > -1 && idx < fields.length - 1) {
+        // Move focus to the next input field instead of submitting
+        e.preventDefault();
+        fields[idx + 1].focus();
+      } else if (authMode === "register") {
+        // On the last field of Step 1 or Step 2, trigger Next Step
+        const isBrand = formId === "brandForm";
+        const step1 = document.getElementById(isBrand ? "brandStep1" : "creatorStep1");
+        const step2 = document.getElementById(isBrand ? "brandStep2" : "creatorStep2");
+        if (step1 && !step1.classList.contains("hidden")) {
+          e.preventDefault();
+          isBrand ? nextBrandStep(2) : nextCreatorStep(2);
+        } else if (step2 && !step2.classList.contains("hidden")) {
+          e.preventDefault();
+          isBrand ? nextBrandStep(3) : nextCreatorStep(3);
+        }
+      }
+    });
+  });
+
+  // --- Auto-upgrade all <select> dropdowns to royal-blue hover menus ---
+  (function upgradeAllSelectDropdowns() {
+    document.querySelectorAll("form select").forEach((selectEl) => {
+      if (selectEl.dataset.gycUpgraded) return;
+      selectEl.dataset.gycUpgraded = "true";
+
+      selectEl.classList.add("hidden");
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "relative gyc-custom-select";
+      selectEl.parentNode.insertBefore(wrapper, selectEl);
+      wrapper.appendChild(selectEl);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className =
+        "w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-left text-sm flex items-center justify-between focus:outline-none focus:border-[#1749E8] transition";
+
+      const labelSpan = document.createElement("span");
+      const initialOpt = selectEl.options[selectEl.selectedIndex];
+      const isPlaceholder = !initialOpt || initialOpt.disabled || initialOpt.value === "";
+      labelSpan.textContent = initialOpt ? initialOpt.textContent : "Select an option...";
+      labelSpan.className = isPlaceholder ? "text-slate-400 truncate" : "text-slate-900 font-medium truncate";
+
+      const arrowSpan = document.createElement("span");
+      arrowSpan.className = "text-slate-400 text-xs ml-2";
+      arrowSpan.textContent = "▼";
+
+      btn.appendChild(labelSpan);
+      btn.appendChild(arrowSpan);
+      wrapper.appendChild(btn);
+
+      const menu = document.createElement("ul");
+      menu.className =
+        "gyc-dd-list hidden absolute z-50 left-0 right-0 top-full mt-1.5 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl divide-y divide-slate-50 text-sm text-slate-700";
+
+      Array.from(selectEl.options).forEach((opt) => {
+        if (opt.disabled && opt.value === "") return;
+
+        const li = document.createElement("li");
+        li.textContent = opt.textContent;
+        li.dataset.value = opt.value;
+        li.className =
+          "gyc-dd-item px-3.5 py-2.5 cursor-pointer transition-colors" +
+          (opt.selected && opt.value !== "" ? " is-selected" : "");
+
+        li.addEventListener("click", () => {
+          selectEl.value = opt.value;
+          selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+
+          labelSpan.textContent = opt.textContent;
+          labelSpan.className = "text-slate-900 font-medium truncate";
+
+          menu.querySelectorAll("li").forEach((item) => item.classList.remove("is-selected"));
+          li.classList.add("is-selected");
+          menu.classList.add("hidden");
+        });
+
+        menu.appendChild(li);
+      });
+
+      wrapper.appendChild(menu);
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const wasHidden = menu.classList.contains("hidden");
+        document.querySelectorAll(".gyc-dd-list").forEach((m) => m.classList.add("hidden"));
+        if (wasHidden) menu.classList.remove("hidden");
+      });
+    });
+
+    document.addEventListener("click", () => {
+      document.querySelectorAll(".gyc-dd-list").forEach((m) => m.classList.add("hidden"));
+    });
+  })();
+
+</script>
 </body>
 </html>
