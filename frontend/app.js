@@ -3784,6 +3784,61 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+(function initGlobalRefreshSpinners() {
+  function enhanceRefreshButtons() {
+    document.querySelectorAll("button").forEach((btn) => {
+      if (btn.dataset.gycRefreshEnhanced) return;
+
+      const text = btn.textContent || "";
+      const onclickAttr = btn.getAttribute("onclick") || "";
+      const isRefreshBtn =
+        text.includes("⟳") ||
+        text.includes("↻") ||
+        /refresh/i.test(onclickAttr) ||
+        /refresh/i.test(btn.id || "");
+
+      if (!isRefreshBtn) return;
+      btn.dataset.gycRefreshEnhanced = "true";
+
+      // Wrap ⟳ or ↻ in an animatable inline-block span
+      if (btn.innerHTML.includes("⟳") || btn.innerHTML.includes("↻")) {
+        btn.innerHTML = btn.innerHTML.replace(
+          /(⟳|↻)/g,
+          '<span class="gyc-refresh-icon">$1</span>'
+        );
+      } else {
+        btn.insertAdjacentHTML("beforeend", ' <span class="gyc-refresh-icon">⟳</span>');
+      }
+
+      // Spin on click for at least 650ms (or until async function finishes)
+      btn.addEventListener("click", () => {
+        if (btn.classList.contains("is-refreshing")) return;
+        btn.classList.add("is-refreshing");
+
+        setTimeout(() => {
+          btn.classList.remove("is-refreshing");
+        }, 700);
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", enhanceRefreshButtons);
+  } else {
+    enhanceRefreshButtons();
+  }
+})();
+
+window.refreshCreatorAnalytics = async function (btnEl) {
+  const btn = btnEl || document.querySelector('[onclick*="refreshCreatorAnalytics"]');
+  if (btn) btn.classList.add("is-refreshing");
+  try {
+    // your existing analytics fetch + render code here
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove("is-refreshing"), 300);
+  }
+};
+
 /* ==========================================================================
    1. LAUNCH CAMPAIGN MODAL (ID: campaignModal)
    ========================================================================== */

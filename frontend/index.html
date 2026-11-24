@@ -379,6 +379,29 @@
       border-radius: 0.75rem !important;
     }
 
+    @keyframes gycSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.gyc-refresh-icon {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+button:hover .gyc-refresh-icon {
+  transform: rotate(45deg);
+}
+
+button.is-refreshing .gyc-refresh-icon {
+  animation: gycSpin 0.75s linear infinite;
+}
+
+button.is-refreshing {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
   </style>
 
 <script>
