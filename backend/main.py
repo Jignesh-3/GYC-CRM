@@ -1614,7 +1614,8 @@ def _row_to_dict(raw_row, columns):
 @limiter.limit("5/minute")
 async def forgot_password(request: Request, payload: ForgotPasswordRequest):
     email = payload.email.strip().lower()
-    target_role = (payload.role or "CREATOR").strip().upper()
+    raw_role = (payload.role or "CREATOR").strip().upper()
+    is_brand_portal = raw_role in ("BRAND", "BRAND_ADMIN")
 
     async with get_db_cursor() as cursor:
         # Debug: confirm which DB is active
@@ -1640,19 +1641,19 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest):
 
         if user:
             db_role = str(user.get("role") or "").strip().upper()
-            if target_role == "BRAND_ADMIN" and db_role != "BRAND_ADMIN":
+            if is_brand_portal and db_role not in ("BRAND", "BRAND_ADMIN"):
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="No Brand account found for this email address."
                 )
-            if target_role != "BRAND_ADMIN" and db_role not in ("CREATOR", "SUPER_ADMIN", "ADMIN"):
+            if not is_brand_portal and db_role not in ("CREATOR", "SUPER_ADMIN", "ADMIN"):
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="No Creator account found for this email address."
                 )
 
         # 2. Fallback: Only check `influencers` for creators (brands store login emails strictly in `users`)
-        if not user and target_role != "BRAND_ADMIN":
+        if not user and not is_brand_portal:
             c_res = cursor.execute(
                 "SELECT id, name, phone_number, email FROM influencers WHERE LOWER(TRIM(email)) = %s LIMIT 1",
                 (email,)
@@ -1678,7 +1679,7 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest):
                 user = {"id": new_user_id, "email": email, "role": "CREATOR", "is_active": 1}
 
         if not user:
-            portal_label = "Brand" if target_role == "BRAND_ADMIN" else "Creator"
+            portal_label = "Brand" if is_brand_portal else "Creator"
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No {portal_label} account found for this email address."
