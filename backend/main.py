@@ -1651,56 +1651,31 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest):
                     detail="No Creator account found for this email address."
                 )
 
-        # 2. Fallback: Only check the matching entity table if not in `users`
-        if not user:
-            if target_role == "BRAND_ADMIN":
-                b_res = cursor.execute(
-                    "SELECT id, email FROM brands WHERE LOWER(TRIM(email)) = %s LIMIT 1",
-                    (email,)
-                )
-                if hasattr(b_res, "__await__"):
-                    await b_res
-                    raw_brand = await cursor.fetchone()
-                else:
-                    raw_brand = cursor.fetchone()
-
-                brand_row = _row_to_dict(raw_brand, ["id", "email"])
-                if brand_row:
-                    new_user_id = str(uuid.uuid4())
-                    ins = cursor.execute(
-                        """
-                        INSERT INTO users (id, email, password_hash, role, brand_id, is_active)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                        """,
-                        (new_user_id, email, "", "BRAND_ADMIN", brand_row["id"], 1)
-                    )
-                    if hasattr(ins, "__await__"):
-                        await ins
-                    user = {"id": new_user_id, "email": email, "role": "BRAND_ADMIN", "is_active": 1}
+        # 2. Fallback: Only check `influencers` for creators (brands store login emails strictly in `users`)
+        if not user and target_role != "BRAND_ADMIN":
+            c_res = cursor.execute(
+                "SELECT id, name, phone_number, email FROM influencers WHERE LOWER(TRIM(email)) = %s LIMIT 1",
+                (email,)
+            )
+            if hasattr(c_res, "__await__"):
+                await c_res
+                raw_creator = await cursor.fetchone()
             else:
-                c_res = cursor.execute(
-                    "SELECT id, name, phone_number, email FROM influencers WHERE LOWER(TRIM(email)) = %s LIMIT 1",
-                    (email,)
-                )
-                if hasattr(c_res, "__await__"):
-                    await c_res
-                    raw_creator = await cursor.fetchone()
-                else:
-                    raw_creator = cursor.fetchone()
+                raw_creator = cursor.fetchone()
 
-                creator_row = _row_to_dict(raw_creator, ["id", "name", "phone_number", "email"])
-                if creator_row:
-                    new_user_id = str(uuid.uuid4())
-                    ins = cursor.execute(
-                        """
-                        INSERT INTO users (id, email, password_hash, role, influencer_id, is_active)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                        """,
-                        (new_user_id, email, "", "CREATOR", creator_row["id"], 1)
-                    )
-                    if hasattr(ins, "__await__"):
-                        await ins
-                    user = {"id": new_user_id, "email": email, "role": "CREATOR", "is_active": 1}
+            creator_row = _row_to_dict(raw_creator, ["id", "name", "phone_number", "email"])
+            if creator_row:
+                new_user_id = str(uuid.uuid4())
+                ins = cursor.execute(
+                    """
+                    INSERT INTO users (id, email, password_hash, role, influencer_id, is_active)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (new_user_id, email, "", "CREATOR", creator_row["id"], 1)
+                )
+                if hasattr(ins, "__await__"):
+                    await ins
+                user = {"id": new_user_id, "email": email, "role": "CREATOR", "is_active": 1}
 
         if not user:
             portal_label = "Brand" if target_role == "BRAND_ADMIN" else "Creator"
