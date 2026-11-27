@@ -2903,7 +2903,7 @@ async function submitCampaign(e) {
   }
 }
 
-// UGC Workflows
+// UGC Workflows and UgcDeliverables
 async function submitUgcForm(e) {
   e.preventDefault();
 
@@ -2924,7 +2924,6 @@ async function submitUgcForm(e) {
   const videoUrl = document.getElementById('ugcVideoUrl')?.value?.trim();
   const captionCopy = document.getElementById('ugcCaptionCopy')?.value?.trim();
 
-  // Guard against blank, null, or string 'undefined'
   if (!brandDealId || brandDealId === 'undefined' || brandDealId === '') {
     alert('Please select a valid campaign from the list.');
     return;
@@ -2935,12 +2934,20 @@ async function submitUgcForm(e) {
     return;
   }
 
-  try {
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn ? submitBtn.textContent : '';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Checking Campaign Fee...';
+  }
+
+  const finishSubmission = async (paymentProof = {}) => {
     await ApiClient.submitUgcDeliverable({
       influencer_id: state.activeCreatorId,
       brand_deal_id: brandDealId,
       video_url: videoUrl,
       caption_copy: captionCopy,
+      ...paymentProof,
     });
 
     if (window.ModalController) ModalController.close('ugcModal');
@@ -2949,8 +2956,107 @@ async function submitUgcForm(e) {
     if (typeof window.loadCreatorPortalData === 'function') {
       await window.loadCreatorPortalData();
     }
+  };
+
+  try {
+    const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) ? API_BASE_URL : '';
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token') || '';
+
+    const orderRes = await fetch(`${baseUrl}/api/v1/ugc/create-payment-order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        influencer_id: state.activeCreatorId,
+        brand_deal_id: brandDealId,
+      }),
+    });
+
+    const orderData = await orderRes.json().catch(() => ({}));
+    if (!orderRes.ok) {
+      throw new Error(orderData.detail || 'Failed to initialize campaign participation payment.');
+    }
+
+    // 1. Free campaign (participation_fee == 0) -> submit immediately
+    if (orderData.free_submission) {
+      if (submitBtn) submitBtn.textContent = 'Submitting Draft...';
+      await finishSubmission();
+      return;
+    }
+
+    // 2. Already paid previously for this campaign -> submit immediately without double-charging
+    if (orderData.already_paid) {
+      if (submitBtn) submitBtn.textContent = 'Submitting Draft...';
+      await finishSubmission({
+        razorpay_order_id: orderData.razorpay_order_id,
+        razorpay_payment_id: orderData.razorpay_payment_id,
+        razorpay_signature: orderData.razorpay_signature,
+      });
+      return;
+    }
+
+    // 3. Paid campaign -> open Razorpay Test Mode Checkout
+    if (typeof window.Razorpay === 'undefined') {
+      throw new Error('Razorpay Checkout SDK failed to load. Please refresh the page and try again.');
+    }
+
+    if (submitBtn) submitBtn.textContent = 'Awaiting Payment...';
+
+    const rzp = new window.Razorpay({
+      key: orderData.key_id,
+      amount: orderData.amount,
+      currency: orderData.currency || 'INR',
+      name: 'GetYouCollab',
+      description: `${orderData.deal_title} — Participation Fee`,
+      order_id: orderData.order_id,
+      handler: async function (response) {
+        try {
+          if (submitBtn) submitBtn.textContent = 'Verifying & Submitting...';
+          await finishSubmission({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+        } catch (submitErr) {
+          alert(`Payment succeeded, but submission failed: ${submitErr.message}`);
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+          }
+        }
+      },
+      modal: {
+        ondismiss: function () {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+          }
+        },
+      },
+      theme: {
+        color: '#1749E8',
+      },
+    });
+
+    rzp.on('payment.failed', function (response) {
+      const reason = response?.error?.description || 'Payment failed or was declined.';
+      alert(`Payment failed: ${reason}`);
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    });
+
+    rzp.open();
   } catch (err) {
     alert(`Submission failed: ${err.message}`);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    }
   }
 }
 

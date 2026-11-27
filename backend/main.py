@@ -15,6 +15,9 @@ from contextlib import asynccontextmanager
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 import pymysql
+import hmac
+import hashlib
+import httpx
 
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
@@ -711,12 +714,123 @@ async def get_ugc_submissions(influencer_id: Optional[str] = None):
         for r in rows
     ]
 
+# Payment Checking for the creator to submit the pitch for the campaign
+@app.post("/api/v1/ugc/create-payment-order", tags=["UGC Review"])
+async def create_ugc_payment_order(payload: Dict[str, Any]):
+    """
+    Creates a Razorpay Test/Live order using the exact `participation_fee`
+    configured by the Super Admin on `brand_deals`.
+    """
+    influencer_id = (payload.get("influencer_id") or "").strip()
+    brand_deal_id = (payload.get("brand_deal_id") or "").strip()
+
+    if not influencer_id or not brand_deal_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="influencer_id and brand_deal_id are required."
+        )
+
+    async with get_db_cursor() as cursor:
+        await cursor.execute(
+            "SELECT id, title, participation_fee FROM brand_deals WHERE id = %s LIMIT 1",
+            (brand_deal_id,)
+        )
+        raw_deal = await cursor.fetchone()
+        deal = _row_to_dict(raw_deal, ["id", "title", "participation_fee"])
+        if not deal:
+            raise HTTPException(status_code=404, detail="Campaign / brand deal not found.")
+
+        fee = float(deal.get("participation_fee") or 0)
+        if fee <= 0:
+            return {"free_submission": True, "amount": 0}
+
+        # Reuse existing PAID order if creator already paid for this deal (prevents double-charging)
+        await cursor.execute(
+            """
+            SELECT razorpay_order_id, razorpay_payment_id, razorpay_signature
+            FROM deal_application_payments
+            WHERE brand_deal_id = %s AND influencer_id = %s AND status = 'PAID'
+            LIMIT 1
+            """,
+            (brand_deal_id, influencer_id)
+        )
+        existing_paid = _row_to_dict(
+            await cursor.fetchone(),
+            ["razorpay_order_id", "razorpay_payment_id", "razorpay_signature"]
+        )
+        if existing_paid:
+            return {
+                "already_paid": True,
+                "amount": fee,
+                **existing_paid
+            }
+
+        rzp_key_id = os.getenv("RAZORPAY_KEY_ID", "").strip()
+        rzp_key_secret = os.getenv("RAZORPAY_KEY_SECRET", "").strip()
+        if not rzp_key_id or not rzp_key_secret:
+            raise HTTPException(
+                status_code=500,
+                detail="Razorpay test keys are not configured on the server."
+            )
+
+        amount_paise = int(round(fee * 100))
+        receipt_id = f"ugc_{uuid.uuid4().hex[:24]}"
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            rzp_resp = await client.post(
+                "https://api.razorpay.com/v1/orders",
+                auth=(rzp_key_id, rzp_key_secret),
+                json={
+                    "amount": amount_paise,
+                    "currency": "INR",
+                    "receipt": receipt_id,
+                    "notes": {
+                        "brand_deal_id": brand_deal_id,
+                        "influencer_id": influencer_id
+                    }
+                }
+            )
+
+        if rzp_resp.status_code >= 400:
+            raise HTTPException(
+                status_code=502,
+                detail=f"Razorpay order creation failed: {rzp_resp.text}"
+            )
+
+        rzp_order = rzp_resp.json()
+        order_id = rzp_order["id"]
+        payment_row_id = str(uuid.uuid4())
+
+        await cursor.execute(
+            """
+            INSERT INTO deal_application_payments
+                (id, brand_deal_id, influencer_id, razorpay_order_id, amount, currency, status)
+            VALUES (%s, %s, %s, %s, %s, 'INR', 'PENDING')
+            """,
+            (payment_row_id, brand_deal_id, influencer_id, order_id, fee)
+        )
+        conn = getattr(cursor, "connection", None)
+        if conn and hasattr(conn, "commit"):
+            commit_res = conn.commit()
+            if hasattr(commit_res, "__await__"):
+                await commit_res
+
+    return {
+        "free_submission": False,
+        "key_id": rzp_key_id,
+        "order_id": order_id,
+        "amount": amount_paise,
+        "display_amount": fee,
+        "currency": "INR",
+        "deal_title": deal.get("title") or "Campaign Participation Fee"
+    }
+
 
 @app.post("/api/v1/ugc/submit", tags=["UGC Review"])
 async def submit_ugc(payload: Dict[str, Any]):
     """
     Submits a UGC video draft/link for a campaign.
-    Enforces tenant ownership: verifies that the brand deal belongs to the submitting creator.
+    Enforces Razorpay participation fee verification if `participation_fee > 0`.
     """
     influencer_id = payload.get("influencer_id")
     brand_deal_id = payload.get("brand_deal_id")
@@ -730,20 +844,60 @@ async def submit_ugc(payload: Dict[str, Any]):
         )
 
     async with get_db_cursor() as cursor:
-        # Cross-tenant integrity check: Ensure this brand deal actually belongs to this influencer
         await cursor.execute(
-            """
-            SELECT id FROM brand_deals 
-            WHERE id = %s;
-            """,
+            "SELECT id, participation_fee FROM brand_deals WHERE id = %s LIMIT 1;",
             (brand_deal_id,)
         )
-        deal = await cursor.fetchone()
+        deal = _row_to_dict(await cursor.fetchone(), ["id", "participation_fee"])
         if not deal:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unauthorized: You can only submit deliverables for campaigns assigned to you."
             )
+
+        required_fee = float(deal.get("participation_fee") or 0)
+        if required_fee > 0:
+            rzp_order_id = (payload.get("razorpay_order_id") or "").strip()
+            rzp_payment_id = (payload.get("razorpay_payment_id") or "").strip()
+            rzp_signature = (payload.get("razorpay_signature") or "").strip()
+
+            if not rzp_order_id or not rzp_payment_id or not rzp_signature:
+                raise HTTPException(
+                    status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                    detail=f"Participation fee of ₹{required_fee:.2f} must be paid before submitting your pitch."
+                )
+
+            rzp_key_secret = os.getenv("RAZORPAY_KEY_SECRET", "").strip()
+            expected_sig = hmac.new(
+                rzp_key_secret.encode("utf-8"),
+                f"{rzp_order_id}|{rzp_payment_id}".encode("utf-8"),
+                hashlib.sha256
+            ).hexdigest()
+
+            if not hmac.compare_digest(expected_sig, rzp_signature):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid Razorpay payment signature."
+                )
+
+            await cursor.execute(
+                """
+                UPDATE deal_application_payments
+                SET status = 'PAID',
+                    razorpay_payment_id = %s,
+                    razorpay_signature = %s,
+                    paid_at = CURRENT_TIMESTAMP
+                WHERE razorpay_order_id = %s
+                  AND brand_deal_id = %s
+                  AND influencer_id = %s
+                """,
+                (rzp_payment_id, rzp_signature, rzp_order_id, brand_deal_id, influencer_id)
+            )
+            conn = getattr(cursor, "connection", None)
+            if conn and hasattr(conn, "commit"):
+                commit_res = conn.commit()
+                if hasattr(commit_res, "__await__"):
+                    await commit_res
 
     try:
         result = await submit_ugc_deliverable(
