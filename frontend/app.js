@@ -2154,7 +2154,7 @@ function renderCreatorCampaigns(campaigns = []) {
                   : ''
               }
               <span class="px-2 py-0.5 bg-sage/10 text-sage text-[11px] font-mono rounded-sm border border-sage/20">
-                ${camp.commission_percentage || 10}% Affiliate Comm.
+                ${camp.commission_percentage || 10}% Aff Comm.
               </span>
             </div>
           </div>
