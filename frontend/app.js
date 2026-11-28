@@ -2154,7 +2154,7 @@ function renderCreatorCampaigns(campaigns = []) {
                   : ''
               }
               <span class="px-2 py-0.5 bg-sage/10 text-sage text-[11px] font-mono rounded-sm border border-sage/20">
-                ${camp.commission_percentage || 10}% Cut
+                ${camp.commission_percentage || 10}% Affiliate Comm.
               </span>
             </div>
           </div>
@@ -2215,7 +2215,7 @@ function renderCreatorOrders(orders = []) {
         <!-- 3. ORDER VALUE -->
         <td class="py-3.5 px-4 font-mono font-medium text-xs">${formatCurrency(o.order_amount || 0)}</td>
         
-        <!-- 4. YOUR CUT -->
+        <!-- 4. YOUR CUT / Affiliate Comm.-->
         <td class="py-3.5 px-4 font-mono font-medium text-xs ${
           isPaid
             ? 'text-sage font-bold'
